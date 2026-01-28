@@ -39,7 +39,7 @@ Make sure you have the following installed on your system:
 3. **Generate Docker image and container**:
    ```bash
    docker build -t pomoroom:latest .
-   docker run -p 27017:27017 -d pomoroom:latest
+   docker run --name pomoroom-db -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=mongo -e MONGO_INITDB_ROOT_PASSWORD=abc123. -d pomoroom:latest
 
 4. **Start the Docker container**:
    ```bash
