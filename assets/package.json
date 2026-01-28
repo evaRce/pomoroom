@@ -11,8 +11,8 @@
     "react-infinite-scroll-component": "^6.1.0",
     "react-input-emoji": "^5.8.0",
     "remount": "^1.0.0",
-    "stream-chat": "^8.25.1",
-    "stream-chat-react": "^11.13.0",
+    "stream-chat": "^9.27.2",
+    "stream-chat-react": "^13.13.1",
     "viem": "^2.9.2",
     "wagmi": "^2.5.12"
   },
