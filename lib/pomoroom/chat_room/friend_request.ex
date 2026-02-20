@@ -2,7 +2,7 @@ defmodule Pomoroom.ChatRoom.FriendRequest do
   use Ecto.Schema
   import Ecto.Changeset
   alias Pomoroom.ChatRoom.PrivateChat
-  alias Pomoroom.User
+  alias Pomoroom.Users
 
   schema "friend_requests" do
     field :status, :string
@@ -51,7 +51,7 @@ defmodule Pomoroom.ChatRoom.FriendRequest do
   end
 
   def send_friend_request(to_user, from_user) do
-    if User.exists?(to_user) do
+    if Users.exists_nickname?(to_user) do
       friend_request_changst =
         request_changeset(to_user, from_user)
         |> timestamps()

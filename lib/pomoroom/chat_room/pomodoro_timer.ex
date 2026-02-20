@@ -1,7 +1,7 @@
 defmodule Pomoroom.ChatRoom.PomodoroTimer do
   use Ecto.Schema
   import Ecto.Changeset
-  alias Pomoroom.User
+  alias Pomoroom.Users
 
   schema "pomodoro_timers" do
     field :timer_id, :string
@@ -69,7 +69,7 @@ defmodule Pomoroom.ChatRoom.PomodoroTimer do
   end
 
   def start(user, work_time, short_break_time, long_break_time) do
-    case User.exists?(user) do
+    case Users.exists_nickname?(user) do
       true ->
         timer_changst =
           user
@@ -90,7 +90,7 @@ defmodule Pomoroom.ChatRoom.PomodoroTimer do
   end
 
   def update_config(user, work_time, short_break_time, long_break_time) do
-    case User.exists?(user) do
+    case Users.exists_nickname?(user) do
       true ->
         case update(user, work_time, short_break_time, long_break_time) do
           {:ok, %Mongo.FindAndModifyResult{value: updated_data}} ->

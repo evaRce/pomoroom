@@ -1,7 +1,7 @@
 defmodule PomoroomWeb.ChatLive.ChatRoom do
   alias Pomoroom.ChatRoom.ChatServer
   use PomoroomWeb, :live_view
-  alias Pomoroom.User
+  alias Pomoroom.Users
   alias Pomoroom.ChatRoom.{PrivateChat, ChatServer, FriendRequest, GroupChat}
   alias Phoenix.PubSub
   alias PomoroomWeb.Presence
@@ -18,7 +18,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
       user_nickname = socket.assigns.user_info.nickname
       PubSub.subscribe(Pomoroom.PubSub, "friend_request:#{user_nickname}")
-      all_chats_id = User.get_all_my_chats_id(user_nickname)
+      all_chats_id = Users.get_all_my_chats_id(user_nickname)
 
       Enum.each(all_chats_id, fn chat_id ->
         ensure_chat_server_exists(chat_id)
@@ -41,7 +41,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
   end
 
   def handle_info(:get_list_contact, %{assigns: %{user_info: user}} = socket) do
-    case User.get_all_contacts(user.nickname) do
+    case Users.get_all_contacts(user.nickname) do
       {:ok, []} ->
         {:noreply, socket}
 
@@ -255,8 +255,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     case PrivateChat.ensure_exists(to_user, from_user) do
       {:ok, private_chat} ->
         ensure_chat_server_exists(private_chat.chat_id)
-        {:ok, to_user_data} = User.get_by("nickname", contact_name)
-        {:ok, from_user_data} = User.get_by("nickname", user.nickname)
+        {:ok, to_user_data} = Users.get_by("nickname", contact_name)
+        {:ok, from_user_data} = Users.get_by("nickname", user.nickname)
 
         case FriendRequest.get(to_user, from_user) do
           {:ok, request} ->
@@ -342,7 +342,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
           {:ok, members_data} ->
             messages_with_images_user =
               Enum.map(messages, fn msg ->
-                case User.get_by("nickname", msg.from_user) do
+                case Users.get_by("nickname", msg.from_user) do
                   {:ok, user_data} ->
                     %{
                       data: msg,
@@ -418,7 +418,6 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
         payload =
           if to_user_name == user_nickname do
-
             %{
               event_name: "open_rejected_request_send",
               event_data: %{
@@ -458,7 +457,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
     case PrivateChat.get(to_user, from_user) do
       {:ok, private_chat} ->
-        {:ok, from_user_data} = User.get_by("nickname", user.nickname)
+        {:ok, from_user_data} = Users.get_by("nickname", user.nickname)
 
         case ChatServer.send_message(
                private_chat.chat_id,
@@ -489,7 +488,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         {:noreply, socket}
 
       {:ok, group_chat} ->
-        {:ok, from_user_data} = User.get_by("nickname", user.nickname)
+        {:ok, from_user_data} = Users.get_by("nickname", user.nickname)
 
         case ChatServer.send_message(
                group_chat.chat_id,
@@ -519,8 +518,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
       payload = %{event_name: "error_adding_contact", event_data: reason}
       {:noreply, push_event(socket, "react", payload)}
     else
-      if User.exists?(to_user_arg) do
-        {:ok, to_user_data} = User.get_by("nickname", to_user_arg)
+      if Users.exists_nickname?(to_user_arg) do
+        {:ok, to_user_data} = Users.get_by("nickname", to_user_arg)
 
         case FriendRequest.get_status(to_user_arg, user_nickname) do
           :not_found ->
@@ -577,7 +576,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
                       from_user,
                       user_nickname
                     )
+
                   PubSub.subscribe(Pomoroom.PubSub, "chat:#{private_chat.chat_id}")
+
                   %{
                     event_name: "add_contact_to_list",
                     event_data: %{
@@ -641,7 +642,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         %{"group_name" => group_name},
         %{assigns: %{user_info: user}} = socket
       ) do
-    case User.get_contacts(user.nickname) do
+    case Users.get_contacts(user.nickname) do
       {:ok, []} ->
         {:noreply, socket}
 
@@ -874,7 +875,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
   end
 
   defp handle_member_update(group_name, user, socket) do
-    case User.get_contacts(user.nickname) do
+    case Users.get_contacts(user.nickname) do
       {:ok, []} ->
         {:noreply, socket}
 

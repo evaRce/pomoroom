@@ -2,7 +2,7 @@ defmodule Pomoroom.ChatRoom.GroupChat do
   use Ecto.Schema
   import Ecto.Changeset
   alias Pomoroom.ChatRoom.{Chat, Message}
-  alias Pomoroom.User
+  alias Pomoroom.Users
 
   schema "group_chats" do
     field :chat_id, :string
@@ -191,7 +191,7 @@ defmodule Pomoroom.ChatRoom.GroupChat do
       {:ok, group_chat} ->
         members_data =
           Enum.map(group_chat.members, fn member ->
-            case User.get_by("nickname", member) do
+            case Users.get_by("nickname", member) do
               {:ok, user} ->
                 is_admin = member in group_chat.admin
                 Map.put(user, :is_admin, is_admin)
