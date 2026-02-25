@@ -1,7 +1,7 @@
 defmodule Pomoroom.ChatRoom.Chat do
   use Ecto.Schema
   import Ecto.Changeset
-  alias Pomoroom.ChatRoom.GroupChat
+  alias Pomoroom.GroupChats
   @max_num 100000
 
   def get_public_id_chat() do
@@ -76,7 +76,7 @@ defmodule Pomoroom.ChatRoom.Chat do
     else
       all_group_chats_data =
         Enum.map(chat_ids, fn chat_id ->
-          {:ok, group_chat} = GroupChat.get_by("chat_id", chat_id)
+          {:ok, group_chat} = GroupChats.get_by("chat_id", chat_id)
           group_chat
         end)
 

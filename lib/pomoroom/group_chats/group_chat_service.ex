@@ -1,69 +1,15 @@
-defmodule Pomoroom.ChatRoom.GroupChat do
-  use Ecto.Schema
-  import Ecto.Changeset
+defmodule Pomoroom.GroupChats.GroupChatService do
   alias Pomoroom.ChatRoom.Chat
+  alias Pomoroom.GroupChats.{GroupChatRepository, GroupChatSchema}
   alias Pomoroom.Messages
   alias Pomoroom.Users
-
-  schema "group_chats" do
-    field :chat_id, :string
-    field :name, :string
-    field :image, :string
-    field :admin, {:array, :string}
-    field :members, {:array, :string}
-    field :invite_link, :string
-    field :inserted_at, :utc_datetime
-    field :updated_at, :utc_datetime
-  end
-
-  def changeset(args) do
-    %Pomoroom.ChatRoom.GroupChat{}
-    |> cast(args, [
-      :chat_id,
-      :name,
-      :image,
-      :admin,
-      :members,
-      :invite_link,
-      :inserted_at,
-      :updated_at
-    ])
-  end
-
-  def group_chat_changeset(args) do
-    changeset(args)
-    |> validate_required([
-      :chat_id,
-      :name,
-      :image,
-      :admin,
-      :members,
-      :invite_link,
-      :inserted_at,
-      :updated_at
-    ])
-  end
-
-  def group_chat_changeset(chat_id, name, image, from_user, invite_link) do
-    group_chat = %{
-      chat_id: chat_id,
-      name: name,
-      image: image,
-      admin: [from_user],
-      members: [from_user],
-      invite_link: invite_link
-    }
-
-    changeset(group_chat)
-    |> validate_required([:chat_id, :name, :image, :admin, :members, :invite_link])
-  end
 
   def create_group_chat(from_user, name) do
     chat_id = Chat.get_public_id_chat()
 
-    group_changst =
+    group_changeset =
       chat_id
-      |> group_chat_changeset(
+      |> GroupChatSchema.group_chat_changeset(
         name,
         get_default_group_image(),
         from_user,
@@ -71,11 +17,11 @@ defmodule Pomoroom.ChatRoom.GroupChat do
       )
       |> Chat.timestamps()
 
-    case group_changst.valid? do
+    case group_changeset.valid? do
       true ->
-        case Mongo.insert_one(:mongo, "group_chats", group_changst.changes) do
+        case GroupChatRepository.create(group_changeset.changes) do
           {:ok, _result} ->
-            {:ok, group_changst.changes}
+            {:ok, group_changeset.changes}
 
           {:error, %Mongo.WriteError{write_errors: [%{"code" => 11000, "errmsg" => _errmsg}]}} ->
             {:error, %{error: "El grupo `#{name}` ya está creado"}}
@@ -96,9 +42,11 @@ defmodule Pomoroom.ChatRoom.GroupChat do
           {:error, "El usuario #{new_member} ya es miembro del grupo"}
         else
           if user in group_chat.admin do
-            query = %{"chat_id" => group_chat.chat_id}
-            # añade un user sin duplicados
-            update(query, "$addToSet", %{members: new_member})
+            GroupChatRepository.update_by_chat_id(
+              group_chat.chat_id,
+              "$addToSet",
+              %{members: new_member}
+            )
             {:ok, "Usuario #{new_member} añadido al grupo"}
           else
             {:error, "El usuario #{user} no tiene permiso para añadir miembros al grupo"}
@@ -124,22 +72,15 @@ defmodule Pomoroom.ChatRoom.GroupChat do
         {:error, reason}
 
       {:ok, group_chat} ->
-        query = %{"chat_id" => group_chat.chat_id}
-        # eliminar el user de members
-        if is_admin?(group_name, user) do
+        if user in group_chat.admin do
           delete_admin(group_name, user, user)
         end
 
-        update(query, "$pull", %{members: user})
-        {:ok, updated_chat} = get_by("chat_id", group_chat.chat_id)
-
-        if length(updated_chat.members) == 0 do
-          Chat.delete_chat("group_chats", group_chat.chat_id)
-          Messages.delete_all_belongs_to_chat(updated_chat.chat_id)
-          {:ok, "Grupo eliminado, ya que el último usuario fue eliminado"}
-        else
-          {:ok, "Contacto eliminado del grupo #{group_name}"}
-        end
+        remove_member_and_cleanup(
+          group_chat,
+          user,
+          "Contacto eliminado del grupo #{group_name}"
+        )
     end
   end
 
@@ -150,18 +91,11 @@ defmodule Pomoroom.ChatRoom.GroupChat do
 
       {:ok, group_chat} ->
         if user in group_chat.admin do
-          query = %{"chat_id" => group_chat.chat_id}
-          # eliminar el user de members
-          update(query, "$pull", %{members: member})
-          {:ok, updated_chat} = get_by("chat_id", group_chat.chat_id)
-
-          if length(updated_chat.members) == 0 do
-            Chat.delete_chat("group_chats", group_chat.chat_id)
-            Messages.delete_all_belongs_to_chat(updated_chat.chat_id)
-            {:ok, "Grupo eliminado, ya que el último usuario fue eliminado"}
-          else
-            {:ok, "Usuario #{member} eliminado del grupo"}
+          if member in group_chat.admin do
+            delete_admin(group_name, user, member)
           end
+
+          remove_member_and_cleanup(group_chat, member, "Usuario #{member} eliminado del grupo")
         else
           {:error, "El usuario #{user} no tiene permiso para eliminar miembros del grupo"}
         end
@@ -169,20 +103,10 @@ defmodule Pomoroom.ChatRoom.GroupChat do
   end
 
   def delete_all_group_chats() do
-    Mongo.delete_many(:mongo, "group_chats", %{})
+    GroupChatRepository.delete_all()
   end
 
-  def get_by(field, value) do
-    query = %{field => value}
-
-    case Mongo.find_one(:mongo, "group_chats", query) do
-      nil ->
-        {:error, "Chat no encontrado"}
-
-      chat ->
-        {:ok, get_changes_from_changeset(chat)}
-    end
-  end
+  def get_by(field, value), do: GroupChatRepository.get_by(field, value)
 
   def get_members(group_name) do
     case get_by("name", group_name) do
@@ -213,11 +137,7 @@ defmodule Pomoroom.ChatRoom.GroupChat do
         {:error, reason}
 
       {:ok, group_chat} ->
-        if user in group_chat.admin do
-          true
-        else
-          false
-        end
+        user in group_chat.admin
     end
   end
 
@@ -229,9 +149,7 @@ defmodule Pomoroom.ChatRoom.GroupChat do
       {:ok, group_chat} ->
         if user in group_chat.admin do
           if member in group_chat.members do
-            query = %{"chat_id" => group_chat.chat_id}
-            # añade el member a la lista de admin
-            update(query, "$addToSet", %{admin: member})
+            GroupChatRepository.update_by_chat_id(group_chat.chat_id, "$addToSet", %{admin: member})
             {:ok, "Usuario #{member} añadido como admin al grupo"}
           else
             {:error, "El usuario #{member} no es miembro del grupo"}
@@ -254,18 +172,15 @@ defmodule Pomoroom.ChatRoom.GroupChat do
               new_admin = Enum.find(group_chat.members, fn m -> m != user end)
 
               if new_admin do
-                query = %{"chat_id" => group_chat.chat_id}
-                update(query, "$pull", %{admin: member})
-                update(query, "$push", %{admin: new_admin})
+                GroupChatRepository.update_by_chat_id(group_chat.chat_id, "$pull", %{admin: member})
+                GroupChatRepository.update_by_chat_id(group_chat.chat_id, "$push", %{admin: new_admin})
 
-                {:ok,
-                 "Usuario #{member} eliminado como admin del grupo y #{new_admin} asignado como nuevo admin."}
+                {:ok, "Usuario #{member} eliminado como admin del grupo y #{new_admin} asignado como nuevo admin."}
               else
                 {:error, "No hay otros miembros disponibles para ser administradores."}
               end
             else
-              query = %{"chat_id" => group_chat.chat_id}
-              update(query, "$pull", %{admin: member})
+              GroupChatRepository.update_by_chat_id(group_chat.chat_id, "$pull", %{admin: member})
               {:ok, "Usuario #{member} eliminado como admin del grupo"}
             end
           else
@@ -274,6 +189,19 @@ defmodule Pomoroom.ChatRoom.GroupChat do
         else
           {:error, "El usuario #{user} no tiene permiso para eliminar admins del grupo"}
         end
+    end
+  end
+
+  defp remove_member_and_cleanup(group_chat, member, success_message) do
+    GroupChatRepository.update_by_chat_id(group_chat.chat_id, "$pull", %{members: member})
+    {:ok, updated_chat} = get_by("chat_id", group_chat.chat_id)
+
+    if length(updated_chat.members) == 0 do
+      Chat.delete_chat("group_chats", group_chat.chat_id)
+      Messages.delete_all_belongs_to_chat(updated_chat.chat_id)
+      {:ok, "Grupo eliminado, ya que el último usuario fue eliminado"}
+    else
+      {:ok, success_message}
     end
   end
 
@@ -300,21 +228,8 @@ defmodule Pomoroom.ChatRoom.GroupChat do
     end
   end
 
-  defp update(filter, operator, operation) do
-    Mongo.update_one(
-      :mongo,
-      "group_chats",
-      filter,
-      %{operator => operation, "$set" => %{updated_at: NaiveDateTime.utc_now()}}
-    )
-  end
-
   defp get_default_group_image() do
     random_number = :rand.uniform(10)
     "/images/default_group/default_group-#{random_number}.svg"
-  end
-
-  defp get_changes_from_changeset(args) do
-    group_chat_changeset(args).changes
   end
 end

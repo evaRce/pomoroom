@@ -2,9 +2,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
   alias Pomoroom.ChatRoom.ChatServer
   use PomoroomWeb, :live_view
   alias Pomoroom.Users
-  alias Pomoroom.ChatRoom.{ChatServer, GroupChat}
+  alias Pomoroom.ChatRoom.ChatServer
+  alias Pomoroom.GroupChats
   alias Pomoroom.PrivateChats
-  alias Pomoroom.FriendRequests, as: FriendRequests
+  alias Pomoroom.FriendRequests
   alias Phoenix.PubSub
   alias PomoroomWeb.Presence
   alias Phoenix.Socket.Broadcast
@@ -332,7 +333,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         %{"group_name" => group_name},
         %{assigns: %{user_info: user}} = socket
       ) do
-    case GroupChat.get_by("name", group_name) do
+    case GroupChats.get_by("name", group_name) do
       {:error, _reason} ->
         {:noreply, socket}
 
@@ -340,7 +341,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         ensure_chat_server_exists(group_chat.chat_id)
         messages = ChatServer.get_messages(group_chat.chat_id, 20)
 
-        case GroupChat.get_members(group_name) do
+        case GroupChats.get_members(group_name) do
           {:ok, members_data} ->
             messages_with_images_user =
               Enum.map(messages, fn msg ->
@@ -362,7 +363,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
             payload = %{
               event_name: "open_group_chat",
               event_data: %{
-                is_admin: GroupChat.is_admin?(group_chat.name, user.nickname),
+                is_admin: GroupChats.is_admin?(group_chat.name, user.nickname),
                 group_data: group_chat,
                 messages: messages_with_images_user,
                 members_data: members_data
@@ -485,7 +486,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         %{"message" => message, "to_group_name" => to_group_name},
         %{assigns: %{user_info: user}} = socket
       ) do
-    case GroupChat.get_by("name", to_group_name) do
+    case GroupChats.get_by("name", to_group_name) do
       {:error, _reason} ->
         {:noreply, socket}
 
@@ -609,7 +610,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         %{"name" => name_group},
         %{assigns: %{user_info: user}} = socket
       ) do
-    case GroupChat.create_group_chat(user.nickname, name_group) do
+    case GroupChats.create_group_chat(user.nickname, name_group) do
       {:ok, group_chat} ->
         ensure_chat_server_exists(group_chat.chat_id)
         PubSub.subscribe(Pomoroom.PubSub, "chat:#{group_chat.chat_id}")
@@ -633,8 +634,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
   end
 
   def handle_event("action.delete_group", group_name, %{assigns: %{user_info: user}} = socket) do
-    {:ok, group_chat} = GroupChat.get_by("name", group_name)
-    GroupChat.delete(group_name, user.nickname)
+    {:ok, group_chat} = GroupChats.get_by("name", group_name)
+    GroupChats.delete(group_name, user.nickname)
     PubSub.unsubscribe(Pomoroom.PubSub, "chat:#{group_chat.chat_id}")
     {:noreply, socket}
   end
@@ -665,7 +666,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         %{"group_name" => group_name, "is_group" => _is_group, "is_visible" => _is_visible},
         socket
       ) do
-    case GroupChat.get_members(group_name) do
+    case GroupChats.get_members(group_name) do
       {:ok, members_data} ->
         payload = %{
           event_name: "show_members",
@@ -684,7 +685,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         %{"group_name" => group_name, "new_member" => new_member},
         %{assigns: %{user_info: user}} = socket
       ) do
-    case GroupChat.add_member(group_name, user.nickname, new_member) do
+    case GroupChats.add_member(group_name, user.nickname, new_member) do
       {:error, _reason} ->
         {:noreply, socket}
 
@@ -698,7 +699,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         %{"group_name" => group_name, "member_name" => member_name},
         %{assigns: %{user_info: user}} = socket
       ) do
-    GroupChat.delete_member(group_name, user.nickname, member_name)
+    GroupChats.delete_member(group_name, user.nickname, member_name)
     handle_member_update(group_name, user, socket)
   end
 
@@ -709,11 +710,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
       ) do
     case operation do
       "add" ->
-        GroupChat.add_admin(group_name, user.nickname, member_name)
+        GroupChats.add_admin(group_name, user.nickname, member_name)
         {:noreply, socket}
 
       "delete" ->
-        GroupChat.delete_admin(group_name, user.nickname, member_name)
+        GroupChats.delete_admin(group_name, user.nickname, member_name)
         {:noreply, socket}
     end
   end
@@ -845,7 +846,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
   end
 
   defp get_contacts_for_group(contacts, user_nickname, group_name) do
-    {:ok, group_chat} = GroupChat.get_by("name", group_name)
+    {:ok, group_chat} = GroupChats.get_by("name", group_name)
 
     Enum.map(contacts, fn contact ->
       {to_user, from_user} =
@@ -882,7 +883,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         {:noreply, socket}
 
       {:ok, contacts} ->
-        case GroupChat.get_members(group_name) do
+        case GroupChats.get_members(group_name) do
           {:ok, members_data} ->
             contact_list = get_contacts_for_group(contacts, user.nickname, group_name)
 
