@@ -1,4 +1,4 @@
-defmodule Pomoroom.Users.User do
+defmodule Pomoroom.Users.UserSchema do
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -12,13 +12,13 @@ defmodule Pomoroom.Users.User do
   end
 
   def changeset_without_passw(args) do
-    %Pomoroom.Users.User{}
+    %Pomoroom.Users.UserSchema{}
     |> cast(args, [:email, :nickname, :image_profile, :inserted_at, :updated_at])
     |> validate_required([:email, :nickname, :image_profile, :inserted_at, :updated_at])
   end
 
   def changeset(args) do
-    %Pomoroom.Users.User{}
+    %Pomoroom.Users.UserSchema{}
     |> cast(args, [:email, :password, :nickname])
     |> validate_required([:email, :password, :nickname])
   end

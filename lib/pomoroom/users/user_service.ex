@@ -1,12 +1,15 @@
 defmodule Pomoroom.Users.UserService do
   alias Pomoroom.ChatRoom.Chat
-  alias Pomoroom.Users.{User, UserPolicy, UserRepository}
+  alias Pomoroom.Users.{UserSchema, UserRepository}
+  import Ecto.Changeset
 
   def register_user(args) do
     user_changeset =
       args
-      |> User.changeset()
-      |> UserPolicy.enrich_for_registration()
+      |> UserSchema.changeset()
+      |> set_hash_password()
+      |> set_timestamps()
+      |> set_default_image()
 
     case user_changeset.valid? do
       true ->
@@ -17,7 +20,7 @@ defmodule Pomoroom.Users.UserService do
             {:ok, user_changeset.changes}
 
           {:error, %Mongo.WriteError{write_errors: [%{"code" => 11000, "errmsg" => errmsg}]}} ->
-            {:error, UserPolicy.parse_duplicate_key_error(errmsg)}
+            {:error, parse_duplicate_key_error(errmsg)}
         end
 
       false ->
@@ -35,7 +38,7 @@ defmodule Pomoroom.Users.UserService do
         {:error, :not_found}
 
       user_data when is_map(user_data) ->
-        {:ok, User.changeset(user_data).changes}
+        {:ok, UserSchema.changeset(user_data).changes}
     end
   end
 
@@ -48,7 +51,7 @@ defmodule Pomoroom.Users.UserService do
         user =
           user_data
           |> Map.drop(["_id", "password"])
-          |> User.changeset_without_passw()
+          |> UserSchema.changeset_without_passw()
 
         {:ok, user.changes}
     end
@@ -95,5 +98,36 @@ defmodule Pomoroom.Users.UserService do
 
   def exists_nickname?(nickname) do
     UserRepository.exists_by_nickname?(nickname)
+  end
+
+  defp parse_duplicate_key_error(errmsg) do
+    cond do
+      String.contains?(errmsg, "email") ->
+        %{email: "Este email ya está siendo usado"}
+
+      String.contains?(errmsg, "nickname") ->
+        %{nickname: "Este nickname ya está asociado a otra cuenta"}
+    end
+  end
+
+  defp set_hash_password(changeset) do
+    hashed_password =
+      changeset
+      |> fetch_field(:password)
+      |> elem(1)
+      |> Bcrypt.hash_pwd_salt()
+
+    change(changeset, %{password: hashed_password})
+  end
+
+  defp set_timestamps(changeset) do
+    now = NaiveDateTime.utc_now()
+    change(changeset, %{inserted_at: now, updated_at: now})
+  end
+
+  defp set_default_image(changeset) do
+    random_number = :rand.uniform(10)
+    image = "/images/default_user/default_user-#{random_number}.svg"
+    change(changeset, %{image_profile: image})
   end
 end

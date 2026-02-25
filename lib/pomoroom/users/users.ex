@@ -1,8 +1,8 @@
 defmodule Pomoroom.Users do
-  alias Pomoroom.Users.{User, UserService}
+  alias Pomoroom.Users.{UserSchema, UserService}
 
-  defdelegate changeset_without_passw(args), to: User
-  defdelegate changeset(args), to: User
+  defdelegate changeset_without_passw(args), to: UserSchema
+  defdelegate changeset(args), to: UserSchema
 
   defdelegate register_user(args), to: UserService
   defdelegate delete_all_users(), to: UserService
