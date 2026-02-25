@@ -2,7 +2,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
   alias Pomoroom.ChatRoom.ChatServer
   use PomoroomWeb, :live_view
   alias Pomoroom.Users
-  alias Pomoroom.ChatRoom.{PrivateChat, ChatServer, GroupChat}
+  alias Pomoroom.ChatRoom.{ChatServer, GroupChat}
+  alias Pomoroom.PrivateChats
   alias Pomoroom.FriendRequests, as: FriendRequests
   alias Phoenix.PubSub
   alias PomoroomWeb.Presence
@@ -238,9 +239,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     {to_user, from_user} =
       FriendRequests.determine_friend_request_users(contact_name, user.nickname)
 
-    {:ok, private_chat} = PrivateChat.get(to_user, from_user)
+    {:ok, private_chat} = PrivateChats.get(to_user, from_user)
 
-    PrivateChat.delete_contact(private_chat.chat_id, user.nickname)
+    PrivateChats.delete_contact(private_chat.chat_id, user.nickname)
     PubSub.unsubscribe(Pomoroom.PubSub, "chat:#{private_chat.chat_id}")
     {:noreply, socket}
   end
@@ -253,7 +254,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     {to_user, from_user} =
       FriendRequests.determine_friend_request_users(contact_name, user.nickname)
 
-    case PrivateChat.ensure_exists(to_user, from_user) do
+    case PrivateChats.ensure_exists(to_user, from_user) do
       {:ok, private_chat} ->
         ensure_chat_server_exists(private_chat.chat_id)
         {:ok, to_user_data} = Users.get_by("nickname", contact_name)
@@ -383,7 +384,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
       ) do
     case status do
       "accepted" ->
-        case PrivateChat.get(to_user_name, from_user_name) do
+        case PrivateChats.get(to_user_name, from_user_name) do
           {:ok, private_chat} ->
             ChatServer.join_chat(private_chat.chat_id)
             FriendRequests.accept_friend_request(to_user_name, from_user_name)
@@ -456,7 +457,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     {to_user, from_user} =
       FriendRequests.determine_friend_request_users(to_user_arg, user.nickname)
 
-    case PrivateChat.get(to_user, from_user) do
+    case PrivateChats.get(to_user, from_user) do
       {:ok, private_chat} ->
         {:ok, from_user_data} = Users.get_by("nickname", user.nickname)
 
@@ -562,7 +563,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
             {to_user, from_user} =
               FriendRequests.determine_friend_request_users(to_user_arg, user_nickname)
 
-            {:ok, private_chat} = PrivateChat.get(to_user, from_user)
+            {:ok, private_chat} = PrivateChats.get(to_user, from_user)
 
             payload =
               case private_chat.deleted_by do
@@ -915,7 +916,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     {to_nickname_request, from_nickname_request_} =
       FriendRequests.determine_friend_request_users(to_user, from_user)
 
-    {:ok, private_chat} = PrivateChat.get(to_nickname_request, from_nickname_request_)
+    {:ok, private_chat} = PrivateChats.get(to_nickname_request, from_nickname_request_)
     IO.inspect("[#{from_user}](PASO 1.1){suscribe, track}")
     chat_id = private_chat.chat_id
     PubSub.subscribe(Pomoroom.PubSub, call_topic(chat_id))

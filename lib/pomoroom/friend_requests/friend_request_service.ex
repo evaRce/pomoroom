@@ -1,5 +1,5 @@
 defmodule Pomoroom.FriendRequests.FriendRequestService do
-  alias Pomoroom.ChatRoom.PrivateChat
+  alias Pomoroom.PrivateChats
   alias Pomoroom.FriendRequests.{FriendRequestSchema, FriendRequestRepository}
   alias Pomoroom.Users
   import Ecto.Changeset
@@ -17,7 +17,7 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
 
         case FriendRequestRepository.create(friend_request_changeset.changes) do
           {:ok, _result} ->
-            PrivateChat.ensure_exists(to_user, from_user)
+            PrivateChats.ensure_exists(to_user, from_user)
             {:ok, friend_request_changeset.changes}
 
           {:error, %Mongo.WriteError{write_errors: [%{"code" => 11000, "errmsg" => _errmsg}]}} ->
@@ -44,7 +44,7 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
             {:error, "No hay una solicitud de amistad pendiente"}
 
           {:ok, request} ->
-            PrivateChat.update_restore_deleted_contact(chat, who_restore)
+            PrivateChats.update_restore_deleted_contact(chat, who_restore)
             {:ok, request}
         end
     end
