@@ -1,7 +1,7 @@
 defmodule Pomoroom.ChatRoom.ChatServer do
   use GenServer
   alias Phoenix.PubSub
-  alias Pomoroom.ChatRoom.Message
+  alias Pomoroom.Messages
 
   def start_link(chat_id) do
     GenServer.start_link(__MODULE__, %{chat_id: chat_id, messages: [], first_load: true},
@@ -28,7 +28,7 @@ defmodule Pomoroom.ChatRoom.ChatServer do
   end
 
   def handle_call({:send_message, user, image_profile, message}, _from, state) do
-    case Message.new_message(message, user, state.chat_id) do
+    case Messages.new_message(message, user, state.chat_id) do
       {:ok, msg} ->
         msg_with_image = %{
           data: msg,
@@ -51,7 +51,7 @@ defmodule Pomoroom.ChatRoom.ChatServer do
 
   def handle_call({:get_messages, :all}, _from, state) do
     if state.first_load do
-      {:ok, messages_from_db} = Message.get_chat_messages(state.chat_id)
+      {:ok, messages_from_db} = Messages.get_chat_messages(state.chat_id)
       new_state = %{state | messages: messages_from_db, first_load: false}
       {:reply, messages_from_db, new_state}
     else
@@ -61,7 +61,7 @@ defmodule Pomoroom.ChatRoom.ChatServer do
 
   def handle_call({:get_messages, limit}, _from, state) when is_integer(limit) do
     if state.first_load do
-      {:ok, limited_messages_from_db} = Message.get_chat_messages(state.chat_id, limit)
+      {:ok, limited_messages_from_db} = Messages.get_chat_messages(state.chat_id, limit)
       new_state = %{state | messages: limited_messages_from_db, first_load: false}
       {:reply, limited_messages_from_db, new_state}
     else

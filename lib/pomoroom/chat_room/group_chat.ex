@@ -1,7 +1,8 @@
 defmodule Pomoroom.ChatRoom.GroupChat do
   use Ecto.Schema
   import Ecto.Changeset
-  alias Pomoroom.ChatRoom.{Chat, Message}
+  alias Pomoroom.ChatRoom.Chat
+  alias Pomoroom.Messages
   alias Pomoroom.Users
 
   schema "group_chats" do
@@ -134,7 +135,7 @@ defmodule Pomoroom.ChatRoom.GroupChat do
 
         if length(updated_chat.members) == 0 do
           Chat.delete_chat("group_chats", group_chat.chat_id)
-          Message.delete_all_belongs_to_chat(updated_chat.chat_id)
+          Messages.delete_all_belongs_to_chat(updated_chat.chat_id)
           {:ok, "Grupo eliminado, ya que el último usuario fue eliminado"}
         else
           {:ok, "Contacto eliminado del grupo #{group_name}"}
@@ -156,7 +157,7 @@ defmodule Pomoroom.ChatRoom.GroupChat do
 
           if length(updated_chat.members) == 0 do
             Chat.delete_chat("group_chats", group_chat.chat_id)
-            Message.delete_all_belongs_to_chat(updated_chat.chat_id)
+            Messages.delete_all_belongs_to_chat(updated_chat.chat_id)
             {:ok, "Grupo eliminado, ya que el último usuario fue eliminado"}
           else
             {:ok, "Usuario #{member} eliminado del grupo"}
