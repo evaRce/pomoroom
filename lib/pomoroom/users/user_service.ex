@@ -1,5 +1,5 @@
 defmodule Pomoroom.Users.UserService do
-  alias Pomoroom.ChatRoom.Chat
+  alias Pomoroom.Chats
   alias Pomoroom.Users.{UserSchema, UserRepository}
   import Ecto.Changeset
 
@@ -83,7 +83,7 @@ defmodule Pomoroom.Users.UserService do
   end
 
   def get_all_contacts(nickname) do
-    {:ok, group_chat_data} = Chat.get_all_group_chats_data(nickname)
+    {:ok, group_chat_data} = Chats.get_all_group_chats_data(nickname)
     {:ok, private_contacts_data} = get_contacts(nickname)
 
     case group_chat_data ++ private_contacts_data do
@@ -93,7 +93,7 @@ defmodule Pomoroom.Users.UserService do
   end
 
   def get_all_my_chats_id(nickname) do
-    Chat.get_all_chats_id(nickname)
+    Chats.get_all_chats_id(nickname)
   end
 
   def exists_nickname?(nickname) do

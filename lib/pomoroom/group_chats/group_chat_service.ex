@@ -1,11 +1,11 @@
 defmodule Pomoroom.GroupChats.GroupChatService do
-  alias Pomoroom.ChatRoom.Chat
+  alias Pomoroom.Chats
   alias Pomoroom.GroupChats.{GroupChatRepository, GroupChatSchema}
   alias Pomoroom.Messages
   alias Pomoroom.Users
 
   def create_group_chat(from_user, name) do
-    chat_id = Chat.get_public_id_chat()
+    chat_id = Chats.get_public_id_chat()
 
     group_changeset =
       chat_id
@@ -15,7 +15,7 @@ defmodule Pomoroom.GroupChats.GroupChatService do
         from_user,
         generate_invite_link(chat_id)
       )
-      |> Chat.timestamps()
+      |> Chats.timestamps()
 
     case group_changeset.valid? do
       true ->
@@ -197,7 +197,7 @@ defmodule Pomoroom.GroupChats.GroupChatService do
     {:ok, updated_chat} = get_by("chat_id", group_chat.chat_id)
 
     if length(updated_chat.members) == 0 do
-      Chat.delete_chat("group_chats", group_chat.chat_id)
+      Chats.delete_chat("group_chats", group_chat.chat_id)
       Messages.delete_all_belongs_to_chat(updated_chat.chat_id)
       {:ok, "Grupo eliminado, ya que el último usuario fue eliminado"}
     else
@@ -215,7 +215,7 @@ defmodule Pomoroom.GroupChats.GroupChatService do
 
     case Base.url_decode64(encoded_chat_id, padding: false) do
       {:ok, chat_id} ->
-        case Chat.exists?(chat_id) do
+        case Chats.exists?(chat_id) do
           true ->
             {:ok, chat_id}
 

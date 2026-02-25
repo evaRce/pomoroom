@@ -1,14 +1,14 @@
 defmodule Pomoroom.PrivateChats.PrivateChatService do
-  alias Pomoroom.ChatRoom.Chat
+  alias Pomoroom.Chats
   alias Pomoroom.FriendRequests
   alias Pomoroom.Messages
   alias Pomoroom.PrivateChats.{PrivateChatRepository, PrivateChatSchema}
 
   def create_private_chat(to_user, from_user) do
     private_chat_changeset =
-      Chat.get_public_id_chat()
+      Chats.get_public_id_chat()
       |> PrivateChatSchema.private_chat_changeset([to_user, from_user])
-      |> Chat.timestamps()
+      |> Chats.timestamps()
 
     case private_chat_changeset.valid? do
       true ->
@@ -36,7 +36,7 @@ defmodule Pomoroom.PrivateChats.PrivateChatService do
         [member1, member2] = Map.get(chat, :members)
 
         if both_users_deleted?(updated_chat.deleted_by, [member1, member2]) do
-          Chat.delete_chat("private_chats", chat_id)
+          Chats.delete_chat("private_chats", chat_id)
           FriendRequests.delete_request(member1, member2)
           Messages.delete_all_belongs_to_chat(chat_id)
         end
