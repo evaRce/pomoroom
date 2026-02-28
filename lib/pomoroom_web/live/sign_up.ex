@@ -3,19 +3,13 @@ defmodule PomoroomWeb.HomeLive.SignUp do
   alias Pomoroom.Users
 
   def mount(_params, session, socket) do
-    socket =
-      socket
-      |> PhoenixLiveSession.maybe_subscribe(session)
-
-    {:ok, socket, layout: false}
+    {:ok, PhoenixLiveSession.maybe_subscribe(socket, session), layout: false}
   end
 
   def handle_event("action.save_user", params, socket) do
-    register_user = Users.register_user(params)
-
-    case register_user do
+    case Users.register_user(params) do
       {:ok, user_changes} ->
-        {:ok, user_info} = Users.get_by("nickname", user_changes.nickname)
+        user_info = Map.drop(user_changes, [:password])
         socket = PhoenixLiveSession.put_session(socket, "user_info", user_info)
         {:noreply, redirect(socket, to: "/chat")}
 

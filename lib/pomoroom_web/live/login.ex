@@ -3,17 +3,11 @@ defmodule PomoroomWeb.HomeLive.Login do
   alias Pomoroom.Users
 
   def mount(_params, session, socket) do
-    socket =
-      socket
-      |> PhoenixLiveSession.maybe_subscribe(session)
-
-    {:ok, socket, layout: false}
+    {:ok, PhoenixLiveSession.maybe_subscribe(socket, session), layout: false}
   end
 
   def handle_event("action.log_user", %{"email" => email, "password" => password}, socket) do
-    user = Users.get_with_passw("email", email)
-
-    case user do
+    case Users.get_with_passw("email", email) do
       {:error, :not_found} ->
         {:noreply,
          push_event(socket, "react.error_login_user", %{
@@ -22,8 +16,7 @@ defmodule PomoroomWeb.HomeLive.Login do
 
       {:ok, user_changes} ->
         if Bcrypt.verify_pass(password, user_changes.password) do
-          {:ok, user_info} = Users.get_by("nickname", user_changes.nickname)
-
+          user_info = Map.drop(user_changes, [:password])
           socket = PhoenixLiveSession.put_session(socket, "user_info", user_info)
           {:noreply, redirect(socket, to: "/chat")}
         else
@@ -32,9 +25,6 @@ defmodule PomoroomWeb.HomeLive.Login do
              errors: %{password: "El email o la contraseña no son válidos"}
            })}
         end
-
-      {:error, error} ->
-        {:noreply, assign(socket, error: error)}
     end
   end
 end
