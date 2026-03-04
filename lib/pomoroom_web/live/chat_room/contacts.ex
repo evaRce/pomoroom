@@ -50,23 +50,18 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Contacts do
         {to_user, from_user} =
           FriendRequests.determine_friend_request_users(contact_name, user.nickname)
 
-        case FriendRequests.get(to_user, from_user) do
-          {:ok, request_data} ->
-            payload = %{
-              event_name: "search_contact_result",
-              event_data: %{contact_data: contact_data, request_data: request_data}
-            }
+        request_data =
+          case FriendRequests.get(to_user, from_user) do
+            {:ok, request} -> request
+            {:error, _reason} -> nil
+          end
 
-            {:noreply, push_event(socket, "react", payload)}
+        payload = %{
+          event_name: "search_contact_result",
+          event_data: %{contact_data: contact_data, request_data: request_data}
+        }
 
-          {:error, _reason} ->
-            payload = %{
-              event_name: "search_contact_result",
-              event_data: %{contact_data: contact_data, request_data: nil}
-            }
-
-            {:noreply, push_event(socket, "react", payload)}
-        end
+        {:noreply, push_event(socket, "react", payload)}
 
       {:error, _reason} ->
         payload = %{event_name: "contact_not_found", event_data: nil}

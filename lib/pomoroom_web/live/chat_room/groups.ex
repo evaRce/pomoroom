@@ -33,20 +33,23 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
   end
 
   def handle_delete_group(group_name, user, socket) do
-    {:ok, group_chat} = GroupChats.get_by("name", group_name)
-    GroupChats.delete(group_name, user.nickname)
-    PubSub.unsubscribe(Pomoroom.PubSub, "chat:#{group_chat.chat_id}")
-    {:noreply, socket}
+    case GroupChats.get_by("name", group_name) do
+      {:ok, group_chat} ->
+        GroupChats.delete(group_name, user.nickname)
+        PubSub.unsubscribe(Pomoroom.PubSub, "chat:#{group_chat.chat_id}")
+        {:noreply, socket}
+
+      {:error, _reason} ->
+        {:noreply, socket}
+    end
   end
 
   def handle_get_my_contacts(group_name, user, socket) do
-    case Users.get_contacts(user.nickname) do
+    case get_contact_list_for_group(group_name, user) do
       {:ok, []} ->
         {:noreply, socket}
 
-      {:ok, contacts} ->
-        contact_list = get_contacts_for_group(contacts, user.nickname, group_name)
-
+      {:ok, contact_list} ->
         payload = %{
           event_name: "show_my_contacts",
           event_data: %{contact_list: contact_list}
@@ -99,47 +102,49 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
   end
 
   defp get_contacts_for_group(contacts, user_nickname, group_name) do
-    {:ok, group_chat} = GroupChats.get_by("name", group_name)
+    case GroupChats.get_by("name", group_name) do
+      {:ok, group_chat} ->
+        members_set = MapSet.new(group_chat.members)
 
-    Enum.map(contacts, fn contact ->
-      {to_user, from_user} =
-        FriendRequests.determine_friend_request_users(contact.nickname, user_nickname)
+        Enum.map(contacts, fn contact ->
+          {to_user, from_user} =
+            FriendRequests.determine_friend_request_users(contact.nickname, user_nickname)
 
-      case FriendRequests.get(to_user, from_user) do
-        {:ok, request} ->
-          if request.status == "accepted" do
-            %{
-              is_group: false,
-              contact_data: contact,
-              request: request
-            }
-          else
-            nil
+          case FriendRequests.get(to_user, from_user) do
+            {:ok, request} ->
+              if request.status == "accepted" do
+                %{
+                  is_group: false,
+                  contact_data: contact,
+                  request: request
+                }
+              else
+                nil
+              end
+
+            _ ->
+              nil
           end
+        end)
+        |> Enum.reject(&is_nil/1)
+        |> Enum.reject(fn %{contact_data: contact} ->
+          # Filtra los contactos que ya están en el grupo
+          MapSet.member?(members_set, contact.nickname)
+        end)
 
-        _ ->
-          nil
-      end
-    end)
-    |> Enum.reject(&is_nil/1)
-    |> Enum.reject(fn %{contact_data: contact} ->
-      # Filtra los contactos que ya están en el grupo
-      Enum.any?(group_chat.members, fn member ->
-        member == contact.nickname
-      end)
-    end)
+      {:error, _reason} ->
+        []
+    end
   end
 
   defp handle_member_update(group_name, user, socket) do
-    case Users.get_contacts(user.nickname) do
+    case get_contact_list_for_group(group_name, user) do
       {:ok, []} ->
         {:noreply, socket}
 
-      {:ok, contacts} ->
+      {:ok, contact_list} ->
         case GroupChats.get_members(group_name) do
           {:ok, members_data} ->
-            contact_list = get_contacts_for_group(contacts, user.nickname, group_name)
-
             payload = %{
               event_name: "update_show_my_contacts_and_members",
               event_data: %{contact_list: contact_list, members_data: members_data}
@@ -150,6 +155,16 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
           {:error, _reason} ->
             {:noreply, socket}
         end
+    end
+  end
+
+  defp get_contact_list_for_group(group_name, user) do
+    case Users.get_contacts(user.nickname) do
+      {:ok, []} ->
+        {:ok, []}
+
+      {:ok, contacts} ->
+        {:ok, get_contacts_for_group(contacts, user.nickname, group_name)}
     end
   end
 end

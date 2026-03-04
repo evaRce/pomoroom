@@ -28,23 +28,28 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
             ChatServer.join_chat(private_chat.chat_id)
             FriendRequests.accept_friend_request(to_user_name, from_user_name)
             PubSub.subscribe(Pomoroom.PubSub, "chat:#{private_chat.chat_id}")
-            {:ok, request} = FriendRequests.get(to_user_name, from_user_name)
 
-            payload = %{
-              event_name: "update_contact_status_to_accepted",
-              event_data: %{
-                request: request,
-                new_status: status
-              }
-            }
+            case FriendRequests.get(to_user_name, from_user_name) do
+              {:ok, request} ->
+                payload = %{
+                  event_name: "update_contact_status_to_accepted",
+                  event_data: %{
+                    request: request,
+                    new_status: status
+                  }
+                }
 
-            PubSub.broadcast(
-              Pomoroom.PubSub,
-              "friend_request:#{from_user_name}",
-              {:friend_request_change_status, payload, private_chat.chat_id}
-            )
+                PubSub.broadcast(
+                  Pomoroom.PubSub,
+                  "friend_request:#{from_user_name}",
+                  {:friend_request_change_status, payload, private_chat.chat_id}
+                )
 
-            {:noreply, push_event(socket, "react", payload)}
+                {:noreply, push_event(socket, "react", payload)}
+
+              {:error, _reason} ->
+                {:noreply, socket}
+            end
 
           {:error, _reason} ->
             {:noreply, socket}
@@ -52,36 +57,41 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
 
       "rejected" ->
         FriendRequests.reject_friend_request(to_user_name, from_user_name)
-        {:ok, request} = FriendRequests.get(to_user_name, from_user_name)
 
-        {to_user_name, from_user_name} =
-          FriendRequests.determine_friend_request_users(to_user_name, from_user_name)
+        case FriendRequests.get(to_user_name, from_user_name) do
+          {:ok, request} ->
+            {to_user_name, from_user_name} =
+              FriendRequests.determine_friend_request_users(to_user_name, from_user_name)
 
-        payload =
-          if to_user_name == user_nickname do
-            %{
-              event_name: "open_rejected_request_send",
-              event_data: %{
-                rejected_request: request
+            payload =
+              if to_user_name == user_nickname do
+                %{
+                  event_name: "open_rejected_request_send",
+                  event_data: %{
+                    rejected_request: request
+                  }
+                }
+              end
+
+            payload_to_broadcast =
+              %{
+                event_name: "open_rejected_request_received",
+                event_data: %{
+                  rejected_request: request
+                }
               }
-            }
-          end
 
-        payload_to_broadcast =
-          %{
-            event_name: "open_rejected_request_received",
-            event_data: %{
-              rejected_request: request
-            }
-          }
+            PubSub.broadcast(
+              Pomoroom.PubSub,
+              "friend_request:#{from_user_name}",
+              {:friend_request_change_status, payload_to_broadcast}
+            )
 
-        PubSub.broadcast(
-          Pomoroom.PubSub,
-          "friend_request:#{from_user_name}",
-          {:friend_request_change_status, payload_to_broadcast}
-        )
+            {:noreply, push_event(socket, "react", payload)}
 
-        {:noreply, push_event(socket, "react", payload)}
+          {:error, _reason} ->
+            {:noreply, socket}
+        end
 
       _ ->
         {:noreply, socket}
@@ -97,74 +107,86 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
       {:noreply, push_event(socket, "react", payload)}
     else
       if Users.exists_nickname?(to_user_arg) do
-        {:ok, to_user_data} = Users.get_by("nickname", to_user_arg)
+        case Users.get_by("nickname", to_user_arg) do
+          {:ok, to_user_data} ->
+            case FriendRequests.get_status(to_user_arg, user_nickname) do
+              :not_found ->
+                case FriendRequests.send_friend_request(to_user_arg, user_nickname) do
+                  {:ok, request} ->
+                    payload = %{
+                      event_name: "add_contact_to_list",
+                      event_data: %{
+                        is_group: false,
+                        contact_data: to_user_data,
+                        request: request
+                      }
+                    }
 
-        case FriendRequests.get_status(to_user_arg, user_nickname) do
-          :not_found ->
-            case FriendRequests.send_friend_request(to_user_arg, user_nickname) do
-              {:ok, request} ->
-                payload = %{
-                  event_name: "add_contact_to_list",
-                  event_data: %{
-                    is_group: false,
-                    contact_data: to_user_data,
-                    request: request
-                  }
-                }
+                    payload_from_user = %{
+                      event_name: "add_contact_to_list",
+                      event_data: %{
+                        is_group: false,
+                        contact_data: user,
+                        request: request
+                      }
+                    }
 
-                payload_from_user = %{
-                  event_name: "add_contact_to_list",
-                  event_data: %{
-                    is_group: false,
-                    contact_data: user,
-                    request: request
-                  }
-                }
-
-                PubSub.broadcast(
-                  Pomoroom.PubSub,
-                  "friend_request:#{to_user_arg}",
-                  {:friend_request_sent, payload_from_user}
-                )
-
-                {:noreply, push_event(socket, "react", payload)}
-
-              _ ->
-                {:noreply, socket}
-            end
-
-          _status ->
-            {to_user, from_user} =
-              FriendRequests.determine_friend_request_users(to_user_arg, user_nickname)
-
-            {:ok, private_chat} = PrivateChats.get(to_user, from_user)
-
-            payload =
-              case private_chat.deleted_by do
-                [] ->
-                  {:error, reason} = FriendRequests.send_friend_request(to_user, from_user)
-                  %{event_name: "error_adding_contact", event_data: reason}
-
-                [user_nickname] ->
-                  {:ok, request} =
-                    FriendRequests.restore_contact_if_request_exists(
-                      to_user,
-                      from_user,
-                      user_nickname
+                    PubSub.broadcast(
+                      Pomoroom.PubSub,
+                      "friend_request:#{to_user_arg}",
+                      {:friend_request_sent, payload_from_user}
                     )
 
-                  PubSub.subscribe(Pomoroom.PubSub, "chat:#{private_chat.chat_id}")
+                    {:noreply, push_event(socket, "react", payload)}
 
-                  %{
-                    event_name: "add_contact_to_list",
-                    event_data: %{
-                      is_group: false,
-                      contact_data: to_user_data,
-                      request: request
-                    }
-                  }
-              end
+                  _ ->
+                    {:noreply, socket}
+                end
 
+              _status ->
+                {to_user, from_user} =
+                  FriendRequests.determine_friend_request_users(to_user_arg, user_nickname)
+
+                case PrivateChats.get(to_user, from_user) do
+                  {:ok, private_chat} ->
+                    payload =
+                      case private_chat.deleted_by do
+                        [] ->
+                          {:error, reason} = FriendRequests.send_friend_request(to_user, from_user)
+                          %{event_name: "error_adding_contact", event_data: reason}
+
+                        [user_nickname] ->
+                          case FriendRequests.restore_contact_if_request_exists(
+                                 to_user,
+                                 from_user,
+                                 user_nickname
+                               ) do
+                            {:ok, request} ->
+                              PubSub.subscribe(Pomoroom.PubSub, "chat:#{private_chat.chat_id}")
+
+                              %{
+                                event_name: "add_contact_to_list",
+                                event_data: %{
+                                  is_group: false,
+                                  contact_data: to_user_data,
+                                  request: request
+                                }
+                              }
+
+                            {:error, reason} ->
+                              %{event_name: "error_adding_contact", event_data: reason}
+                          end
+                      end
+
+                    {:noreply, push_event(socket, "react", payload)}
+
+                  {:error, _reason} ->
+                    {:noreply, socket}
+                end
+            end
+
+          {:error, reason} ->
+            payload = %{event_name: "error_adding_contact", event_data: reason}
             {:noreply, push_event(socket, "react", payload)}
         end
       else

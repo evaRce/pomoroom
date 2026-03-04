@@ -159,16 +159,17 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Calls do
     PubSub.unsubscribe(Pomoroom.PubSub, call_topic(chat_id) <> ":" <> from_user.nickname)
     Presence.untrack(self(), call_topic(chat_id), from_user.nickname)
 
-    socket =
-      socket
-      |> assign(:chat_id, "")
-      |> assign(:connected_users, [])
-      |> assign(:offer_requests, [])
-      |> assign(:ice_candidate_offers, [])
-      |> assign(:sdp_offers, [])
-      |> assign(:answers, [])
+    {:noreply, reset_call_state(socket)}
+  end
 
-    {:noreply, socket}
+  def reset_call_state(socket) do
+    socket
+    |> assign(:chat_id, "")
+    |> assign(:connected_users, [])
+    |> assign(:offer_requests, [])
+    |> assign(:ice_candidate_offers, [])
+    |> assign(:sdp_offers, [])
+    |> assign(:answers, [])
   end
 
   defp list_present(call_topic) do
@@ -182,18 +183,29 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Calls do
     {to_nickname_request, from_nickname_request_} =
       FriendRequests.determine_friend_request_users(to_user, from_user)
 
-    {:ok, private_chat} = PrivateChats.get(to_nickname_request, from_nickname_request_)
-    IO.inspect("[#{from_user}](PASO 1.1){suscribe, track}")
-    chat_id = private_chat.chat_id
-    PubSub.subscribe(Pomoroom.PubSub, call_topic(chat_id))
-    PubSub.subscribe(Pomoroom.PubSub, call_topic(chat_id) <> ":" <> from_user)
-    {:ok, _ref} = Presence.track(self(), call_topic(chat_id), from_user, %{})
-    connected_users = list_present(call_topic(chat_id))
-    IO.inspect(connected_users, label: "[#{from_user}]Connected: ")
+    case PrivateChats.get(to_nickname_request, from_nickname_request_) do
+      {:ok, private_chat} ->
+        IO.inspect("[#{from_user}](PASO 1.1){suscribe, track}")
+        chat_id = private_chat.chat_id
+        PubSub.subscribe(Pomoroom.PubSub, call_topic(chat_id))
+        PubSub.subscribe(Pomoroom.PubSub, call_topic(chat_id) <> ":" <> from_user)
 
-    socket
-    |> assign(:chat_id, chat_id)
-    |> assign(:connected_users, connected_users)
+        case Presence.track(self(), call_topic(chat_id), from_user, %{}) do
+          {:ok, _ref} ->
+            connected_users = list_present(call_topic(chat_id))
+            IO.inspect(connected_users, label: "[#{from_user}]Connected: ")
+
+            socket
+            |> assign(:chat_id, chat_id)
+            |> assign(:connected_users, connected_users)
+
+          {:error, _reason} ->
+            socket
+        end
+
+      {:error, _reason} ->
+        socket
+    end
   end
 
   defp send_direct_message(chat_id, to_user, event, payload, from_user) do

@@ -9,6 +9,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
   alias Pomoroom.Users
   alias PomoroomWeb.ChatLive.ChatRoom.Runtime
 
+  @messages_limit 20
+
   def handle_new_message_info(args, socket) do
     payload = %{
       event_name: "show_message_to_send",
@@ -30,63 +32,24 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
     case PrivateChats.ensure_exists(to_user, from_user) do
       {:ok, private_chat} ->
         Runtime.ensure_chat_server_exists(private_chat.chat_id)
-        {:ok, to_user_data} = Users.get_by("nickname", contact_name)
-        {:ok, from_user_data} = Users.get_by("nickname", user.nickname)
 
         case FriendRequests.get(to_user, from_user) do
           {:ok, request} ->
+            is_owner_request = FriendRequests.is_owner_request?(contact_name, user.nickname)
+
             case request.status do
               "accepted" ->
-                messages = ChatServer.get_messages(private_chat.chat_id, 20)
-
-                messages_with_images_user =
-                  Enum.map(messages, fn msg ->
-                    image_user =
-                      if msg.from_user == user.nickname do
-                        from_user_data.image_profile
-                      else
-                        to_user_data.image_profile
-                      end
-
-                    %{data: msg, image_user: image_user}
-                  end)
-
-                socket = assign(socket, :chat_id, private_chat.chat_id)
-
-                payload = %{
-                  event_name: "open_private_chat",
-                  event_data: %{
-                    from_user_data: from_user_data,
-                    to_user_data: to_user_data,
-                    messages: messages_with_images_user
-                  }
-                }
-
-                {:noreply, push_event(socket, "react", payload)}
+                open_accepted_private_chat(private_chat, contact_name, user, socket)
 
               "pending" ->
                 payload =
-                  if FriendRequests.is_owner_request?(contact_name, user.nickname) do
-                    %{event_name: "open_chat_request_send", event_data: %{request: request}}
-                  else
-                    %{event_name: "open_chat_request_received", event_data: %{request: request}}
-                  end
+                  build_private_chat_request_payload("pending", request, is_owner_request)
 
                 {:noreply, push_event(socket, "react", payload)}
 
               "rejected" ->
                 payload =
-                  if FriendRequests.is_owner_request?(contact_name, user.nickname) do
-                    %{
-                      event_name: "open_rejected_request_received",
-                      event_data: %{rejected_request: request}
-                    }
-                  else
-                    %{
-                      event_name: "open_rejected_request_send",
-                      event_data: %{rejected_request: request}
-                    }
-                  end
+                  build_private_chat_request_payload("rejected", request, is_owner_request)
 
                 {:noreply, push_event(socket, "react", payload)}
             end
@@ -107,31 +70,25 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
 
       {:ok, group_chat} ->
         Runtime.ensure_chat_server_exists(group_chat.chat_id)
-        messages = ChatServer.get_messages(group_chat.chat_id, 20)
+        messages = ChatServer.get_messages(group_chat.chat_id, @messages_limit)
 
         case GroupChats.get_members(group_name) do
           {:ok, members_data} ->
+            is_admin = GroupChats.is_admin?(group_name, user.nickname)
+            user_image_map_by_nickname = build_user_image_map_by_nickname(messages)
+
             messages_with_images_user =
               Enum.map(messages, fn msg ->
-                case Users.get_by("nickname", msg.from_user) do
-                  {:ok, user_data} ->
-                    %{
-                      data: msg,
-                      image_user: user_data.image_profile
-                    }
-
-                  {:error, _reason} ->
-                    %{
-                      data: msg,
-                      image_user: nil
-                    }
-                end
+                %{
+                  data: msg,
+                  image_user: Map.get(user_image_map_by_nickname, msg.from_user)
+                }
               end)
 
             payload = %{
               event_name: "open_group_chat",
               event_data: %{
-                is_admin: GroupChats.is_admin?(group_chat.name, user.nickname),
+                is_admin: is_admin,
                 group_data: group_chat,
                 messages: messages_with_images_user,
                 members_data: members_data
@@ -151,25 +108,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
       FriendRequests.determine_friend_request_users(to_user_arg, user.nickname)
 
     case PrivateChats.get(to_user, from_user) do
-      {:ok, private_chat} ->
-        {:ok, from_user_data} = Users.get_by("nickname", user.nickname)
-
-        case ChatServer.send_message(
-              private_chat.chat_id,
-              from_user_data.nickname,
-              from_user_data.image_profile,
-              message
-            ) do
-          {:ok, _msg} ->
-            {:noreply, socket}
-
-          {:error, reason} ->
-            payload = %{event_name: "error_sending_message", event_data: reason}
-            {:noreply, push_event(socket, "react", payload)}
-        end
-
       {:error, _reason} ->
         {:noreply, socket}
+
+      {:ok, private_chat} ->
+        send_message_to_chat(private_chat.chat_id, message, user, socket)
     end
   end
 
@@ -179,21 +122,87 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
         {:noreply, socket}
 
       {:ok, group_chat} ->
-        {:ok, from_user_data} = Users.get_by("nickname", user.nickname)
+        send_message_to_chat(group_chat.chat_id, message, user, socket)
+    end
+  end
 
-        case ChatServer.send_message(
-              group_chat.chat_id,
-              from_user_data.nickname,
-              from_user_data.image_profile,
-              message
-            ) do
-          {:ok, _msg} ->
-            {:noreply, socket}
+  defp send_message_to_chat(chat_id, message, user, socket) do
+    case ChatServer.send_message(chat_id, user.nickname, user.image_profile, message) do
+      {:ok, _msg} ->
+        {:noreply, socket}
 
-          {:error, reason} ->
-            payload = %{event_name: "error_sending_message", event_data: reason}
-            {:noreply, push_event(socket, "react", payload)}
+      {:error, reason} ->
+        payload = %{event_name: "error_sending_message", event_data: reason}
+        {:noreply, push_event(socket, "react", payload)}
+    end
+  end
+
+  defp open_accepted_private_chat(private_chat, contact_name, user, socket) do
+    case Users.get_by("nickname", contact_name) do
+      {:ok, to_user_data} ->
+        messages = ChatServer.get_messages(private_chat.chat_id, @messages_limit)
+
+        messages_with_images_user =
+          Enum.map(messages, fn msg ->
+            image_user =
+              if msg.from_user == user.nickname do
+                user.image_profile
+              else
+                to_user_data.image_profile
+              end
+
+            %{data: msg, image_user: image_user}
+          end)
+
+        socket = assign(socket, :chat_id, private_chat.chat_id)
+
+        payload = %{
+          event_name: "open_private_chat",
+          event_data: %{
+            from_user_data: user,
+            to_user_data: to_user_data,
+            messages: messages_with_images_user
+          }
+        }
+
+        {:noreply, push_event(socket, "react", payload)}
+
+      {:error, _reason} ->
+        {:noreply, socket}
+    end
+  end
+
+  defp build_user_image_map_by_nickname(messages) do
+    Enum.reduce(messages, %{}, fn msg, acc ->
+      nickname = msg.from_user
+
+      if Map.has_key?(acc, nickname) do
+        acc
+      else
+        case Users.get_by("nickname", nickname) do
+          {:ok, user_data} ->
+            Map.put(acc, nickname, user_data.image_profile)
+
+          {:error, _reason} ->
+            Map.put(acc, nickname, nil)
         end
+      end
+    end)
+  end
+
+  defp build_private_chat_request_payload(status, request, is_owner_request) do
+    case {status, is_owner_request} do
+      {"pending", true} ->
+        %{event_name: "open_chat_request_send", event_data: %{request: request}}
+
+      {"pending", false} ->
+        %{event_name: "open_chat_request_received", event_data: %{request: request}}
+
+      {"rejected", true} ->
+        %{event_name: "open_rejected_request_received", event_data: %{rejected_request: request}}
+
+      {"rejected", false} ->
+        %{event_name: "open_rejected_request_send", event_data: %{rejected_request: request}}
     end
   end
 end

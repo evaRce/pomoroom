@@ -32,14 +32,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
       end)
     end
 
-    socket =
-      socket
-      |> assign(:chat_id, "")
-      |> assign(:connected_users, [])
-      |> assign(:offer_requests, [])
-      |> assign(:ice_candidate_offers, [])
-      |> assign(:sdp_offers, [])
-      |> assign(:answers, [])
+    socket = Calls.reset_call_state(socket)
 
     # IO.inspect(socket, structs: false, limit: :infinity)
     {:ok, socket, layout: false}
