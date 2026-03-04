@@ -16,9 +16,17 @@ defmodule PomoroomWeb.HomeLive.Login do
 
       {:ok, user_changes} ->
         if Bcrypt.verify_pass(password, user_changes.password) do
-          user_info = Map.drop(user_changes, [:password])
-          socket = PhoenixLiveSession.put_session(socket, "user_info", user_info)
-          {:noreply, redirect(socket, to: "/chat")}
+          case Users.get_by("nickname", user_changes.nickname) do
+            {:ok, user_info} ->
+              socket = PhoenixLiveSession.put_session(socket, "user_info", user_info)
+              {:noreply, redirect(socket, to: "/chat")}
+
+            {:error, _reason} ->
+              {:noreply,
+               push_event(socket, "react.error_login_user", %{
+                 errors: %{email: "No se pudo iniciar sesión. Inténtalo de nuevo"}
+               })}
+          end
         else
           {:noreply,
            push_event(socket, "react.error_login_user", %{
