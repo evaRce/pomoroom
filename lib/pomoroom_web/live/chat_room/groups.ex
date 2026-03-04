@@ -46,9 +46,6 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
 
   def handle_get_my_contacts(group_name, user, socket) do
     case get_contact_list_for_group(group_name, user) do
-      {:ok, []} ->
-        {:noreply, socket}
-
       {:ok, contact_list} ->
         payload = %{
           event_name: "show_my_contacts",
@@ -139,9 +136,6 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
 
   defp handle_member_update(group_name, user, socket) do
     case get_contact_list_for_group(group_name, user) do
-      {:ok, []} ->
-        {:noreply, socket}
-
       {:ok, contact_list} ->
         case GroupChats.get_members(group_name) do
           {:ok, members_data} ->
