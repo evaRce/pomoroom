@@ -21,11 +21,11 @@ import "phoenix_html"
 import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
-import hooks from './hooks'
+import live_hooks from './live_hooks'
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
-  hooks,
+  hooks: live_hooks,
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken}
 })
