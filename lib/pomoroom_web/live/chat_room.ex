@@ -19,8 +19,6 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
       |> put_session_assigns(session)
 
     if connected?(socket) do
-      send(self(), :get_list_contact)
-
       user_nickname = socket.assigns.user_info.nickname
       PubSub.subscribe(Pomoroom.PubSub, "friend_request:#{user_nickname}")
       all_chats_id = Users.get_all_my_chats_id(user_nickname)
@@ -36,10 +34,6 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
     # IO.inspect(socket, structs: false, limit: :infinity)
     {:ok, socket, layout: false}
-  end
-
-  def handle_info(:get_list_contact, %{assigns: %{user_info: user}} = socket) do
-    Contacts.handle_list_contacts(user, socket)
   end
 
   def handle_info({:new_message, args}, socket) do
@@ -119,6 +113,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
   def handle_event("action.get_user_info", _args, %{assigns: %{user_info: user}} = socket) do
     payload = %{event_name: "show_user_info", event_data: user}
     {:noreply, push_event(socket, "react", payload)}
+  end
+
+  def handle_event("action.get_list_contact", _args, %{assigns: %{user_info: user}} = socket) do
+    Contacts.handle_list_contacts(user, socket)
   end
 
   def handle_event("action.delete_contact", contact_name, %{assigns: %{user_info: user}} = socket) do

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ChatPanel from "./chat_panel/ChatPanel";
 import ChatDetailPanel from "./info_panel/ChatDetailPanel";
 import BackGround from "./chat_panel/BackGround";
@@ -28,11 +28,16 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
   const [userName, setUserName] = useState("");
   const [isVisibleDetail, setIsVisibleDetail] = useState(false);
   const [infoChatSelected, setInfoChatSelected] = useState({});
+  const hasRequestedInitialData = useRef(false);
 
   useEffect(() => {
     const randomImageNumber = Math.floor(Math.random() * 5) + 1;
     setImageNumber(randomImageNumber);
-    pushEventToLiveView("action.get_user_info", {});
+    if (!hasRequestedInitialData.current) {
+      pushEventToLiveView("action.get_user_info", {});
+      pushEventToLiveView("action.get_list_contact", {});
+      hasRequestedInitialData.current = true;
+    }
   }, []);
 
   useOutgoingLiveViewActions({
