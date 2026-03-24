@@ -47,6 +47,21 @@ export default function ChatHeader({ userLogin }) {
   }, [chatData]);
 
   const showUserDetails = () => {
+    const activeDetail = getEventData("show_detail");
+    const isSameChatOpen =
+      activeDetail?.chat_name === chatName && activeDetail?.is_group === isGroup;
+
+    if (isSameChatOpen) {
+      addEvent("toggle_detail_visibility", {
+        is_visible: false,
+        is_group: isGroup,
+        group_name: chatName,
+      });
+      removeEvent("show_detail");
+      removeEvent("show_members");
+      return;
+    }
+
     addEvent("toggle_detail_visibility", {
       is_visible: true,
       is_group: isGroup,

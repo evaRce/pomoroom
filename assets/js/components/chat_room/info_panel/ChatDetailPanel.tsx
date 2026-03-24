@@ -37,12 +37,13 @@ export default function ChatDetailPanel() {
 
   const hideUserDetails = () => {
     addEvent("toggle_detail_visibility", {
-      isVisible: false,
-      is_group: false,
+      is_visible: false,
+      is_group: chatData?.is_group || false,
       group_name: chatData?.chat_name,
     });
     removeEvent("check_admin");
     removeEvent("show_detail");
+    removeEvent("show_members");
   };
 
   const setAdmin = (memberName, operation) => {
