@@ -5,12 +5,17 @@ import { useEventContext } from "../../EventContext";
 import AddMembersModal from "./AddMembersModal";
 import CallPanel from "../../call_panel/CallPanel";
 
-export default function ChatHeader({ userLogin }) {
-  const { addEvent, getEventData, removeEvent } = useEventContext();
-  const [chatData, setChatData] = useState(null);
+interface ChatHeaderProps {
+  userLogin: any;
+  isVisibleDetail: boolean;
+}
+
+export default function ChatHeader({ userLogin, isVisibleDetail }: ChatHeaderProps) {
+  const { addEvent, getEventData } = useEventContext() as any;
+  const [chatData, setChatData] = useState<any>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isGroup, setIsGroup] = useState(false);
-  const [checkAdmin, setCheckAdmin] = useState({});
+  const [checkAdmin, setCheckAdmin] = useState<any>({});
   const [chatName, setChatName] = useState("");
   const [chatImage, setChatImage] = useState("");
 
@@ -48,7 +53,7 @@ export default function ChatHeader({ userLogin }) {
 
   const showUserDetails = () => {
     addEvent("toggle_detail_visibility", {
-      is_visible: true,
+      is_visible: !isVisibleDetail,
       is_group: isGroup,
       group_name: chatName,
     });
@@ -88,7 +93,7 @@ export default function ChatHeader({ userLogin }) {
     setIsModalVisible(true);
   };
 
-  const handleModalVisible = (isModalVisible) => {
+  const handleModalVisible = (isModalVisible: boolean) => {
     setIsModalVisible(isModalVisible);
   };
 

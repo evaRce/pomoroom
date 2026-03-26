@@ -4,7 +4,11 @@ import MessageItem from "./body/MessageItem";
 import ChatHeader from "./header/ChatHeader";
 import ChatFooter from "./footer/ChatFooter";
 
-export default function ChatPanel() {
+interface ChatPanelProps {
+  isVisibleDetail: boolean;
+}
+
+export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   const [messages, setMessages] = useState([]);
   const { getEventData, removeEvent } = useEventContext();
   const messagesEndRef = useRef(null);
@@ -49,7 +53,7 @@ export default function ChatPanel() {
 
   return (
     <div className="flex flex-col flex-grow w-full border-l border-r">
-      <ChatHeader userLogin={userLogin} />
+      <ChatHeader userLogin={userLogin} isVisibleDetail={isVisibleDetail} />
       <main
         className="flex flex-col h-[83vh] overflow-y-auto overflow-x-hidden p-5 border-t border-b"
         style={{ scrollbarWidth: "thin" }}

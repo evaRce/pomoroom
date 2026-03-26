@@ -93,7 +93,9 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
   return (
     <div className="flex h-screen w-screen min-h-screen md:min-h-48 overflow-x-hidden">
       <ConversationSidebar />
-      {component === "ChatPanel" && <ChatPanel />}
+      {component === "ChatPanel" && (
+        <ChatPanel isVisibleDetail={isVisibleDetail} />
+      )}
       {component === "RequestSend" && <RequestSend imageNumber={imageNumber} />}
       {component === "RequestReceived" && (
         <RequestReceived imageNumber={imageNumber} />

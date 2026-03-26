@@ -4,13 +4,17 @@ import { SearchOutlined, CloseOutlined } from "@ant-design/icons";
 import ConversationTargetItem from "./ConversationTargetItem";
 import { useEventContext } from "../EventContext";
 
+const INITIAL_BATCH_SIZE = 15;
+const BATCH_SIZE = 10;
+
 export default function ConversationTargetsList() {
-  const { addEvent, getEventData, removeEvent } = useEventContext();
-  const [contacts, setContacts] = useState([]);
-  const [filteredContacts, setFilteredContacts] = useState([]);
+  const { addEvent, getEventData, removeEvent } = useEventContext() as any;
+  const [contacts, setContacts] = useState<any[]>([]);
+  const [filteredContacts, setFilteredContacts] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedContact, setSelectedContact] = useState("");
-  const [userLogin, setUserLogin] = useState({});
+  const [userLogin, setUserLogin] = useState<any>({});
+  const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH_SIZE);
 
   useEffect(() => {
     const contact = getEventData("add_contact_to_list");
@@ -24,8 +28,18 @@ export default function ConversationTargetsList() {
   useEffect(() => {
     const contactList = getEventData("show_list_contact");
 
+    if (Array.isArray(contactList) && contactList.length > 0) {
+      const normalizedList = contactList.map((contact: any) =>
+        normalizeContact(contact)
+      );
+
+      setContacts(normalizedList);
+      setVisibleCount(INITIAL_BATCH_SIZE);
+      removeEvent("show_list_contact");
+      return;
+    }
+
     if (contactList) {
-      contactList.forEach((contact) => addContact(contact));
       removeEvent("show_list_contact");
     }
   }, [getEventData("show_list_contact")]);
@@ -102,19 +116,47 @@ export default function ConversationTargetsList() {
       contact.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredContacts(results);
+
+    if (searchTerm) {
+      setVisibleCount(INITIAL_BATCH_SIZE);
+      return;
+    }
+
+    setVisibleCount((prev) => Math.min(Math.max(prev, INITIAL_BATCH_SIZE), results.length || INITIAL_BATCH_SIZE));
   }, [searchTerm, contacts]);
 
-  const addContact = (contact) => {
-    const newContact = {
-      name: contact.contact_data?.nickname || contact.group_data?.name,
-      image: contact.contact_data?.image_profile || contact.group_data?.image,
-      status_request: contact.request?.status || contact.status,
-      is_group: contact.is_group,
+  const normalizeContact = (contact: any) => {
+    return {
+      name:
+        contact?.contact_data?.nickname ||
+        contact?.group_data?.name,
+      image:
+        contact?.contact_data?.image_profile ||
+        contact?.group_data?.image,
+      status_request:
+        contact?.request?.status ||
+        contact?.status,
+      is_group: Boolean(contact?.is_group),
     };
-    setContacts((prevContacts) => [...prevContacts, newContact]);
   };
 
-  const updateContactStatus = (request, new_status) => {
+  const addContact = (contact: any) => {
+    const newContact = normalizeContact(contact);
+
+    setContacts((prevContacts) => {
+      const alreadyExists = prevContacts.some(
+        (prevContact) => prevContact.name === newContact.name
+      );
+
+      if (alreadyExists) {
+        return prevContacts;
+      }
+
+      return [...prevContacts, newContact];
+    });
+  };
+
+  const updateContactStatus = (request: any, new_status: any) => {
     setContacts((prevContacts) =>
       prevContacts.map((contact) => {
         const isInvolvedReceived =
@@ -136,7 +178,7 @@ export default function ConversationTargetsList() {
     );
   };
 
-  const handleSearch = (event) => {
+  const handleSearch = (event: any) => {
     setSearchTerm(event.target.value);
   };
 
@@ -144,7 +186,7 @@ export default function ConversationTargetsList() {
     setSearchTerm("");
   };
 
-  const deleteContact = (contact) => {
+  const deleteContact = (contact: any) => {
     const index = contacts.findIndex(
       (contactFind) => contactFind.name === contact.name
     );
@@ -165,9 +207,23 @@ export default function ConversationTargetsList() {
     }
   };
 
-  const handleSelectedContact = (contactName) => {
+  const handleSelectedContact = (contactName: string) => {
     setSelectedContact(contactName);
   };
+
+  const handleListScroll = (event: any) => {
+    const target = event.currentTarget;
+    const reachedBottom =
+      target.scrollTop + target.clientHeight >= target.scrollHeight - 1;
+
+    if (reachedBottom) {
+      setVisibleCount((prev) =>
+        Math.min(prev + BATCH_SIZE, filteredContacts.length)
+      );
+    }
+  };
+
+  const visibleContacts = filteredContacts.slice(0, visibleCount);
 
   return (
     <div className="flex flex-col h-[90vh] w-[20vw]">
@@ -192,8 +248,9 @@ export default function ConversationTargetsList() {
       <div
         className="overflow-auto w-[20vw] p-1"
         style={{ scrollbarWidth: "thin" }}
+        onScroll={handleListScroll}
       >
-        {filteredContacts.map((contact) => (
+        {visibleContacts.map((contact) => (
           <Fragment key={contact.name}>
             <ConversationTargetItem
               contact={contact}
