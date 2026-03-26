@@ -9,15 +9,37 @@ interface ChatPanelProps {
 }
 
 export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
-  const [messages, setMessages] = useState([]);
-  const { getEventData, removeEvent } = useEventContext();
-  const messagesEndRef = useRef(null);
-  const [userLogin, setUserLogin] = useState(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const { getEventData, removeEvent } = useEventContext() as any;
+  const messagesEndRef = useRef<any>(null);
+  const seenMessageIdsRef = useRef<Set<any>>(new Set());
+  const [userLogin, setUserLogin] = useState<any>(null);
+
+  const buildUniqueMessagesAndSeedIds = (messagesList: any[]) => {
+    const seenMessageIds = new Set<any>();
+    const uniqueMessages: any[] = [];
+
+    for (const message of messagesList) {
+      const messageId = message?.data?.msg_id;
+
+      if (!messageId) {
+        continue;
+      }
+
+      if (!seenMessageIds.has(messageId)) {
+        seenMessageIds.add(messageId);
+        uniqueMessages.push(message);
+      }
+    }
+
+    seenMessageIdsRef.current = seenMessageIds;
+    return uniqueMessages;
+  };
 
   useEffect(() => {
     const msgs = getEventData("show_list_messages");
     if (msgs) {
-      setMessages(msgs.messages);
+      setMessages(buildUniqueMessagesAndSeedIds(msgs.messages || []));
       removeEvent("show_list_messages");
     }
   }, [getEventData("show_list_messages")]);
@@ -38,10 +60,22 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
     }
   }, [getEventData("show_user_info")]);
 
-  const addMessage = (message) => {
+  const addMessage = (message: any) => {
     if (!message || !message.data || message.data.text.trim() === "") {
       return; // No añadir mensajes vacíos
     }
+
+    const messageId = message?.data?.msg_id;
+    if (!messageId) {
+      return;
+    }
+
+    if (messageId && seenMessageIdsRef.current.has(messageId)) {
+      return;
+    }
+
+    seenMessageIdsRef.current.add(messageId);
+
     setMessages((prevMessages) => [...prevMessages, message]);
   };
 
