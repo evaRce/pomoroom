@@ -17,7 +17,8 @@ defmodule Pomoroom.GroupChats.GroupChatRepository do
         {:error, "Chat no encontrado"}
 
       chat ->
-        {:ok, get_changes_from_changeset(chat)}
+        normalized_chat = normalize_legacy_members(chat)
+        {:ok, get_changes_from_changeset(normalized_chat)}
     end
   end
 
@@ -35,5 +36,21 @@ defmodule Pomoroom.GroupChats.GroupChatRepository do
 
   defp get_changes_from_changeset(args) do
     GroupChatSchema.group_chat_changeset(args).changes
+  end
+
+  defp normalize_legacy_members(chat) when is_map(chat) do
+    members = Map.get(chat, "members", [])
+
+    normalized_members =
+      Enum.map(members, fn member ->
+        cond do
+          is_binary(member) -> %{"user_id" => member, "joined_at" => nil}
+          is_map(member) -> member
+          true -> nil
+        end
+      end)
+      |> Enum.reject(&is_nil/1)
+
+    Map.put(chat, "members", normalized_members)
   end
 end

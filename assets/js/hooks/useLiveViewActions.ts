@@ -41,6 +41,7 @@ export function useOutgoingLiveViewActions({
     const newAnswer = getEventData("new_answer");
     const endCall = getEventData("end_private_call");
     const loadOlderMessages = getEventData("load_older_messages");
+    const refreshConversations = getEventData("refresh_conversations");
 
     if (contactToDelete) {
       pushEventToLiveView("action.delete_contact", contactToDelete);
@@ -136,6 +137,10 @@ export function useOutgoingLiveViewActions({
     if (loadOlderMessages) {
       pushEventToLiveView("action.load_older_messages", loadOlderMessages);
       removeEvent("load_older_messages");
+    }
+    if (refreshConversations) {
+      pushEventToLiveView("action.get_list_contact", {});
+      removeEvent("refresh_conversations");
     }
   }, [
     getEventData,

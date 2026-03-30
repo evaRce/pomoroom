@@ -38,15 +38,18 @@ defmodule Pomoroom.GroupChats.GroupChatService do
         {:error, reason}
 
       {:ok, group_chat} ->
-        if new_member in group_chat.members do
+        member_ids = get_member_ids(group_chat.members)
+
+        if new_member in member_ids do
           {:error, "El usuario #{new_member} ya es miembro del grupo"}
         else
           if user in group_chat.admin do
             GroupChatRepository.update_by_chat_id(
               group_chat.chat_id,
               "$addToSet",
-              %{members: new_member}
+              %{members: %{"user_id" => new_member, "joined_at" => DateTime.utc_now()}}
             )
+
             {:ok, "Usuario #{new_member} añadido al grupo"}
           else
             {:error, "El usuario #{user} no tiene permiso para añadir miembros al grupo"}
@@ -95,7 +98,13 @@ defmodule Pomoroom.GroupChats.GroupChatService do
             delete_admin(group_name, user, member)
           end
 
-          remove_member_and_cleanup(group_chat, member, "Usuario #{member} eliminado del grupo")
+          member_ids = get_member_ids(group_chat.members)
+
+          if member in member_ids do
+            remove_member_and_cleanup(group_chat, member, "Usuario #{member} eliminado del grupo")
+          else
+            {:error, "El usuario #{member} no es miembro del grupo"}
+          end
         else
           {:error, "El usuario #{user} no tiene permiso para eliminar miembros del grupo"}
         end
@@ -114,12 +123,20 @@ defmodule Pomoroom.GroupChats.GroupChatService do
         {:error, reason}
 
       {:ok, group_chat} ->
+        members = group_chat.members || []
+
         members_data =
-          Enum.map(group_chat.members, fn member ->
-            case Users.get_by("nickname", member) do
+          Enum.map(members, fn member_map ->
+            member_id = get_member_id(member_map)
+            joined_at = get_member_joined_at(member_map)
+
+            case member_id && Users.get_by("nickname", member_id) do
               {:ok, user} ->
-                is_admin = member in group_chat.admin
-                Map.put(user, :is_admin, is_admin)
+                is_admin = member_id in group_chat.admin
+
+                user
+                |> Map.put(:is_admin, is_admin)
+                |> Map.put(:joined_at, joined_at)
 
               {:error, _reason} ->
                 nil
@@ -147,9 +164,14 @@ defmodule Pomoroom.GroupChats.GroupChatService do
         {:error, reason}
 
       {:ok, group_chat} ->
+        member_ids = get_member_ids(group_chat.members)
+
         if user in group_chat.admin do
-          if member in group_chat.members do
-            GroupChatRepository.update_by_chat_id(group_chat.chat_id, "$addToSet", %{admin: member})
+          if member in member_ids do
+            GroupChatRepository.update_by_chat_id(group_chat.chat_id, "$addToSet", %{
+              admin: member
+            })
+
             {:ok, "Usuario #{member} añadido como admin al grupo"}
           else
             {:error, "El usuario #{member} no es miembro del grupo"}
@@ -166,16 +188,24 @@ defmodule Pomoroom.GroupChats.GroupChatService do
         {:error, reason}
 
       {:ok, group_chat} ->
+        member_ids = get_member_ids(group_chat.members)
+
         if user in group_chat.admin do
-          if member in group_chat.members do
+          if member in member_ids do
             if length(group_chat.admin) == 1 and user == member do
-              new_admin = Enum.find(group_chat.members, fn m -> m != user end)
+              new_admin = Enum.find(member_ids, fn m -> m != user end)
 
               if new_admin do
-                GroupChatRepository.update_by_chat_id(group_chat.chat_id, "$pull", %{admin: member})
-                GroupChatRepository.update_by_chat_id(group_chat.chat_id, "$push", %{admin: new_admin})
+                GroupChatRepository.update_by_chat_id(group_chat.chat_id, "$pull", %{
+                  admin: member
+                })
 
-                {:ok, "Usuario #{member} eliminado como admin del grupo y #{new_admin} asignado como nuevo admin."}
+                GroupChatRepository.update_by_chat_id(group_chat.chat_id, "$push", %{
+                  admin: new_admin
+                })
+
+                {:ok,
+                 "Usuario #{member} eliminado como admin del grupo y #{new_admin} asignado como nuevo admin."}
               else
                 {:error, "No hay otros miembros disponibles para ser administradores."}
               end
@@ -193,10 +223,16 @@ defmodule Pomoroom.GroupChats.GroupChatService do
   end
 
   defp remove_member_and_cleanup(group_chat, member, success_message) do
-    GroupChatRepository.update_by_chat_id(group_chat.chat_id, "$pull", %{members: member})
-    {:ok, updated_chat} = get_by("chat_id", group_chat.chat_id)
+    GroupChatRepository.update_by_chat_id(group_chat.chat_id, "$pull", %{
+      members: %{"user_id" => member}
+    })
 
-    if length(updated_chat.members) == 0 do
+    GroupChatRepository.update_by_chat_id(group_chat.chat_id, "$pull", %{members: member})
+
+    {:ok, updated_chat} = get_by("chat_id", group_chat.chat_id)
+    remaining_members = updated_chat.members || []
+
+    if length(remaining_members) == 0 do
       Chats.delete_chat("group_chats", group_chat.chat_id)
       Messages.delete_all_belongs_to_chat(updated_chat.chat_id)
       {:ok, "Grupo eliminado, ya que el último usuario fue eliminado"}
@@ -227,6 +263,23 @@ defmodule Pomoroom.GroupChats.GroupChatService do
         {:error, %{error: "Enlace de invitación inválido"}}
     end
   end
+
+  defp get_member_ids(members) do
+    Enum.map(members || [], fn member ->
+      get_member_id(member)
+    end)
+    |> Enum.reject(&is_nil/1)
+  end
+
+  defp get_member_id(member) when is_map(member),
+    do: member["user_id"] || member[:user_id]
+
+  defp get_member_id(member) when is_binary(member), do: member
+
+  defp get_member_joined_at(member) when is_map(member),
+    do: member["joined_at"] || member[:joined_at]
+
+  defp get_member_joined_at(_member), do: nil
 
   defp get_default_group_image() do
     random_number = :rand.uniform(10)

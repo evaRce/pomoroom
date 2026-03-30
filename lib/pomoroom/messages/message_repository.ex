@@ -37,8 +37,18 @@ defmodule Pomoroom.Messages.MessageRepository do
     end
   end
 
-  def get_chat_messages(chat_id, limit \\ :all) do
-    msg_query = %{"chat_id" => chat_id}
+  def get_chat_messages(chat_id, limit \\ :all, joined_at \\ nil) do
+    normalized_joined_at = normalize_joined_at(joined_at)
+
+    msg_query =
+      case normalized_joined_at do
+        nil ->
+          %{"chat_id" => chat_id}
+
+        _ ->
+          %{"chat_id" => chat_id, "inserted_at" => %{"$gte" => normalized_joined_at}}
+      end
+
     sort_order = %{"inserted_at" => -1, "msg_id" => -1}
 
     find_messages =
@@ -63,23 +73,58 @@ defmodule Pomoroom.Messages.MessageRepository do
     {:ok, Enum.reverse(messages)}
   end
 
-  def get_chat_messages_before(chat_id, before_inserted_at, limit, before_db_id \\ nil) do
+  def get_chat_messages_before(
+        chat_id,
+        before_inserted_at,
+        limit,
+        before_db_id \\ nil,
+        joined_at \\ nil
+      ) do
+    normalized_joined_at = normalize_joined_at(joined_at)
+
+    base_query = %{"chat_id" => chat_id}
+
+    new_base_query =
+      case normalized_joined_at do
+        nil -> base_query
+        _ -> Map.put(base_query, "inserted_at", %{"$gte" => normalized_joined_at})
+      end
+
     msg_query =
       case BSON.ObjectId.decode(before_db_id || "") do
         {:ok, object_id} ->
-          %{
-            "chat_id" => chat_id,
-            "$or" => [
-              %{"inserted_at" => %{"$lt" => before_inserted_at}},
-              %{"inserted_at" => before_inserted_at, "_id" => %{"$lt" => object_id}}
-            ]
-          }
+          or_conditions = [
+            %{"inserted_at" => %{"$lt" => before_inserted_at}},
+            %{"inserted_at" => before_inserted_at, "_id" => %{"$lt" => object_id}}
+          ]
+
+          case normalized_joined_at do
+            nil ->
+              Map.put(new_base_query, "$or", or_conditions)
+
+            _ ->
+              Map.put(new_base_query, "$or", [
+                %{
+                  "inserted_at" => %{"$gte" => normalized_joined_at, "$lt" => before_inserted_at}
+                },
+                %{
+                  "inserted_at" => before_inserted_at,
+                  "_id" => %{"$lt" => object_id}
+                }
+              ])
+          end
 
         :error ->
-          %{
-            "chat_id" => chat_id,
-            "inserted_at" => %{"$lt" => before_inserted_at}
-          }
+          case normalized_joined_at do
+            nil ->
+              Map.put(new_base_query, "inserted_at", %{"$lt" => before_inserted_at})
+
+            _ ->
+              Map.put(new_base_query, "inserted_at", %{
+                "$gte" => normalized_joined_at,
+                "$lt" => before_inserted_at
+              })
+          end
       end
 
     sort_order = %{"inserted_at" => -1, "msg_id" => -1}
@@ -102,4 +147,7 @@ defmodule Pomoroom.Messages.MessageRepository do
   defp get_changes_from_changeset(args) do
     MessageSchema.message_changeset(args).changes
   end
+
+  defp normalize_joined_at(%DateTime{} = datetime), do: DateTime.to_naive(datetime)
+  defp normalize_joined_at(value), do: value
 end

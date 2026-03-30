@@ -13,7 +13,12 @@ defmodule Pomoroom.Chats.ChatRepository do
   end
 
   def get_chat_ids(collection, user) do
-    query = %{"members" => user}
+    query = %{
+      "$or" => [
+        %{"members" => user},
+        %{"members.user_id" => user}
+      ]
+    }
 
     case Mongo.find(:mongo, collection, query) |> Enum.to_list() do
       [] ->

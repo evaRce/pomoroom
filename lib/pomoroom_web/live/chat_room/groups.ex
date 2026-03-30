@@ -1,4 +1,5 @@
 defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
+  import Phoenix.Component, only: [assign: 3]
   import Phoenix.LiveView, only: [push_event: 3]
 
   alias Phoenix.PubSub
@@ -77,6 +78,18 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
         {:noreply, socket}
 
       {:ok, _result} ->
+        payload =
+          case GroupChats.get_by("name", group_name) do
+            {:ok, group_chat} -> %{group_name: group_name, chat_id: group_chat.chat_id}
+            {:error, _reason} -> %{group_name: group_name}
+          end
+
+        PubSub.broadcast(
+          Pomoroom.PubSub,
+          "user:#{new_member}",
+          {:new_group_member_added, payload}
+        )
+
         handle_member_update(group_name, user, socket)
     end
   end
@@ -98,10 +111,36 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
     end
   end
 
+  def handle_new_group_member_added(%{chat_id: chat_id}, socket) do
+    socket = ensure_group_chat_subscription(socket, chat_id)
+    push_refresh_conversations(socket)
+  end
+
+  def handle_new_group_member_added(%{group_name: group_name}, socket) do
+    case GroupChats.get_by("name", group_name) do
+      {:ok, group_chat} ->
+        socket = ensure_group_chat_subscription(socket, group_chat.chat_id)
+        push_refresh_conversations(socket)
+
+      {:error, _reason} ->
+        {:noreply, socket}
+    end
+  end
+
   defp get_contacts_for_group(contacts, user_nickname, group_name) do
     case GroupChats.get_by("name", group_name) do
       {:ok, group_chat} ->
-        members_set = MapSet.new(group_chat.members)
+        members_set =
+          (group_chat.members || [])
+          |> Enum.map(fn member ->
+            cond do
+              is_map(member) -> member["user_id"]
+              is_binary(member) -> member
+              true -> nil
+            end
+          end)
+          |> Enum.reject(&is_nil/1)
+          |> MapSet.new()
 
         Enum.map(contacts, fn contact ->
           {to_user, from_user} =
@@ -150,6 +189,28 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
             {:noreply, socket}
         end
     end
+  end
+
+  defp ensure_group_chat_subscription(socket, chat_id) do
+    subscribed_chat_ids = Map.get(socket.assigns, :subscribed_chat_ids, MapSet.new())
+
+    if MapSet.member?(subscribed_chat_ids, chat_id) do
+      socket
+    else
+      Runtime.ensure_chat_server_exists(chat_id)
+      ChatServer.join_chat(chat_id)
+      PubSub.subscribe(Pomoroom.PubSub, "chat:#{chat_id}")
+      assign(socket, :subscribed_chat_ids, MapSet.put(subscribed_chat_ids, chat_id))
+    end
+  end
+
+  defp push_refresh_conversations(socket) do
+    payload = %{
+      event_name: "refresh_conversations",
+      event_data: %{}
+    }
+
+    {:noreply, push_event(socket, "react", payload)}
   end
 
   defp get_contact_list_for_group(group_name, user) do

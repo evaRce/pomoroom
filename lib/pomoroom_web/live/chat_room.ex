@@ -18,26 +18,41 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
       |> PhoenixLiveSession.maybe_subscribe(session)
       |> put_session_assigns(session)
 
+    subscribed_chat_ids = MapSet.new()
+
     if connected?(socket) do
       user_nickname = socket.assigns.user_info.nickname
       PubSub.subscribe(Pomoroom.PubSub, "friend_request:#{user_nickname}")
+      PubSub.subscribe(Pomoroom.PubSub, "user:#{user_nickname}")
       all_chats_id = Users.get_all_my_chats_id(user_nickname)
 
-      Enum.each(all_chats_id, fn chat_id ->
+      Enum.each(Enum.uniq(all_chats_id), fn chat_id ->
         Runtime.ensure_chat_server_exists(chat_id)
         ChatServer.join_chat(chat_id)
         PubSub.subscribe(Pomoroom.PubSub, "chat:#{chat_id}")
       end)
+
+      subscribed_chat_ids = MapSet.new(all_chats_id)
+      socket = assign(socket, :subscribed_chat_ids, subscribed_chat_ids)
+      socket = Calls.reset_call_state(socket)
+
+      {:ok, socket, layout: false}
+    else
+      socket =
+        socket
+        |> assign(:subscribed_chat_ids, subscribed_chat_ids)
+        |> Calls.reset_call_state()
+
+      {:ok, socket, layout: false}
     end
-
-    socket = Calls.reset_call_state(socket)
-
-    # IO.inspect(socket, structs: false, limit: :infinity)
-    {:ok, socket, layout: false}
   end
 
   def handle_info({:new_message, args}, socket) do
     Chats.handle_new_message_info(args, socket)
+  end
+
+  def handle_info({:new_group_member_added, payload}, socket) do
+    Groups.handle_new_group_member_added(payload, socket)
   end
 
   # Las request_offers solo le llegan al que INICIO la llamada
@@ -178,7 +193,14 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         },
         socket
       ) do
-    Chats.handle_load_older_messages(chat_id, before_inserted_at, before_db_id, socket)
+    joined_at =
+      if socket.assigns[:chat_id] == chat_id do
+        socket.assigns[:current_group_joined_at]
+      else
+        nil
+      end
+
+    Chats.handle_load_older_messages(chat_id, before_inserted_at, before_db_id, joined_at, socket)
   end
 
   def handle_event(
@@ -186,7 +208,14 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         %{"chat_id" => chat_id, "before_inserted_at" => before_inserted_at},
         socket
       ) do
-    Chats.handle_load_older_messages(chat_id, before_inserted_at, socket)
+    joined_at =
+      if socket.assigns[:chat_id] == chat_id do
+        socket.assigns[:current_group_joined_at]
+      else
+        nil
+      end
+
+    Chats.handle_load_older_messages(chat_id, before_inserted_at, nil, joined_at, socket)
   end
 
   def handle_event(

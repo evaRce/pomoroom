@@ -30,8 +30,8 @@ defmodule Pomoroom.Messages.MessageService do
 
   def get_by_id(msg_id), do: MessageRepository.get_by_id(msg_id)
 
-  def get_chat_messages(chat_id, limit \\ :all),
-    do: MessageRepository.get_chat_messages(chat_id, limit)
+  def get_chat_messages(chat_id, limit \\ :all, joined_at \\ nil),
+    do: MessageRepository.get_chat_messages(chat_id, limit, joined_at)
 
   def get_chat_messages_before(chat_id, before_inserted_at, limit),
     do: MessageRepository.get_chat_messages_before(chat_id, before_inserted_at, limit)
@@ -39,6 +39,16 @@ defmodule Pomoroom.Messages.MessageService do
   def get_chat_messages_before(chat_id, before_inserted_at, limit, before_db_id),
     do:
       MessageRepository.get_chat_messages_before(chat_id, before_inserted_at, limit, before_db_id)
+
+  def get_chat_messages_before(chat_id, before_inserted_at, limit, before_db_id, joined_at),
+    do:
+      MessageRepository.get_chat_messages_before(
+        chat_id,
+        before_inserted_at,
+        limit,
+        before_db_id,
+        joined_at
+      )
 
   defp parse_duplicate_key_error(errmsg) do
     cond do

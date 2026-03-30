@@ -26,6 +26,10 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   const getMessageUniqueKey = (message: any) => {
     const data = message?.data || {};
 
+    if (data.msg_id) {
+      return `msg:${data.msg_id}`;
+    }
+
     if (data.db_id) {
       return `db:${data.db_id}`;
     }

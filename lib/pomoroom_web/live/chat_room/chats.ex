@@ -71,12 +71,32 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
 
       {:ok, group_chat} ->
         Runtime.ensure_chat_server_exists(group_chat.chat_id)
-        messages = ChatServer.get_messages(group_chat.chat_id, @initial_messages_limit)
 
         case GroupChats.get_members(group_name) do
           {:ok, members_data} ->
+            current_user_member =
+              Enum.find(members_data, fn member ->
+                (Map.get(member, :nickname) || Map.get(member, "nickname")) == user.nickname
+              end)
+
+            joined_at =
+              if current_user_member do
+                Map.get(current_user_member, :joined_at) ||
+                  Map.get(current_user_member, "joined_at")
+              else
+                nil
+              end
+
+            messages =
+              ChatServer.get_messages(group_chat.chat_id, @initial_messages_limit, joined_at)
+
             is_admin = GroupChats.is_admin?(group_name, user.nickname)
             user_image_map_by_nickname = build_user_image_map_by_nickname(messages)
+
+            socket =
+              socket
+              |> assign(:chat_id, group_chat.chat_id)
+              |> assign(:current_group_joined_at, joined_at)
 
             messages_with_images_user =
               Enum.map(messages, fn msg ->
@@ -134,6 +154,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
   end
 
   def handle_load_older_messages(chat_id, before_inserted_at, before_db_id, socket) do
+    handle_load_older_messages(chat_id, before_inserted_at, before_db_id, nil, socket)
+  end
+
+  def handle_load_older_messages(chat_id, before_inserted_at, before_db_id, joined_at, socket) do
     case parse_inserted_at(before_inserted_at) do
       {:ok, parsed_inserted_at} ->
         older_messages =
@@ -141,7 +165,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
             chat_id,
             parsed_inserted_at,
             @older_messages_limit,
-            before_db_id
+            before_db_id,
+            joined_at
           )
 
         user_image_map_by_nickname = build_user_image_map_by_nickname(older_messages)
@@ -198,6 +223,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
           end)
 
         socket = assign(socket, :chat_id, private_chat.chat_id)
+        socket = assign(socket, :current_group_joined_at, nil)
 
         payload = %{
           event_name: "open_private_chat",

@@ -43,4 +43,10 @@ export function useUserContactsAndGroupsEvents({
       addEvent(eventName, eventData.error);
     }
   }, [eventData.error]);
+
+  useEffect(() => {
+    if (eventName === "refresh_conversations") {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData]);
 }
