@@ -17,6 +17,13 @@ defmodule Pomoroom.ChatRoom.ChatServer do
     GenServer.call(via_tuple(chat_id), {:get_messages, limit})
   end
 
+  def get_messages_before(chat_id, before_inserted_at, limit, before_db_id \\ nil) do
+    GenServer.call(
+      via_tuple(chat_id),
+      {:get_messages_before, before_inserted_at, limit, before_db_id}
+    )
+  end
+
   def join_chat(chat_id) do
     GenServer.call(via_tuple(chat_id), :join_chat)
   end
@@ -55,7 +62,9 @@ defmodule Pomoroom.ChatRoom.ChatServer do
       new_state = %{state | messages: messages_from_db, first_load: false}
       {:reply, messages_from_db, new_state}
     else
-      {:reply, state.messages, state}
+      {:ok, messages_from_db} = Messages.get_chat_messages(state.chat_id)
+      new_state = %{state | messages: messages_from_db}
+      {:reply, messages_from_db, new_state}
     end
   end
 
@@ -65,14 +74,27 @@ defmodule Pomoroom.ChatRoom.ChatServer do
       new_state = %{state | messages: limited_messages_from_db, first_load: false}
       {:reply, limited_messages_from_db, new_state}
     else
-      limited_messages = state.messages |> Enum.reverse() |> Enum.take(limit) |> Enum.reverse()
-      {:reply, limited_messages, state}
+      if length(state.messages) < limit do
+        {:ok, limited_messages_from_db} = Messages.get_chat_messages(state.chat_id, limit)
+        new_state = %{state | messages: limited_messages_from_db}
+        {:reply, limited_messages_from_db, new_state}
+      else
+        limited_messages = state.messages |> Enum.reverse() |> Enum.take(limit) |> Enum.reverse()
+        {:reply, limited_messages, state}
+      end
     end
   end
 
   def handle_call(:join_chat, _from, state) do
     PubSub.subscribe(Pomoroom.PubSub, chat_topic(state.chat_id))
     {:reply, :ok, state}
+  end
+
+  def handle_call({:get_messages_before, before_inserted_at, limit, before_db_id}, _from, state) do
+    {:ok, older_messages} =
+      Messages.get_chat_messages_before(state.chat_id, before_inserted_at, limit, before_db_id)
+
+    {:reply, older_messages, state}
   end
 
   def handle_info({:new_message, _msg_with_image}, state) do

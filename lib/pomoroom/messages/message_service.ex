@@ -23,13 +23,22 @@ defmodule Pomoroom.Messages.MessageService do
 
   def delete_message(msg_id), do: MessageRepository.delete(msg_id)
 
-  def delete_all_belongs_to_chat(chat_id), do: MessageRepository.delete_all_belongs_to_chat(chat_id)
+  def delete_all_belongs_to_chat(chat_id),
+    do: MessageRepository.delete_all_belongs_to_chat(chat_id)
 
   def delete_all_messages(), do: MessageRepository.delete_all()
 
   def get_by_id(msg_id), do: MessageRepository.get_by_id(msg_id)
 
-  def get_chat_messages(chat_id, limit \\ :all), do: MessageRepository.get_chat_messages(chat_id, limit)
+  def get_chat_messages(chat_id, limit \\ :all),
+    do: MessageRepository.get_chat_messages(chat_id, limit)
+
+  def get_chat_messages_before(chat_id, before_inserted_at, limit),
+    do: MessageRepository.get_chat_messages_before(chat_id, before_inserted_at, limit)
+
+  def get_chat_messages_before(chat_id, before_inserted_at, limit, before_db_id),
+    do:
+      MessageRepository.get_chat_messages_before(chat_id, before_inserted_at, limit, before_db_id)
 
   defp parse_duplicate_key_error(errmsg) do
     cond do

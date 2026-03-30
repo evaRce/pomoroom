@@ -51,10 +51,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
   def handle_info(
         {:friend_request_change_status,
-          %{
-            event_name: "update_contact_status_to_accepted",
-            event_data: %{request: _request, new_status: "accepted"}
-          } = payload, chat_id},
+         %{
+           event_name: "update_contact_status_to_accepted",
+           event_data: %{request: _request, new_status: "accepted"}
+         } = payload, chat_id},
         socket
       ) do
     FriendRequests.handle_friend_request_accepted(payload, chat_id, socket)
@@ -62,10 +62,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
   def handle_info(
         {:friend_request_change_status,
-          %{
-            event_name: "open_rejected_request_received",
-            event_data: %{rejected_request: %{to_user: _to_user, status: "rejected"}}
-          } = payload},
+         %{
+           event_name: "open_rejected_request_received",
+           event_data: %{rejected_request: %{to_user: _to_user, status: "rejected"}}
+         } = payload},
         socket
       ) do
     FriendRequests.handle_friend_request_rejected(payload, socket)
@@ -80,7 +80,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
   def handle_info(
         {:new_ice_candidate,
-          %{"candidate" => _candidate, "from_user" => _from_user, "to_user" => _to_user} = payload},
+         %{"candidate" => _candidate, "from_user" => _from_user, "to_user" => _to_user} = payload},
         socket
       ) do
     Calls.handle_new_ice_candidate_info(socket, payload)
@@ -88,11 +88,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
   def handle_info(
         {:new_sdp_offer,
-          %{
-            "description" => %{"sdp" => _sdp, "type" => "offer"},
-            "from_user" => _from_user,
-            "to_user" => _to_user
-          } = payload},
+         %{
+           "description" => %{"sdp" => _sdp, "type" => "offer"},
+           "from_user" => _from_user,
+           "to_user" => _to_user
+         } = payload},
         socket
       ) do
     Calls.handle_new_sdp_offer_info(socket, payload)
@@ -100,11 +100,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
   def handle_info(
         {:new_answer,
-          %{
-            "description" => %{"sdp" => _sdp, "type" => "answer"},
-            "from_user" => _from_user,
-            "to_user" => _to_user
-          } = payload},
+         %{
+           "description" => %{"sdp" => _sdp, "type" => "answer"},
+           "from_user" => _from_user,
+           "to_user" => _to_user
+         } = payload},
         socket
       ) do
     Calls.handle_new_answer_info(socket, payload)
@@ -167,6 +167,26 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         %{assigns: %{user_info: user}} = socket
       ) do
     Chats.handle_send_group_message(message, to_group_name, user, socket)
+  end
+
+  def handle_event(
+        "action.load_older_messages",
+        %{
+          "chat_id" => chat_id,
+          "before_inserted_at" => before_inserted_at,
+          "before_db_id" => before_db_id
+        },
+        socket
+      ) do
+    Chats.handle_load_older_messages(chat_id, before_inserted_at, before_db_id, socket)
+  end
+
+  def handle_event(
+        "action.load_older_messages",
+        %{"chat_id" => chat_id, "before_inserted_at" => before_inserted_at},
+        socket
+      ) do
+    Chats.handle_load_older_messages(chat_id, before_inserted_at, socket)
   end
 
   def handle_event(

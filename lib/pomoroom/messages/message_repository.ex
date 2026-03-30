@@ -39,7 +39,7 @@ defmodule Pomoroom.Messages.MessageRepository do
 
   def get_chat_messages(chat_id, limit \\ :all) do
     msg_query = %{"chat_id" => chat_id}
-    sort_order = %{"inserted_at" => -1}
+    sort_order = %{"inserted_at" => -1, "msg_id" => -1}
 
     find_messages =
       case limit do
@@ -52,11 +52,51 @@ defmodule Pomoroom.Messages.MessageRepository do
 
     messages =
       Enum.map(find_messages, fn message ->
-        Map.delete(message, "_id")
+        db_id = message["_id"] |> to_string()
+
+        message
+        |> Map.delete("_id")
         |> get_changes_from_changeset()
+        |> Map.put(:db_id, db_id)
       end)
 
     {:ok, Enum.reverse(messages)}
+  end
+
+  def get_chat_messages_before(chat_id, before_inserted_at, limit, before_db_id \\ nil) do
+    msg_query =
+      case BSON.ObjectId.decode(before_db_id || "") do
+        {:ok, object_id} ->
+          %{
+            "chat_id" => chat_id,
+            "$or" => [
+              %{"inserted_at" => %{"$lt" => before_inserted_at}},
+              %{"inserted_at" => before_inserted_at, "_id" => %{"$lt" => object_id}}
+            ]
+          }
+
+        :error ->
+          %{
+            "chat_id" => chat_id,
+            "inserted_at" => %{"$lt" => before_inserted_at}
+          }
+      end
+
+    sort_order = %{"inserted_at" => -1, "msg_id" => -1}
+
+    messages =
+      Mongo.find(:mongo, "messages", msg_query, sort: sort_order, limit: limit)
+      |> Enum.map(fn message ->
+        db_id = message["_id"] |> to_string()
+
+        message
+        |> Map.delete("_id")
+        |> get_changes_from_changeset()
+        |> Map.put(:db_id, db_id)
+      end)
+      |> Enum.reverse()
+
+    {:ok, messages}
   end
 
   defp get_changes_from_changeset(args) do

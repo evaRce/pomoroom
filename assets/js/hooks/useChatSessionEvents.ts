@@ -68,4 +68,10 @@ export function useChatSessionEvents({
       addEvent(eventName, eventData);
     }
   }, [eventData.message]);
+
+  useEffect(() => {
+    if (eventName === "show_older_messages") {
+      addEvent(eventName, eventData);
+    }
+  }, [eventData.messages, eventData.has_more]);
 }

@@ -40,6 +40,7 @@ export function useOutgoingLiveViewActions({
     const newSdpOffer = getEventData("new_sdp_offer");
     const newAnswer = getEventData("new_answer");
     const endCall = getEventData("end_private_call");
+    const loadOlderMessages = getEventData("load_older_messages");
 
     if (contactToDelete) {
       pushEventToLiveView("action.delete_contact", contactToDelete);
@@ -131,6 +132,10 @@ export function useOutgoingLiveViewActions({
     if (endCall) {
       pushEventToLiveView("action.end_private_call", endCall);
       removeEvent("end_private_call");
+    }
+    if (loadOlderMessages) {
+      pushEventToLiveView("action.load_older_messages", loadOlderMessages);
+      removeEvent("load_older_messages");
     }
   }, [
     getEventData,

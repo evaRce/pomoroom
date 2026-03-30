@@ -13,4 +13,8 @@ defmodule Pomoroom.Messages do
   defdelegate get_by_id(msg_id), to: MessageService
   defdelegate get_chat_messages(chat_id), to: MessageService
   defdelegate get_chat_messages(chat_id, limit), to: MessageService
+  defdelegate get_chat_messages_before(chat_id, before_inserted_at, limit), to: MessageService
+
+  defdelegate get_chat_messages_before(chat_id, before_inserted_at, limit, before_db_id),
+    to: MessageService
 end

@@ -9,7 +9,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
   alias Pomoroom.Users
   alias PomoroomWeb.ChatLive.ChatRoom.Runtime
 
-  @messages_limit 20
+  @initial_messages_limit 20
+  @older_messages_limit 15
 
   def handle_new_message_info(args, socket) do
     payload = %{
@@ -70,7 +71,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
 
       {:ok, group_chat} ->
         Runtime.ensure_chat_server_exists(group_chat.chat_id)
-        messages = ChatServer.get_messages(group_chat.chat_id, @messages_limit)
+        messages = ChatServer.get_messages(group_chat.chat_id, @initial_messages_limit)
 
         case GroupChats.get_members(group_name) do
           {:ok, members_data} ->
@@ -88,9 +89,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
             payload = %{
               event_name: "open_group_chat",
               event_data: %{
+                chat_id: group_chat.chat_id,
                 is_admin: is_admin,
                 group_data: group_chat,
                 messages: messages_with_images_user,
+                has_more: length(messages_with_images_user) == @initial_messages_limit,
                 members_data: members_data
               }
             }
@@ -126,6 +129,46 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
     end
   end
 
+  def handle_load_older_messages(chat_id, before_inserted_at, socket) do
+    handle_load_older_messages(chat_id, before_inserted_at, nil, socket)
+  end
+
+  def handle_load_older_messages(chat_id, before_inserted_at, before_db_id, socket) do
+    case parse_inserted_at(before_inserted_at) do
+      {:ok, parsed_inserted_at} ->
+        older_messages =
+          ChatServer.get_messages_before(
+            chat_id,
+            parsed_inserted_at,
+            @older_messages_limit,
+            before_db_id
+          )
+
+        user_image_map_by_nickname = build_user_image_map_by_nickname(older_messages)
+
+        older_messages_with_images_user =
+          Enum.map(older_messages, fn msg ->
+            %{
+              data: msg,
+              image_user: Map.get(user_image_map_by_nickname, msg.from_user)
+            }
+          end)
+
+        payload = %{
+          event_name: "show_older_messages",
+          event_data: %{
+            messages: older_messages_with_images_user,
+            has_more: length(older_messages_with_images_user) == @older_messages_limit
+          }
+        }
+
+        {:noreply, push_event(socket, "react", payload)}
+
+      _ ->
+        {:noreply, socket}
+    end
+  end
+
   defp send_message_to_chat(chat_id, message, user, socket) do
     case ChatServer.send_message(chat_id, user.nickname, user.image_profile, message) do
       {:ok, _msg} ->
@@ -140,7 +183,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
   defp open_accepted_private_chat(private_chat, contact_name, user, socket) do
     case Users.get_by("nickname", contact_name) do
       {:ok, to_user_data} ->
-        messages = ChatServer.get_messages(private_chat.chat_id, @messages_limit)
+        messages = ChatServer.get_messages(private_chat.chat_id, @initial_messages_limit)
 
         messages_with_images_user =
           Enum.map(messages, fn msg ->
@@ -159,9 +202,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
         payload = %{
           event_name: "open_private_chat",
           event_data: %{
+            chat_id: private_chat.chat_id,
             from_user_data: user,
             to_user_data: to_user_data,
-            messages: messages_with_images_user
+            messages: messages_with_images_user,
+            has_more: length(messages_with_images_user) == @initial_messages_limit
           }
         }
 
@@ -205,4 +250,19 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
         %{event_name: "open_rejected_request_send", event_data: %{rejected_request: request}}
     end
   end
+
+  defp parse_inserted_at(inserted_at) when is_binary(inserted_at) do
+    case NaiveDateTime.from_iso8601(inserted_at) do
+      {:ok, naive_datetime} ->
+        {:ok, naive_datetime}
+
+      {:error, _reason} ->
+        case DateTime.from_iso8601(inserted_at) do
+          {:ok, datetime, _offset} -> {:ok, DateTime.to_naive(datetime)}
+          {:error, _} -> {:error, :invalid_inserted_at}
+        end
+    end
+  end
+
+  defp parse_inserted_at(_), do: {:error, :invalid_inserted_at}
 end

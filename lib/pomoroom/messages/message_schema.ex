@@ -1,7 +1,6 @@
 defmodule Pomoroom.Messages.MessageSchema do
   use Ecto.Schema
   import Ecto.Changeset
-  @max_num 3000
 
   schema "messages" do
     field :msg_id, :string
@@ -44,7 +43,6 @@ defmodule Pomoroom.Messages.MessageSchema do
   end
 
   def get_msg_id() do
-    :rand.uniform(@max_num)
-    |> Integer.to_string()
+    Ecto.UUID.generate()
   end
 end
