@@ -5,3 +5,6 @@
 /* This file is for your main application CSS */
 /* @import '~antd/dist/antd.css'; */
 @import 'antd/dist/reset.css';
+
+/* Component Styles */
+@import '../js/components/chat_room/chat_panel/body/MessageItem.module.css';

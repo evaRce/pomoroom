@@ -19,26 +19,24 @@ export default function MessageItem({
     return `${hours}:${minutes}`;
   };
 
-  const messagePosition =
-    message.data.from_user === userLogin.nickname ? "chat-end" : "chat-start";
+  const isMyMessage = message.data.from_user === userLogin?.nickname;
+  const messagePosition = isMyMessage ? "chat-end" : "chat-start";
+  const bubbleClass = isMyMessage ? "message-bubble-mine" : "message-bubble-other";
 
   return (
     <div className={`chat ${messagePosition}`}>
       {!hideSenderIdentity && (
         <>
           <div className="chat-image avatar">
-            <Avatar className="bg-gray-50" src={message.image_user} size={45} />
+            <Avatar className="bg-gray-50/30" src={message.image_user} size={45} />
           </div>
           <div className="chat-header">{message.data.from_user}</div>
         </>
       )}
-      <div
-        className="chat-bubble"
-        style={{ maxWidth: "70%", wordWrap: "break-word" }}
-      >
+      <div className={`chat-bubble ${bubbleClass}`}>
         {message.data.text}
-        <div style={{ textAlign: "right" }}>
-          <time className="text-xs opacity-50">
+        <div className="message-time">
+          <time className="text-xs">
             {setTime(message.data.inserted_at)}
           </time>
         </div>
