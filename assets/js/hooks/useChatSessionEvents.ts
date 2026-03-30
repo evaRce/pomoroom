@@ -19,7 +19,6 @@ export function useChatSessionEvents({
 }: UseChatSessionEventsParams) {
   useEffect(() => {
     if (eventName === "open_private_chat") {
-      console.log("OPEN PRIVATE CHAT LLEGO");
       addEvent(eventName, eventData);
       addEvent("show_list_messages", eventData);
       if (isVisibleDetail) {

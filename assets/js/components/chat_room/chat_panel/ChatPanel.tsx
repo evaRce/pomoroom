@@ -19,6 +19,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   const isPrependingOlderRef = useRef(false);
   const [userLogin, setUserLogin] = useState<any>(null);
   const [currentChatId, setCurrentChatId] = useState<string>("");
+  const [isPrivateChat, setIsPrivateChat] = useState(false);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [hasMoreOlder, setHasMoreOlder] = useState(true);
 
@@ -58,6 +59,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
     if (msgs) {
       setMessages(buildUniqueMessagesAndSeedIds(msgs.messages || []));
       setCurrentChatId(msgs.chat_id || "");
+      setIsPrivateChat(!msgs.group_data);
       const hasMoreFromServer = typeof msgs.has_more === "boolean" ? msgs.has_more : false;
       setHasMoreOlder(hasMoreFromServer);
       setIsLoadingOlder(false);
@@ -186,6 +188,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
               key={getMessageUniqueKey(message)}
               message={message}
               userLogin={userLogin}
+              hideSenderIdentity={isPrivateChat}
             />
           ))}
         <div></div>

@@ -14,16 +14,15 @@ export default function ChatHeader({ userLogin, isVisibleDetail }: ChatHeaderPro
   const { addEvent, getEventData } = useEventContext() as any;
   const [chatData, setChatData] = useState<any>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isGroup, setIsGroup] = useState(false);
   const [checkAdmin, setCheckAdmin] = useState<any>({});
   const [chatName, setChatName] = useState("");
   const [chatImage, setChatImage] = useState("");
+  const isGroupChat = Boolean(chatData?.group_data);
 
   useEffect(() => {
     const privateChat = getEventData("open_private_chat");
 
     if (privateChat) {
-      setIsGroup(false);
       setChatData(privateChat);
     }
   }, [getEventData("open_private_chat")]);
@@ -31,7 +30,6 @@ export default function ChatHeader({ userLogin, isVisibleDetail }: ChatHeaderPro
   useEffect(() => {
     const groupChat = getEventData("open_group_chat");
     if (groupChat) {
-      setIsGroup(true);
       setChatData(groupChat);
     }
   }, [getEventData("open_group_chat")]);
@@ -54,13 +52,13 @@ export default function ChatHeader({ userLogin, isVisibleDetail }: ChatHeaderPro
   const showUserDetails = () => {
     addEvent("toggle_detail_visibility", {
       is_visible: !isVisibleDetail,
-      is_group: isGroup,
+      is_group: isGroupChat,
       group_name: chatName,
     });
     addEvent("show_detail", {
       chat_name: chatName,
       image: chatImage,
-      is_group: isGroup,
+      is_group: isGroupChat,
     });
   };
 
