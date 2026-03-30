@@ -183,14 +183,19 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
         onScroll={handleMessagesScroll}
       >
         {messages.length > 0 &&
-          messages.map((message) => (
-            <MessageItem
-              key={getMessageUniqueKey(message)}
-              message={message}
-              userLogin={userLogin}
-              hideSenderIdentity={isPrivateChat}
-            />
-          ))}
+          messages.map((message) => {
+            const isMyMessage = message.data.from_user === userLogin?.nickname;
+            const shouldHideIdentity = isPrivateChat || (isMyMessage && !isPrivateChat);
+            
+            return (
+              <MessageItem
+                key={getMessageUniqueKey(message)}
+                message={message}
+                userLogin={userLogin}
+                hideSenderIdentity={shouldHideIdentity}
+              />
+            );
+          })}
         <div></div>
       </main>
       <ChatFooter addMessage={addMessage} />
