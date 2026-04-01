@@ -14,9 +14,14 @@ defmodule Pomoroom.Chats.ChatRepository do
 
   def get_chat_ids(collection, user) do
     query = %{
-      "$or" => [
-        %{"members" => user},
-        %{"members.user_id" => user}
+      "$and" => [
+        %{
+          "$or" => [
+            %{"members" => %{"$in" => [user]}},
+            %{"members" => %{"$elemMatch" => %{"user_id" => user}}}
+          ]
+        },
+        %{"deleted_by" => %{"$nin" => [user]}}
       ]
     }
 

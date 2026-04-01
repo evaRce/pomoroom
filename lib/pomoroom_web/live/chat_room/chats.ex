@@ -208,7 +208,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
   defp open_accepted_private_chat(private_chat, contact_name, user, socket) do
     case Users.get_by("nickname", contact_name) do
       {:ok, to_user_data} ->
-        messages = ChatServer.get_messages(private_chat.chat_id, @initial_messages_limit)
+        joined_at = PrivateChats.get_member_joined_at(private_chat, user.nickname)
+        messages = ChatServer.get_messages(private_chat.chat_id, @initial_messages_limit, joined_at)
 
         messages_with_images_user =
           Enum.map(messages, fn msg ->
@@ -223,7 +224,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
           end)
 
         socket = assign(socket, :chat_id, private_chat.chat_id)
-        socket = assign(socket, :current_group_joined_at, nil)
+        socket = assign(socket, :current_group_joined_at, joined_at)
 
         payload = %{
           event_name: "open_private_chat",

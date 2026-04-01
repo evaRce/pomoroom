@@ -17,7 +17,6 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
 
         case FriendRequestRepository.create(friend_request_changeset.changes) do
           {:ok, _result} ->
-            PrivateChats.ensure_exists(to_user, from_user)
             {:ok, friend_request_changeset.changes}
 
           {:error, %Mongo.WriteError{write_errors: [%{"code" => 11000, "errmsg" => _errmsg}]}} ->
@@ -32,7 +31,10 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
   def restore_contact_if_request_exists(to_user, from_user, who_restore) do
     deleted_by = if who_restore == from_user, do: from_user, else: to_user
 
-    query = %{"members" => [to_user, from_user], "deleted_by" => %{"$in" => [deleted_by]}}
+    query = %{
+      "sorted_members" => Enum.sort([to_user, from_user]),
+      "deleted_by" => %{"$in" => [deleted_by]}
+    }
 
     case Mongo.find_one(:mongo, "private_chats", query) do
       nil ->
@@ -45,16 +47,18 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
 
           {:ok, request} ->
             PrivateChats.update_restore_deleted_contact(chat, who_restore)
-            {:ok, request}
+            FriendRequestRepository.update_request_status(to_user, from_user, "accepted")
+            {:ok, %{request | status: "accepted"}}
         end
     end
   end
 
   def accept_friend_request(to_user, from_user) do
-    case get(to_user, from_user) do
-      {:ok, %{status: "pending"}} ->
-        FriendRequestRepository.update_request_status(to_user, from_user, "accepted")
-        {:ok, "Petición de amistad aceptada"}
+    case get_request_any_direction(to_user, from_user) do
+      {:ok, %{status: "pending"} = request} ->
+        FriendRequestRepository.update_request_status(request.to_user, request.from_user, "accepted")
+        PrivateChats.ensure_exists(request.to_user, request.from_user)
+        {:ok, %{request | status: "accepted"}}
 
       {:ok, _request} ->
         {:error, %{error: "Petición de amistad ya aceptada"}}
@@ -78,12 +82,25 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
 
   def reject_friend_request(to_user, from_user) do
     case get(to_user, from_user) do
-      {:ok, %{status: "pending"}} ->
+      {:ok, %{status: "pending"} = request} ->
         FriendRequestRepository.update_request_status(to_user, from_user, "rejected")
-        {:ok, "Petición de amistad rechazada"}
+        {:ok, %{request | status: "rejected"}}
 
       {:ok, _request} ->
         {:error, %{error: "Petición de amistad ya rechazada"}}
+
+      {:error, :not_found} ->
+        case get(from_user, to_user) do
+          {:ok, %{status: "pending"} = request} ->
+            FriendRequestRepository.update_request_status(from_user, to_user, "rejected")
+            {:ok, %{request | status: "rejected"}}
+
+          {:ok, _request} ->
+            {:error, %{error: "Petición de amistad ya rechazada"}}
+
+          {:error, reason} ->
+            {:error, reason}
+        end
 
       {:error, reason} ->
         {:error, reason}
@@ -91,6 +108,9 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
   end
 
   def delete_request(to_user, from_user), do: FriendRequestRepository.delete(to_user, from_user)
+
+  def delete_request_between_users(user1, user2),
+    do: FriendRequestRepository.delete_between_users(user1, user2)
 
   def delete_all_request(), do: FriendRequestRepository.delete_all()
 
@@ -124,6 +144,13 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
     case is_owner_request?(user1, user2) do
       true -> {user1, user2}
       false -> {user2, user1}
+    end
+  end
+
+  defp get_request_any_direction(to_user, from_user) do
+    case get(to_user, from_user) do
+      {:error, :not_found} -> get(from_user, to_user)
+      result -> result
     end
   end
 

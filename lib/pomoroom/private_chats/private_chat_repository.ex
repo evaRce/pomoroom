@@ -22,7 +22,7 @@ defmodule Pomoroom.PrivateChats.PrivateChatRepository do
   end
 
   def get_by_members(to_user, from_user) do
-    query = %{"members" => [to_user, from_user]}
+    query = %{"sorted_members" => Enum.sort([to_user, from_user])}
 
     case Mongo.find_one(:mongo, "private_chats", query) do
       nil ->
@@ -34,17 +34,14 @@ defmodule Pomoroom.PrivateChats.PrivateChatRepository do
   end
 
   def get_existing_chat(to_user, from_user) do
-    query = %{
-      members: %{"$all" => [to_user, from_user]},
-      chat_id: %{"$exists" => true, "$ne" => nil}
-    }
+    query = %{"sorted_members" => Enum.sort([to_user, from_user])}
 
     case Mongo.find_one(:mongo, "private_chats", query) do
       nil ->
         nil
 
       chat when is_map(chat) ->
-        {:ok, get_changes_from_changeset(chat)}
+        get_changes_from_changeset(chat)
     end
   end
 
@@ -60,14 +57,36 @@ defmodule Pomoroom.PrivateChats.PrivateChatRepository do
   end
 
   def restore_deleted(chat, from_user) do
+    chat_id = Map.get(chat, "chat_id")
+    members_list = Map.get(chat, "members", [])
     now = NaiveDateTime.utc_now()
+    new_timestamp = DateTime.utc_now()
+
+    updated_members =
+      Enum.map(members_list, fn member ->
+        user_id = Map.get(member, "user_id") || Map.get(member, :user_id)
+
+        if user_id == from_user do
+          Map.put(member, "joined_at", new_timestamp)
+        else
+          member
+        end
+      end)
 
     Mongo.update_one(
       :mongo,
       "private_chats",
-      %{chat_id: Map.get(chat, "chat_id")},
-      %{"$pull" => %{deleted_by: from_user}, "$set" => %{updated_at: now}}
+      %{"chat_id" => chat_id},
+      %{
+        "$pull" => %{deleted_by: from_user},
+        "$set" => %{
+          "updated_at" => now,
+          "members" => updated_members
+        }
+      }
     )
+
+    :ok
   end
 
   defp get_changes_from_changeset(args) do

@@ -32,6 +32,18 @@ defmodule Pomoroom.FriendRequests.FriendRequestRepository do
     :ok
   end
 
+  def delete_between_users(user1, user2) do
+    request_query = %{
+      "$or" => [
+        %{"to_user" => user1, "from_user" => user2},
+        %{"to_user" => user2, "from_user" => user1}
+      ]
+    }
+
+    Mongo.delete_many(:mongo, "friend_requests", request_query)
+    :ok
+  end
+
   def delete_all() do
     Mongo.delete_many(:mongo, "friend_requests", %{})
   end

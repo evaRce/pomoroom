@@ -20,7 +20,7 @@ defmodule Pomoroom.Users.UserRepository do
 	end
 
 	def list_private_chats_for_user(nickname) do
-		query = %{"members" => nickname}
+		query = %{"members" => %{"$elemMatch" => %{"user_id" => nickname}}}
 		Mongo.find(:mongo, "private_chats", query) |> Enum.to_list()
 	end
 end

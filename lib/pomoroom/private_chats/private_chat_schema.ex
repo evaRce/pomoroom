@@ -4,7 +4,7 @@ defmodule Pomoroom.PrivateChats.PrivateChatSchema do
 
   schema "private_chats" do
     field :chat_id, :string
-    field :members, {:array, :string}
+    field :members, {:array, :map}
     field :sorted_members, {:array, :string}
     field :deleted_by, {:array, :string}
     field :inserted_at, :utc_datetime
@@ -36,9 +36,15 @@ defmodule Pomoroom.PrivateChats.PrivateChatSchema do
   end
 
   def private_chat_changeset(chat_id, members) do
+    now = DateTime.utc_now()
+
+    members_with_joined_at = Enum.map(members, fn member ->
+      %{"user_id" => member, "joined_at" => now}
+    end)
+
     private_chat = %{
       chat_id: chat_id,
-      members: members,
+      members: members_with_joined_at,
       sorted_members: Enum.sort(members),
       deleted_by: []
     }

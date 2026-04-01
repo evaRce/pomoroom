@@ -33,11 +33,19 @@ defmodule Pomoroom.PrivateChats.PrivateChatService do
       {:ok, chat} ->
         PrivateChatRepository.mark_deleted(chat_id, from_user)
         {:ok, updated_chat} = get(chat_id)
-        [member1, member2] = Map.get(chat, :members)
+        members_list = Map.get(chat, :members) || []
+        member_ids = Enum.map(members_list, fn member -> 
+          Map.get(member, :user_id) || Map.get(member, "user_id")
+        end)
 
-        if both_users_deleted?(updated_chat.deleted_by, [member1, member2]) do
+        if both_users_deleted?(updated_chat.deleted_by, member_ids) do
           Chats.delete_chat("private_chats", chat_id)
-          FriendRequests.delete_request(member1, member2)
+
+          case member_ids do
+            [user1, user2] -> FriendRequests.delete_request_between_users(user1, user2)
+            _ -> :ok
+          end
+
           Messages.delete_all_belongs_to_chat(chat_id)
         end
 
@@ -59,12 +67,26 @@ defmodule Pomoroom.PrivateChats.PrivateChatService do
         create_private_chat(to_user, from_user)
 
       existing_chat ->
-        existing_chat
+        {:ok, existing_chat}
     end
   end
 
   def update_restore_deleted_contact(chat, from_user) do
     PrivateChatRepository.restore_deleted(chat, from_user)
+  end
+
+  def get_member_joined_at(chat, member) when is_map(chat) and is_binary(member) do
+    members = Map.get(chat, :members) || Map.get(chat, "members") || []
+    
+    member_data = Enum.find(members, fn m ->
+      user_id = Map.get(m, :user_id) || Map.get(m, "user_id")
+      user_id == member
+    end)
+    
+    case member_data do
+      nil -> nil
+      data -> Map.get(data, :joined_at) || Map.get(data, "joined_at")
+    end
   end
 
   def both_users_deleted?(deleted_by, members) do

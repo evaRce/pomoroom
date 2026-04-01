@@ -65,12 +65,19 @@ defmodule Pomoroom.Users.UserService do
       chat_list ->
         contacts =
           Enum.flat_map(chat_list, fn chat ->
-            chat["members"]
-            |> Enum.filter(fn contact ->
-              contact != nickname and not Enum.member?(chat["deleted_by"], nickname)
+            members = Map.get(chat, "members", [])
+            deleted_by = Map.get(chat, "deleted_by", [])
+
+            members
+            |> Enum.map(fn member ->
+              Map.get(member, "user_id") || Map.get(member, :user_id)
             end)
-            |> Enum.map(fn contact ->
-              case get_by("nickname", contact) do
+            |> Enum.reject(&is_nil/1)
+            |> Enum.filter(fn contact_nickname ->
+              contact_nickname != nickname and not Enum.member?(deleted_by, nickname)
+            end)
+            |> Enum.map(fn contact_nickname ->
+              case get_by("nickname", contact_nickname) do
                 {:ok, user_info} -> user_info
                 {:error, _} -> nil
               end
