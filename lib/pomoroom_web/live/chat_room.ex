@@ -48,7 +48,14 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
   end
 
   def handle_info({:new_message, args}, socket) do
-    Chats.handle_new_message_info(args, socket)
+    current_chat_id = Map.get(socket.assigns, :chat_id)
+    message_chat_id = get_in(args, [:data, :chat_id]) || get_in(args, ["data", "chat_id"])
+
+    if not is_nil(current_chat_id) and current_chat_id == message_chat_id do
+      Chats.handle_new_message_info(args, socket)
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_info({:new_group_member_added, payload}, socket) do

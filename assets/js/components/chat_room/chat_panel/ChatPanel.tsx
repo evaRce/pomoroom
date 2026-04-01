@@ -99,10 +99,15 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   useEffect(() => {
     const msg = getEventData("show_message_to_send");
     if (msg) {
-      addMessage(msg.message);
+      const eventChatId = msg.message?.data?.chat_id || "";
+
+      if (eventChatId && eventChatId === currentChatId) {
+        addMessage(msg.message);
+      }
+
       removeEvent("show_message_to_send");
     }
-  }, [getEventData("show_message_to_send")]);
+  }, [getEventData("show_message_to_send"), currentChatId]);
 
 
   useEffect(() => {
