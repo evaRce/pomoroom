@@ -14,11 +14,19 @@ defmodule PomoroomWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :require_authenticated_user do
+    plug PomoroomWeb.Plugs.RequireAuthenticatedUser
+  end
+
   scope "/", PomoroomWeb do
     pipe_through :browser
     get "/", PageController, :home
     live "/login", HomeLive.Login
     live "/signup", HomeLive.SignUp
+  end
+
+  scope "/", PomoroomWeb do
+    pipe_through [:browser, :require_authenticated_user]
     live "/chat", ChatLive.ChatRoom
   end
 

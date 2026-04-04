@@ -13,37 +13,43 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
   use PomoroomWeb, :live_view
 
   def mount(_params, session, socket) do
-    socket =
-      socket
-      |> PhoenixLiveSession.maybe_subscribe(session)
-      |> put_session_assigns(session)
+    case authenticated_user_info(session) do
+      nil ->
+        {:ok, redirect(socket, to: "/login")}
 
-    subscribed_chat_ids = MapSet.new()
+      user_info ->
+        socket =
+          socket
+          |> PhoenixLiveSession.maybe_subscribe(session)
+          |> assign(:user_info, user_info)
 
-    if connected?(socket) do
-      user_nickname = socket.assigns.user_info.nickname
-      PubSub.subscribe(Pomoroom.PubSub, "friend_request:#{user_nickname}")
-      PubSub.subscribe(Pomoroom.PubSub, "user:#{user_nickname}")
-      all_chats_id = Users.get_all_my_chats_id(user_nickname)
+        subscribed_chat_ids = MapSet.new()
 
-      Enum.each(Enum.uniq(all_chats_id), fn chat_id ->
-        Runtime.ensure_chat_server_exists(chat_id)
-        ChatServer.join_chat(chat_id)
-        PubSub.subscribe(Pomoroom.PubSub, "chat:#{chat_id}")
-      end)
+        if connected?(socket) do
+          user_nickname = socket.assigns.user_info.nickname
+          PubSub.subscribe(Pomoroom.PubSub, "friend_request:#{user_nickname}")
+          PubSub.subscribe(Pomoroom.PubSub, "user:#{user_nickname}")
+          all_chats_id = Users.get_all_my_chats_id(user_nickname)
 
-      subscribed_chat_ids = MapSet.new(all_chats_id)
-      socket = assign(socket, :subscribed_chat_ids, subscribed_chat_ids)
-      socket = Calls.reset_call_state(socket)
+          Enum.each(Enum.uniq(all_chats_id), fn chat_id ->
+            Runtime.ensure_chat_server_exists(chat_id)
+            ChatServer.join_chat(chat_id)
+            PubSub.subscribe(Pomoroom.PubSub, "chat:#{chat_id}")
+          end)
 
-      {:ok, socket, layout: false}
-    else
-      socket =
-        socket
-        |> assign(:subscribed_chat_ids, subscribed_chat_ids)
-        |> Calls.reset_call_state()
+          subscribed_chat_ids = MapSet.new(all_chats_id)
+          socket = assign(socket, :subscribed_chat_ids, subscribed_chat_ids)
+          socket = Calls.reset_call_state(socket)
 
-      {:ok, socket, layout: false}
+          {:ok, socket, layout: false}
+        else
+          socket =
+            socket
+            |> assign(:subscribed_chat_ids, subscribed_chat_ids)
+            |> Calls.reset_call_state()
+
+          {:ok, socket, layout: false}
+        end
     end
   end
 
@@ -367,4 +373,17 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
   defp to_naive_datetime(%DateTime{} = datetime), do: DateTime.to_naive(datetime)
   defp to_naive_datetime(%NaiveDateTime{} = datetime), do: datetime
   defp to_naive_datetime(value), do: value
+
+  defp authenticated_user_info(session) do
+    case Map.get(session, "user_info") do
+      %{"nickname" => nickname} = user_info when is_binary(nickname) and nickname != "" ->
+        user_info
+
+      %{nickname: nickname} = user_info when is_binary(nickname) and nickname != "" ->
+        user_info
+
+      _ ->
+        nil
+    end
+  end
 end

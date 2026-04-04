@@ -6,6 +6,13 @@ import { ChatRoom, ChatRoomProps } from "./ChatRoom";
 export default {
 	mounted(this: any) {
 		const chatDomNode = document.getElementById('chat_container') as Element;
+		const isAuthenticated = chatDomNode?.getAttribute("data-authenticated") === "true";
+
+		if (!isAuthenticated) {
+			window.location.replace("/login");
+			return;
+		}
+
 		const rootElementChat = createRoot(chatDomNode);
 
 		render(rootElementChat, this.opts());
