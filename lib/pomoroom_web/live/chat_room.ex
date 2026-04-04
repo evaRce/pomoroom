@@ -358,6 +358,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     Calls.handle_end_private_call(socket, from_user, chat_id)
   end
 
+  def handle_event("action.logout", _payload, socket) do
+    {:noreply, redirect(socket, to: "/logout")}
+  end
+
   def put_session_assigns(socket, session) do
     socket
     |> assign(:user_info, Map.get(session, "user_info", %{}))

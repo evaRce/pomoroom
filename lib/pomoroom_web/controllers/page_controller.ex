@@ -6,4 +6,11 @@ defmodule PomoroomWeb.PageController do
     # so skip the default app layout.
     render(conn, :home, layout: false)
   end
+
+  def logout(conn, _params) do
+    conn
+    |> configure_session(drop: true)
+    |> clear_session()
+    |> redirect(to: "/login")
+  end
 end

@@ -43,6 +43,7 @@ export function useOutgoingLiveViewActions({
     const loadOlderMessages = getEventData("load_older_messages");
     const refreshConversations = getEventData("refresh_conversations");
     const groupDeleted = getEventData("group_deleted");
+    const logout = getEventData("logout");
 
     if (contactToDelete) {
       pushEventToLiveView("action.delete_contact", contactToDelete);
@@ -164,6 +165,10 @@ export function useOutgoingLiveViewActions({
       }
 
       removeEvent("group_deleted");
+    }
+    if (logout) {
+      pushEventToLiveView("action.logout", {});
+      removeEvent("logout");
     }
   }, [
     getEventData,

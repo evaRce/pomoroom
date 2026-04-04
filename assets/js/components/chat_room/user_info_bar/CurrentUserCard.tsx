@@ -8,7 +8,7 @@ import AddContactOrGroup from "./AddContactOrGroup";
 export default function CurrentUserCard() {
 	const [userLogin, setUserLogin] = useState(null);
 	const [showModal, setShowModal] = useState(false);
-	const { getEventData, removeEvent } = useEventContext();
+	const { addEvent, getEventData, removeEvent } = useEventContext();
 	const [showTimerModal, setShowTimerModal] = useState(false);
 	const [dropdownVisible, setDropdownVisible] = useState(false);
 
@@ -39,7 +39,9 @@ export default function CurrentUserCard() {
 	const handleMenuClick = (e, key) => {
 		e.domEvent.stopPropagation(); // Prevent container selection
 		if (key === "logout") {
-			console.log("Cerrar sesion");
+			addEvent("logout", true);
+			setDropdownVisible(false);
+			return;
 		}
 		setDropdownVisible(false);
 	};
@@ -81,7 +83,6 @@ export default function CurrentUserCard() {
 	const handleButtonClick = (e) => {
 		e.stopPropagation(); // Prevent click from propagating to the contact container
 		setDropdownVisible(!dropdownVisible); // Toggle dropdown visibility
-		console.log("Boton otros")
 	};
 
 	return (
