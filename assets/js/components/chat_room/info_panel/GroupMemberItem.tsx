@@ -13,6 +13,7 @@ export default function GroupMemberItem({
   onDelete,
   isInModal = false,
   imAdmin,
+  isCurrentUser = false,
 }) {
   const [dropdownVisible, setDropdownVisible] = useState(false);
 
@@ -27,18 +28,26 @@ export default function GroupMemberItem({
     setDropdownVisible(false);
   };
 
-  const items = [
-    {
-      label: contact.is_admin ? "Eliminar como admin" : "Establecer como admin",
-      key: contact.is_admin ? "deleteAdmin" : "addAdmin",
-      icon: <ThunderboltOutlined />,
-    },
-    {
-      label: "Eliminar miembro",
-      key: "deleteMember",
-      icon: <DeleteOutlined />,
-    },
-  ];
+  const items = isCurrentUser
+    ? [
+        {
+          label: "Dejar grupo",
+          key: "deleteMember",
+          icon: <DeleteOutlined />,
+        },
+      ]
+    : [
+        {
+          label: contact.is_admin ? "Eliminar como admin" : "Establecer como admin",
+          key: contact.is_admin ? "deleteAdmin" : "addAdmin",
+          icon: <ThunderboltOutlined />,
+        },
+        {
+          label: "Eliminar miembro",
+          key: "deleteMember",
+          icon: <DeleteOutlined />,
+        },
+      ];
 
   const menuProps = {
     items,

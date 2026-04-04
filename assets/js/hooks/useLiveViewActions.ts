@@ -42,6 +42,7 @@ export function useOutgoingLiveViewActions({
     const endCall = getEventData("end_private_call");
     const loadOlderMessages = getEventData("load_older_messages");
     const refreshConversations = getEventData("refresh_conversations");
+    const groupDeleted = getEventData("group_deleted");
 
     if (contactToDelete) {
       pushEventToLiveView("action.delete_contact", contactToDelete);
@@ -55,6 +56,9 @@ export function useOutgoingLiveViewActions({
       removeEvent("delete_contact");
     }
     if (selectedPrivateChat) {
+      if (isVisibleDetail) {
+        setIsVisibleDetail(false);
+      }
       setInfoChatSelected(selectedPrivateChat);
       pushEventToLiveView("action.selected_private_chat", selectedPrivateChat);
       removeEvent("selected_private_chat");
@@ -83,6 +87,9 @@ export function useOutgoingLiveViewActions({
       removeEvent("add_group");
     }
     if (selectedGroupChat) {
+      if (isVisibleDetail) {
+        setIsVisibleDetail(false);
+      }
       setInfoChatSelected(selectedGroupChat);
       pushEventToLiveView("action.selected_group_chat", selectedGroupChat);
       removeEvent("selected_group_chat");
@@ -141,6 +148,22 @@ export function useOutgoingLiveViewActions({
     if (refreshConversations) {
       pushEventToLiveView("action.get_list_contact", {});
       removeEvent("refresh_conversations");
+    }
+    if (groupDeleted) {
+      const isCurrentSelectedGroup =
+        infoChatSelected?.group_name && groupDeleted?.group_name
+          ? infoChatSelected.group_name === groupDeleted.group_name
+          : false;
+
+      if (isCurrentSelectedGroup) {
+        setComponent("");
+        if (isVisibleDetail) {
+          setIsVisibleDetail(false);
+        }
+        setInfoChatSelected({});
+      }
+
+      removeEvent("group_deleted");
     }
   }, [
     getEventData,

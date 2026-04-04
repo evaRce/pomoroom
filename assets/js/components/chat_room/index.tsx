@@ -1,31 +1,31 @@
 import React from "react";
-import {createRoot} from "react-dom/client";
+import { createRoot } from "react-dom/client";
 import { EventProvider } from "./EventContext";
-import {ChatRoom, ChatRoomProps } from "./ChatRoom";
+import { ChatRoom, ChatRoomProps } from "./ChatRoom";
 
 export default {
-	mounted(){
+	mounted(this: any) {
 		const chatDomNode = document.getElementById('chat_container') as Element;
 		const rootElementChat = createRoot(chatDomNode);
-		
+
 		render(rootElementChat, this.opts());
-    this.handleEvent("react", (event) => {
+		this.handleEvent("react", (event: any) => {
 			render(rootElementChat, this.opts(event.event_name, event.event_data));
 		});
 	},
 
-	destroyed() {
+	destroyed(this: any) {
 		const chatDomNode = document.getElementById('chat_container') as Element;
 		const rootElementChat = createRoot(chatDomNode);
 		rootElementChat.unmount();
 	},
 
-	pushEventToLiveView(event, payload) {
+	pushEventToLiveView(this: any, event: any, payload: any) {
 		this.pushEventTo(this.el, event, payload);
 	},
 
 	opts(eventName = "", eventData = {}) {
-		return { 
+		return {
 			eventName: eventName,
 			eventData: eventData,
 			pushEventToLiveView: this.pushEventToLiveView.bind(this)
@@ -36,9 +36,9 @@ export default {
 function render(rootElement3: any, opts: ChatRoomProps) {
 	rootElement3.render(
 		<React.StrictMode>
-      <EventProvider>
-        <ChatRoom {...opts}/>
-      </EventProvider>
-    </React.StrictMode>
+			<EventProvider>
+				<ChatRoom {...opts} />
+			</EventProvider>
+		</React.StrictMode>
 	);
 }

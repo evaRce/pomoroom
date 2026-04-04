@@ -4,7 +4,7 @@ type UseFriendRequestEventsParams = {
   eventName: string;
   eventData: any;
   addEvent: (eventName: string, eventData: any) => void;
-  userName: string;
+  userNickname: string;
   setIsVisibleDetail: (value: boolean) => void;
   setComponent: (value: string) => void;
   infoChatSelected: any;
@@ -14,7 +14,7 @@ export function useFriendRequestEvents({
   eventName,
   eventData,
   addEvent,
-  userName,
+  userNickname,
   setIsVisibleDetail,
   setComponent,
   infoChatSelected,
@@ -22,7 +22,7 @@ export function useFriendRequestEvents({
   useEffect(() => {
     if (
       eventName === "open_chat_request_send" &&
-      userName === eventData.request.from_user
+      userNickname === eventData.request.from_user
     ) {
       addEvent(eventName, eventData.request);
       setIsVisibleDetail(false);
@@ -30,7 +30,7 @@ export function useFriendRequestEvents({
     }
     if (
       eventName === "open_chat_request_received" &&
-      userName === eventData.request.to_user
+      userNickname === eventData.request.to_user
     ) {
       addEvent(eventName, eventData.request);
       setIsVisibleDetail(false);
@@ -41,7 +41,7 @@ export function useFriendRequestEvents({
   useEffect(() => {
     if (
       eventName === "open_rejected_request_send" &&
-      userName === eventData.rejected_request.to_user
+      userNickname === eventData.rejected_request.to_user
     ) {
       setIsVisibleDetail(false);
       addEvent(eventName, eventData.rejected_request);
@@ -57,7 +57,7 @@ export function useFriendRequestEvents({
     }
     if (
       eventName === "open_rejected_request_received" &&
-      userName === eventData.rejected_request.from_user
+      userNickname === eventData.rejected_request.from_user
     ) {
       setIsVisibleDetail(false);
       addEvent(eventName, eventData.rejected_request);

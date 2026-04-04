@@ -11,13 +11,16 @@ interface ChatHeaderProps {
 }
 
 export default function ChatHeader({ userLogin, isVisibleDetail }: ChatHeaderProps) {
-  const { addEvent, getEventData } = useEventContext() as any;
+  const { addEvent, getEventData, removeEvent } = useEventContext() as any;
   const [chatData, setChatData] = useState<any>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [checkAdmin, setCheckAdmin] = useState<any>({});
   const [chatName, setChatName] = useState("");
   const [chatImage, setChatImage] = useState("");
+  const [isGroupMemberRemoved, setIsGroupMemberRemoved] = useState(false);
   const isGroupChat = Boolean(chatData?.group_data);
+  const currentChatId = chatData?.chat_id || chatData?.group_data?.chat_id || "";
+  const currentGroupName = chatData?.group_data?.name || "";
 
   useEffect(() => {
     const privateChat = getEventData("open_private_chat");
@@ -31,16 +34,102 @@ export default function ChatHeader({ userLogin, isVisibleDetail }: ChatHeaderPro
     const groupChat = getEventData("open_group_chat");
     if (groupChat) {
       setChatData(groupChat);
+      setIsGroupMemberRemoved(Boolean(groupChat.removed_at));
     }
   }, [getEventData("open_group_chat")]);
+
+  useEffect(() => {
+    const groupMemberRemovedEvent = getEventData("group_member_removed");
+    const isRemovedEventForCurrentChat =
+      groupMemberRemovedEvent &&
+      ((currentChatId && groupMemberRemovedEvent.chat_id && currentChatId === groupMemberRemovedEvent.chat_id) ||
+        (currentGroupName &&
+          groupMemberRemovedEvent.group_name &&
+          currentGroupName === groupMemberRemovedEvent.group_name));
+
+    if (groupMemberRemovedEvent && isRemovedEventForCurrentChat) {
+      setIsGroupMemberRemoved(true);
+      addEvent("toggle_detail_visibility", {
+        is_visible: false,
+        is_group: true,
+        group_name: groupMemberRemovedEvent.group_name,
+      });
+    }
+  }, [getEventData("group_member_removed"), currentChatId, currentGroupName]);
+
+  useEffect(() => {
+    const groupMemberAddedEvent = getEventData("group_member_added");
+
+    const isAddedEventForCurrentChat =
+      groupMemberAddedEvent &&
+      ((currentChatId && groupMemberAddedEvent.chat_id && currentChatId === groupMemberAddedEvent.chat_id) ||
+        (currentGroupName &&
+          groupMemberAddedEvent.group_name &&
+          currentGroupName === groupMemberAddedEvent.group_name));
+
+    if (groupMemberAddedEvent && isAddedEventForCurrentChat) {
+      setIsGroupMemberRemoved(false);
+      setChatData((prevChatData: any) =>
+        prevChatData
+          ? {
+              ...prevChatData,
+              removed_at: null,
+            }
+          : prevChatData
+      );
+
+      if (typeof groupMemberAddedEvent.is_admin === "boolean") {
+        setCheckAdmin({ is_admin: groupMemberAddedEvent.is_admin });
+      }
+
+      removeEvent("group_member_removed");
+    }
+  }, [getEventData("group_member_added"), currentChatId, currentGroupName]);
 
   useEffect(() => {
     const adminData = getEventData("check_admin");
 
     if (adminData) {
-      setCheckAdmin(adminData);
+      setCheckAdmin({ is_admin: Boolean(adminData?.is_admin) });
+      removeEvent("check_admin");
     }
   }, [getEventData("check_admin")]);
+
+  useEffect(() => {
+    const groupAdminUpdatedEvent = getEventData("group_admin_updated");
+
+    const isAdminUpdateForCurrentChat =
+      groupAdminUpdatedEvent &&
+      ((currentChatId && groupAdminUpdatedEvent.chat_id && currentChatId === groupAdminUpdatedEvent.chat_id) ||
+        (currentGroupName &&
+          groupAdminUpdatedEvent.group_name &&
+          currentGroupName === groupAdminUpdatedEvent.group_name));
+
+    if (groupAdminUpdatedEvent && isAdminUpdateForCurrentChat) {
+      setCheckAdmin({ is_admin: Boolean(groupAdminUpdatedEvent.is_admin) });
+    }
+  }, [getEventData("group_admin_updated"), currentChatId, currentGroupName]);
+
+  useEffect(() => {
+    const membersSnapshot = getEventData("members_snapshot");
+    const currentNickname = userLogin?.nickname;
+
+    if (!membersSnapshot?.members || !currentNickname || !isGroupChat) {
+      return;
+    }
+
+    const currentMember = membersSnapshot.members.find(
+      (member: any) => member?.nickname === currentNickname
+    );
+
+    if (currentMember) {
+      const nextIsAdmin = Boolean(currentMember.is_admin);
+      const nextIsRemoved = Boolean(currentMember.removed_at);
+      setCheckAdmin({ is_admin: nextIsAdmin });
+      setIsGroupMemberRemoved(nextIsRemoved);
+      removeEvent("members_snapshot");
+    }
+  }, [getEventData("members_snapshot"), userLogin?.nickname, isGroupChat]);
 
   useEffect(() => {
     if (chatData) {
@@ -50,6 +139,10 @@ export default function ChatHeader({ userLogin, isVisibleDetail }: ChatHeaderPro
   }, [chatData]);
 
   const showUserDetails = () => {
+    if (isGroupChat && isGroupMemberRemoved) {
+      return;
+    }
+
     addEvent("toggle_detail_visibility", {
       is_visible: !isVisibleDetail,
       is_group: isGroupChat,
@@ -59,6 +152,8 @@ export default function ChatHeader({ userLogin, isVisibleDetail }: ChatHeaderPro
       chat_name: chatName,
       image: chatImage,
       is_group: isGroupChat,
+      chat_id: currentChatId,
+      group_name: currentGroupName,
     });
   };
 
@@ -110,7 +205,7 @@ export default function ChatHeader({ userLogin, isVisibleDetail }: ChatHeaderPro
         </div>
       )}
       <div className="flex items-center gap-2">
-        {chatData?.group_data && checkAdmin.is_admin && (
+        {chatData?.group_data && checkAdmin.is_admin && !isGroupMemberRemoved && (
           <Button
             className="bg-white"
             icon={<UsergroupAddOutlined />}
@@ -141,6 +236,7 @@ export default function ChatHeader({ userLogin, isVisibleDetail }: ChatHeaderPro
           }
           onClick={showUserDetails}
           title="Detalles del contacto"
+          disabled={isGroupChat && isGroupMemberRemoved}
         />
       </div>
       {chatData?.group_data && (

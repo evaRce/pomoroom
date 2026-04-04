@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button, Modal, message } from "antd";
 import EmojiPicker from "emoji-picker-react";
 import {
@@ -14,11 +14,20 @@ export default function ChatFooter({ addMessage }) {
   const { addEvent, getEventData, removeEvent } = useEventContext();
   const [chatData, setChatData] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
+  const [isGroupMemberRemoved, setIsGroupMemberRemoved] = useState(false);
+  const [groupMemberRemovedMessage, setGroupMemberRemovedMessage] = useState("");
+  const lastProcessedGroupMemberRemovedEventSignatureRef = useRef("");
+  const lastProcessedGroupMemberAddedEventSignatureRef = useRef("");
 
   const onEmojiClick = (emojiObject, event) => {
     setInputStr((prevInput) => prevInput + emojiObject.emoji);
     setShowPicker(false);
   };
+
+  const buildRemovedMessage = (groupName?: string) =>
+    groupName
+      ? `Has sido eliminado del grupo ${groupName}`
+      : "Has sido eliminado del grupo";
 
   useEffect(() => {
     const privateChat = getEventData("open_private_chat");
@@ -30,16 +39,83 @@ export default function ChatFooter({ addMessage }) {
   }, [getEventData("open_private_chat")]);
 
   useEffect(() => {
-    const groupChat = getEventData("open_group_chat");
+      const groupChat = getEventData("open_group_chat");
 
     if (groupChat) {
       setChatData(groupChat);
+      setIsGroupMemberRemoved(Boolean(groupChat.removed_at));
+      setGroupMemberRemovedMessage(
+        groupChat.removed_at ? buildRemovedMessage(groupChat.group_data?.name) : ""
+      );
       removeEvent("open_group_chat");
     }
   }, [getEventData("open_group_chat")]);
 
+  useEffect(() => {
+    const groupMemberRemovedEvent = getEventData("group_member_removed");
+
+    if (!groupMemberRemovedEvent) {
+      return;
+    }
+
+    const removedEventSignature = `${groupMemberRemovedEvent.chat_id || ""}:${groupMemberRemovedEvent.group_name || ""}:${groupMemberRemovedEvent.removed_at || ""}`;
+
+    if (lastProcessedGroupMemberRemovedEventSignatureRef.current === removedEventSignature) {
+      return;
+    }
+
+    const isSameChatById =
+      groupMemberRemovedEvent &&
+      chatData?.chat_id &&
+      groupMemberRemovedEvent.chat_id &&
+      chatData.chat_id === groupMemberRemovedEvent.chat_id;
+
+    if (groupMemberRemovedEvent && isSameChatById) {
+      lastProcessedGroupMemberRemovedEventSignatureRef.current = removedEventSignature;
+      setIsGroupMemberRemoved(true);
+      setGroupMemberRemovedMessage(buildRemovedMessage(groupMemberRemovedEvent.group_name));
+    }
+  }, [getEventData("group_member_removed")]);
+
+  useEffect(() => {
+    const groupMemberAddedEvent = getEventData("group_member_added");
+
+    if (!groupMemberAddedEvent) {
+      return;
+    }
+
+    const addedEventSignature = `${groupMemberAddedEvent.chat_id || ""}:${groupMemberAddedEvent.group_name || ""}:${groupMemberAddedEvent.message || ""}`;
+
+    if (lastProcessedGroupMemberAddedEventSignatureRef.current === addedEventSignature) {
+      return;
+    }
+
+    const isSameChatById =
+      groupMemberAddedEvent &&
+      chatData?.chat_id &&
+      groupMemberAddedEvent.chat_id &&
+      chatData.chat_id === groupMemberAddedEvent.chat_id;
+
+    if (groupMemberAddedEvent && isSameChatById) {
+      lastProcessedGroupMemberAddedEventSignatureRef.current = addedEventSignature;
+      setIsGroupMemberRemoved(false);
+      setGroupMemberRemovedMessage("");
+      addEvent("selected_group_chat", {
+        group_name: chatData.group_data?.name || groupMemberAddedEvent.group_name,
+      });
+      if (groupMemberAddedEvent.message) {
+        message.success(groupMemberAddedEvent.message);
+      }
+    }
+  }, [getEventData("group_member_added")]);
+
   const handleSendMessage = (e) => {
     e.preventDefault();
+
+    if (isGroupMemberRemoved && chatData.group_data) {
+      return;
+    }
+
     if (inputStr.trim() === "") {
       return;
     }
@@ -59,41 +135,49 @@ export default function ChatFooter({ addMessage }) {
     setInputStr("");
   };
 
+  const footerPadding = isGroupMemberRemoved && chatData.group_data ? "px-0 py-0" : "px-4 py-6";
   return (
-    <footer className="flex justify-between bg-gray-300 h-[7vh] px-4 py-6">
-      <form className="flex w-full gap-3" onSubmit={handleSendMessage}>
-        <div className="flex items-center gap-2">
-          <Button className="bg-gray-100" icon={<PictureOutlined />} />
+    <footer className={`flex justify-between ${isGroupMemberRemoved && chatData.group_data ? '' : 'bg-gray-300'} h-[7vh] ${footerPadding}`}>
+      {isGroupMemberRemoved && chatData.group_data ? (
+        <div className="flex h-full w-full items-center justify-center bg-yellow-300 text-yellow-900 text-2xl font-bold tracking-wide" style={{padding: 0, borderRadius: 0}}>
+          <span className="mr-3" role="img" aria-label="warning">⚠️</span>
+          {groupMemberRemovedMessage}
         </div>
-        <div className="flex items-center w-full justify-center">
-          <input
-            className="input bg-gray-100 h-8 w-full focus:outline-none rounded-r-none"
-            type="text"
-            value={inputStr}
-            onChange={(e) => {
-              if (e.target.value.length <= 5000) {
-                setInputStr(e.target.value);
-              } else {
-                setModalVisible(true);
-              }
-            }}
-            placeholder="Type a message..."
-            maxLength={5001}
-          />
-          <div className="flex">
-            <Button
-              className="bg-gray-100 rounded-none"
-              onClick={() => setShowPicker(true)}
-              icon={<SmileOutlined />}
-            />
-            <Button
-              className="bg-sky-400 rounded-l-none rounded-r-lg"
-              icon={<SendOutlined />}
-              onClick={(e) => handleSendMessage(e)}
-            />
+      ) : (
+        <form className="flex w-full gap-3" onSubmit={handleSendMessage}>
+          <div className="flex items-center gap-2">
+            <Button className="bg-gray-100" icon={<PictureOutlined />} />
           </div>
-        </div>
-      </form>
+          <div className="flex items-center w-full justify-center">
+            <input
+              className="input bg-gray-100 h-8 w-full focus:outline-none rounded-r-none"
+              type="text"
+              value={inputStr}
+              onChange={(e) => {
+                if (e.target.value.length <= 5000) {
+                  setInputStr(e.target.value);
+                } else {
+                  setModalVisible(true);
+                }
+              }}
+              placeholder="Type a message..."
+              maxLength={5001}
+            />
+            <div className="flex">
+              <Button
+                className="bg-gray-100 rounded-none"
+                onClick={() => setShowPicker(true)}
+                icon={<SmileOutlined />}
+              />
+              <Button
+                className="bg-sky-400 rounded-l-none rounded-r-lg"
+                icon={<SendOutlined />}
+                onClick={(e) => handleSendMessage(e)}
+              />
+            </div>
+          </div>
+        </form>
+      )}
       <Modal
         title="Elige los emojis"
         open={showPicker}

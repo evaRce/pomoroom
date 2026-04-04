@@ -5,10 +5,13 @@ import { useEventContext } from "../EventContext";
 import GroupMemberItem from "./GroupMemberItem";
 
 export default function ChatDetailPanel() {
-  const { addEvent, getEventData, removeEvent } = useEventContext();
-  const [chatData, setChatData] = useState(null);
-  const [members, setMembers] = useState([]);
-  const [checkAdmin, setCheckAdmin] = useState({});
+  const { addEvent, getEventData, removeEvent } = useEventContext() as any;
+  const [chatData, setChatData] = useState<any>(null);
+  const [members, setMembers] = useState<any[]>([]);
+  const [checkAdmin, setCheckAdmin] = useState<any>({});
+  const [currentUserNickname, setCurrentUserNickname] = useState("");
+  const currentChatId = chatData?.chat_id || "";
+  const currentGroupName = chatData?.group_name || chatData?.chat_name || "";
 
   useEffect(() => {
     const chat = getEventData("show_detail");
@@ -28,24 +31,68 @@ export default function ChatDetailPanel() {
   }, [getEventData("show_members")]);
 
   useEffect(() => {
-    const adminData = getEventData("check_admin");
+    const groupAdminUpdatedEvent = getEventData("group_admin_updated");
 
-    if (adminData) {
-      setCheckAdmin(adminData.is_admin);
+    const isAdminUpdateForCurrentChat =
+      groupAdminUpdatedEvent &&
+      ((currentChatId && groupAdminUpdatedEvent.chat_id && currentChatId === groupAdminUpdatedEvent.chat_id) ||
+        (currentGroupName &&
+          groupAdminUpdatedEvent.group_name &&
+          currentGroupName === groupAdminUpdatedEvent.group_name));
+
+    if (groupAdminUpdatedEvent && isAdminUpdateForCurrentChat) {
+      setCheckAdmin(Boolean(groupAdminUpdatedEvent.is_admin));  
     }
-  }, [getEventData("check_admin")]);
+  }, [getEventData("group_admin_updated"), currentChatId, currentGroupName]);
+
+  useEffect(() => {
+    const userInfo = getEventData("show_user_info");
+
+    if (userInfo?.nickname) {
+      setCurrentUserNickname(userInfo.nickname);
+    }
+  }, [getEventData("show_user_info")]);
+
+  useEffect(() => {
+    if (!currentUserNickname || !Array.isArray(members) || members.length === 0) {
+      return;
+    }
+
+    const currentMember = members.find(
+      (member: any) => member?.nickname === currentUserNickname
+    );
+
+    if (currentMember) {
+      const nextIsAdmin = Boolean(currentMember.is_admin);
+      setCheckAdmin(nextIsAdmin);
+    }
+  }, [members, currentUserNickname]);
+
+  useEffect(() => {
+    const groupMemberRemovedEvent = getEventData("group_member_removed");
+    const isRemovedEventForCurrentChat =
+      groupMemberRemovedEvent &&
+      ((currentChatId && groupMemberRemovedEvent.chat_id && currentChatId === groupMemberRemovedEvent.chat_id) ||
+        (currentGroupName &&
+          groupMemberRemovedEvent.group_name &&
+          currentGroupName === groupMemberRemovedEvent.group_name));
+
+    if (groupMemberRemovedEvent && isRemovedEventForCurrentChat) {
+      hideUserDetails();
+    }
+  }, [getEventData("group_member_removed"), currentChatId, currentGroupName]);
 
   const hideUserDetails = () => {
     addEvent("toggle_detail_visibility", {
       isVisible: false,
-      is_group: false,
+      is_group: true,
       group_name: chatData?.chat_name,
     });
     removeEvent("check_admin");
     removeEvent("show_detail");
   };
 
-  const setAdmin = (memberName, operation) => {
+  const setAdmin = (memberName: any, operation: any) => {
     addEvent("set_admin", {
       member_name: memberName,
       group_name: chatData.chat_name,
@@ -53,9 +100,9 @@ export default function ChatDetailPanel() {
     });
   };
 
-  const deleteMember = (memberName) => {
+  const deleteMember = (memberName: any) => {
     const index = members.findIndex(
-      (memberFind) => memberFind.nickname === memberName
+      (memberFind: any) => memberFind.nickname === memberName
     );
     if (index !== -1) {
       addEvent("delete_member", {
@@ -126,6 +173,7 @@ export default function ChatDetailPanel() {
                     onSetAdmin={setAdmin}
                     onDelete={deleteMember}
                     imAdmin={checkAdmin}
+                    isCurrentUser={item.nickname === currentUserNickname}
                   />
                 </div>
               )}

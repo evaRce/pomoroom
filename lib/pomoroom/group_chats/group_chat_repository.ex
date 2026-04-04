@@ -34,6 +34,17 @@ defmodule Pomoroom.GroupChats.GroupChatRepository do
     )
   end
 
+  def update_members(chat_id, members) do
+    now = NaiveDateTime.utc_now()
+
+    Mongo.update_one(
+      :mongo,
+      "group_chats",
+      %{"chat_id" => chat_id},
+      %{"$set" => %{"members" => members, "updated_at" => now}}
+    )
+  end
+
   defp get_changes_from_changeset(args) do
     GroupChatSchema.group_chat_changeset(args).changes
   end

@@ -25,7 +25,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
   const { addEvent, getEventData, removeEvent } = useEventContext();
   const [component, setComponent] = useState("");
   const [imageNumber, setImageNumber] = useState(1);
-  const [userName, setUserName] = useState("");
+  const [userNickname, setUserNickname] = useState("");
   const [isVisibleDetail, setIsVisibleDetail] = useState(false);
   const [infoChatSelected, setInfoChatSelected] = useState({});
   const hasRequestedInitialData = useRef(false);
@@ -55,15 +55,14 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
     eventName,
     eventData,
     addEvent,
-    setUserName,
+    setUserNickname,
   });
 
   useChatSessionEvents({
     eventName,
     eventData,
     addEvent,
-    isVisibleDetail,
-    userName,
+    userNickname,
     setComponent,
   });
 
@@ -71,7 +70,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
     eventName,
     eventData,
     addEvent,
-    userName,
+    userNickname,
     setIsVisibleDetail,
     setComponent,
     infoChatSelected,
@@ -81,13 +80,14 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
     eventName,
     eventData,
     addEvent,
+    removeEvent,
   });
 
   useCallSignalingEvents({
     eventName,
     eventData,
     addEvent,
-    userName,
+    userNickname,
   });
 
   return (

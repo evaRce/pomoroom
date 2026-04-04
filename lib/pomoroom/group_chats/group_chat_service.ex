@@ -38,22 +38,48 @@ defmodule Pomoroom.GroupChats.GroupChatService do
         {:error, reason}
 
       {:ok, group_chat} ->
-        member_ids = get_member_ids(group_chat.members)
+        if user in group_chat.admin do
+          now = DateTime.utc_now()
+          members = group_chat.members || []
 
-        if new_member in member_ids do
-          {:error, "El usuario #{new_member} ya es miembro del grupo"}
-        else
-          if user in group_chat.admin do
-            GroupChatRepository.update_by_chat_id(
-              group_chat.chat_id,
-              "$addToSet",
-              %{members: %{"user_id" => new_member, "joined_at" => DateTime.utc_now()}}
-            )
+          existing_member =
+            Enum.find(members, fn member ->
+              get_member_id(member) == new_member
+            end)
 
-            {:ok, "Usuario #{new_member} añadido al grupo"}
-          else
-            {:error, "El usuario #{user} no tiene permiso para añadir miembros al grupo"}
+          case existing_member do
+            nil ->
+              GroupChatRepository.update_by_chat_id(
+                group_chat.chat_id,
+                "$addToSet",
+                %{members: %{"user_id" => new_member, "joined_at" => now, "removed_at" => nil}}
+              )
+
+              {:ok, "Usuario #{new_member} añadido al grupo"}
+
+            member when is_map(member) ->
+              removed_at = get_member_removed_at(member)
+
+              if is_nil(removed_at) do
+                {:error, "El usuario #{new_member} ya es miembro del grupo"}
+              else
+                updated_members =
+                  Enum.map(members, fn current_member ->
+                    if get_member_id(current_member) == new_member do
+                      current_member
+                      |> Map.put("joined_at", now)
+                      |> Map.put("removed_at", nil)
+                    else
+                      current_member
+                    end
+                  end)
+
+                GroupChatRepository.update_members(group_chat.chat_id, updated_members)
+                {:ok, "Usuario #{new_member} reañadido al grupo"}
+              end
           end
+        else
+          {:error, "El usuario #{user} no tiene permiso para añadir miembros al grupo"}
         end
     end
   end
@@ -129,16 +155,21 @@ defmodule Pomoroom.GroupChats.GroupChatService do
           Enum.map(members, fn member_map ->
             member_id = get_member_id(member_map)
             joined_at = get_member_joined_at(member_map)
+            removed_at = get_member_removed_at(member_map)
 
-            case member_id && Users.get_by("nickname", member_id) do
-              {:ok, user} ->
-                is_admin = member_id in group_chat.admin
+            if is_nil(removed_at) do
+              case member_id && Users.get_by("nickname", member_id) do
+                {:ok, user} ->
+                  is_admin = member_id in group_chat.admin
 
-                user
-                |> Map.put(:is_admin, is_admin)
-                |> Map.put(:joined_at, joined_at)
+                  user
+                  |> Map.put(:is_admin, is_admin)
+                  |> Map.put(:joined_at, joined_at)
 
-              {:error, _reason} ->
+                {:error, _reason} ->
+                  nil
+              end
+            else
                 nil
             end
           end)
@@ -155,6 +186,43 @@ defmodule Pomoroom.GroupChats.GroupChatService do
 
       {:ok, group_chat} ->
         user in group_chat.admin
+    end
+  end
+
+  def member_state(group_name, user) do
+    case get_by("name", group_name) do
+      {:error, _reason} ->
+        :not_member
+
+      {:ok, group_chat} ->
+        members = group_chat.members || []
+
+        member =
+          Enum.find(members, fn member ->
+            get_member_id(member) == user
+          end)
+
+        case member do
+          nil ->
+            :not_member
+
+          found_member ->
+            joined_at = get_member_joined_at(found_member)
+            removed_at = get_member_removed_at(found_member)
+
+            if is_nil(removed_at) do
+              {:active, joined_at}
+            else
+              {:removed, joined_at, removed_at}
+            end
+        end
+    end
+  end
+
+  def can_send_message?(group_name, user) do
+    case member_state(group_name, user) do
+      {:active, _joined_at} -> true
+      _ -> false
     end
   end
 
@@ -223,21 +291,39 @@ defmodule Pomoroom.GroupChats.GroupChatService do
   end
 
   defp remove_member_and_cleanup(group_chat, member, success_message) do
-    GroupChatRepository.update_by_chat_id(group_chat.chat_id, "$pull", %{
-      members: %{"user_id" => member}
-    })
+    removed_at = DateTime.utc_now()
 
-    GroupChatRepository.update_by_chat_id(group_chat.chat_id, "$pull", %{members: member})
+    updated_members =
+      Enum.map(group_chat.members || [], fn current_member ->
+        if get_member_id(current_member) == member do
+          Map.put(current_member, "removed_at", removed_at)
+        else
+          current_member
+        end
+      end)
+
+    GroupChatRepository.update_members(group_chat.chat_id, updated_members)
 
     {:ok, updated_chat} = get_by("chat_id", group_chat.chat_id)
-    remaining_members = updated_chat.members || []
+    remaining_members =
+      (updated_chat.members || [])
+      |> Enum.filter(fn current_member ->
+        is_nil(get_member_removed_at(current_member))
+      end)
 
     if length(remaining_members) == 0 do
       Chats.delete_chat("group_chats", group_chat.chat_id)
       Messages.delete_all_belongs_to_chat(updated_chat.chat_id)
-      {:ok, "Grupo eliminado, ya que el último usuario fue eliminado"}
+      {:ok, %{chat_deleted: true, chat_id: group_chat.chat_id}}
     else
-      {:ok, success_message}
+      {:ok,
+       %{
+         message: success_message,
+         chat_id: group_chat.chat_id,
+         group_name: group_chat.name,
+         removed_member: member,
+         removed_at: removed_at
+       }}
     end
   end
 
@@ -266,7 +352,11 @@ defmodule Pomoroom.GroupChats.GroupChatService do
 
   defp get_member_ids(members) do
     Enum.map(members || [], fn member ->
-      get_member_id(member)
+      if is_nil(get_member_removed_at(member)) do
+        get_member_id(member)
+      else
+        nil
+      end
     end)
     |> Enum.reject(&is_nil/1)
   end
@@ -280,6 +370,11 @@ defmodule Pomoroom.GroupChats.GroupChatService do
     do: member["joined_at"] || member[:joined_at]
 
   defp get_member_joined_at(_member), do: nil
+
+  defp get_member_removed_at(member) when is_map(member),
+    do: member["removed_at"] || member[:removed_at]
+
+  defp get_member_removed_at(_), do: nil
 
   defp get_default_group_image() do
     random_number = :rand.uniform(10)

@@ -72,55 +72,21 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
       {:ok, group_chat} ->
         Runtime.ensure_chat_server_exists(group_chat.chat_id)
 
-        case GroupChats.get_members(group_name) do
-          {:ok, members_data} ->
-            current_user_member =
-              Enum.find(members_data, fn member ->
-                (Map.get(member, :nickname) || Map.get(member, "nickname")) == user.nickname
-              end)
+        case GroupChats.member_state(group_name, user.nickname) do
+          {:active, joined_at} ->
+            open_group_chat_with_members(group_name, group_chat, user, joined_at, nil, socket)
 
-            joined_at =
-              if current_user_member do
-                Map.get(current_user_member, :joined_at) ||
-                  Map.get(current_user_member, "joined_at")
-              else
-                nil
-              end
-
-            messages =
-              ChatServer.get_messages(group_chat.chat_id, @initial_messages_limit, joined_at)
-
-            is_admin = GroupChats.is_admin?(group_name, user.nickname)
-            user_image_map_by_nickname = build_user_image_map_by_nickname(messages)
-
-            socket =
+          {:removed, joined_at, removed_at} ->
+            open_group_chat_with_members(
+              group_name,
+              group_chat,
+              user,
+              joined_at,
+              removed_at,
               socket
-              |> assign(:chat_id, group_chat.chat_id)
-              |> assign(:current_group_joined_at, joined_at)
+            )
 
-            messages_with_images_user =
-              Enum.map(messages, fn msg ->
-                %{
-                  data: msg,
-                  image_user: Map.get(user_image_map_by_nickname, msg.from_user)
-                }
-              end)
-
-            payload = %{
-              event_name: "open_group_chat",
-              event_data: %{
-                chat_id: group_chat.chat_id,
-                is_admin: is_admin,
-                group_data: group_chat,
-                messages: messages_with_images_user,
-                has_more: length(messages_with_images_user) == @initial_messages_limit,
-                members_data: members_data
-              }
-            }
-
-            {:noreply, push_event(socket, "react", payload)}
-
-          {:error, _reason} ->
+          :not_member ->
             {:noreply, socket}
         end
     end
@@ -140,13 +106,83 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
   end
 
   def handle_send_group_message(message, to_group_name, user, socket) do
-    case GroupChats.get_by("name", to_group_name) do
-      {:error, _reason} ->
-        {:noreply, socket}
+    if GroupChats.can_send_message?(to_group_name, user.nickname) do
+      case GroupChats.get_by("name", to_group_name) do
+        {:error, _reason} ->
+          {:noreply, socket}
 
-      {:ok, group_chat} ->
-        send_message_to_chat(group_chat.chat_id, message, user, socket)
+        {:ok, group_chat} ->
+          send_message_to_chat(group_chat.chat_id, message, user, socket)
+      end
+    else
+      chat_id =
+        case GroupChats.get_by("name", to_group_name) do
+          {:ok, group_chat} -> group_chat.chat_id
+          {:error, _reason} -> nil
+        end
+
+      payload = %{
+        event_name: "group_member_removed",
+        event_data: %{
+          chat_id: chat_id,
+          group_name: to_group_name,
+          disable_send: true
+        }
+      }
+
+      {:noreply, push_event(socket, "react", payload)}
     end
+  end
+
+  defp open_group_chat_with_members(group_name, group_chat, user, joined_at, removed_at, socket) do
+    messages =
+      ChatServer.get_messages(group_chat.chat_id, @initial_messages_limit, joined_at)
+
+    visible_messages =
+      if is_nil(removed_at) do
+        messages
+      else
+        Enum.filter(messages, fn msg ->
+          case NaiveDateTime.compare(
+                 to_naive_datetime(msg.inserted_at),
+                 to_naive_datetime(removed_at)
+               ) do
+            :gt -> false
+            _ -> true
+          end
+        end)
+      end
+
+    is_admin = GroupChats.is_admin?(group_name, user.nickname)
+    user_image_map_by_nickname = build_user_image_map_by_nickname(visible_messages)
+
+    socket =
+      socket
+      |> assign(:chat_id, group_chat.chat_id)
+      |> assign(:current_group_joined_at, joined_at)
+      |> assign(:current_group_removed_at, removed_at)
+
+    messages_with_images_user =
+      Enum.map(visible_messages, fn msg ->
+        %{
+          data: msg,
+          image_user: Map.get(user_image_map_by_nickname, msg.from_user)
+        }
+      end)
+
+    payload = %{
+      event_name: "open_group_chat",
+      event_data: %{
+        chat_id: group_chat.chat_id,
+        is_admin: is_admin,
+        group_data: group_chat,
+        messages: messages_with_images_user,
+        has_more: length(messages_with_images_user) == @initial_messages_limit,
+        removed_at: removed_at
+      }
+    }
+
+    {:noreply, push_event(socket, "react", payload)}
   end
 
   def handle_load_older_messages(chat_id, before_inserted_at, socket) do
@@ -209,7 +245,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
     case Users.get_by("nickname", contact_name) do
       {:ok, to_user_data} ->
         joined_at = PrivateChats.get_member_joined_at(private_chat, user.nickname)
-        messages = ChatServer.get_messages(private_chat.chat_id, @initial_messages_limit, joined_at)
+
+        messages =
+          ChatServer.get_messages(private_chat.chat_id, @initial_messages_limit, joined_at)
 
         messages_with_images_user =
           Enum.map(messages, fn msg ->
@@ -292,4 +330,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
   end
 
   defp parse_inserted_at(_), do: {:error, :invalid_inserted_at}
+
+  defp to_naive_datetime(%DateTime{} = datetime), do: DateTime.to_naive(datetime)
+  defp to_naive_datetime(%NaiveDateTime{} = datetime), do: datetime
+  defp to_naive_datetime(value), do: value
 end

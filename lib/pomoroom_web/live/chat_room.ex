@@ -50,16 +50,42 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
   def handle_info({:new_message, args}, socket) do
     current_chat_id = Map.get(socket.assigns, :chat_id)
     message_chat_id = get_in(args, [:data, :chat_id]) || get_in(args, ["data", "chat_id"])
+    current_group_removed_at = Map.get(socket.assigns, :current_group_removed_at)
 
-    if not is_nil(current_chat_id) and current_chat_id == message_chat_id do
+    message_inserted_at =
+      get_in(args, [:data, :inserted_at]) || get_in(args, ["data", "inserted_at"])
+
+    visible_for_removed_user =
+      if is_nil(current_group_removed_at) do
+        true
+      else
+        case NaiveDateTime.compare(
+               to_naive_datetime(message_inserted_at),
+               to_naive_datetime(current_group_removed_at)
+             ) do
+          :gt -> false
+          _ -> true
+        end
+      end
+
+    if not is_nil(current_chat_id) and current_chat_id == message_chat_id and
+         visible_for_removed_user do
       Chats.handle_new_message_info(args, socket)
     else
       {:noreply, socket}
     end
   end
 
+  def handle_info({:group_member_removed, payload}, socket) do
+    Groups.handle_group_member_removed(payload, socket)
+  end
+
   def handle_info({:new_group_member_added, payload}, socket) do
     Groups.handle_new_group_member_added(payload, socket)
+  end
+
+  def handle_info({:group_admin_updated, payload}, socket) do
+    Groups.handle_group_admin_updated(payload, socket)
   end
 
   # Las request_offers solo le llegan al que INICIO la llamada
@@ -337,4 +363,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
       [] -> {:error, :user_not_found}
     end
   end
+
+  defp to_naive_datetime(%DateTime{} = datetime), do: DateTime.to_naive(datetime)
+  defp to_naive_datetime(%NaiveDateTime{} = datetime), do: datetime
+  defp to_naive_datetime(value), do: value
 end

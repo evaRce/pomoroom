@@ -4,18 +4,18 @@ type UseUserContactsAndGroupsEventsParams = {
   eventName: string;
   eventData: any;
   addEvent: (eventName: string, eventData: any) => void;
-  setUserName: (value: string) => void;
+  setUserNickname: (value: string) => void;
 };
 
 export function useUserContactsAndGroupsEvents({
   eventName,
   eventData,
   addEvent,
-  setUserName,
+  setUserNickname,
 }: UseUserContactsAndGroupsEventsParams) {
   useEffect(() => {
     if (eventName === "show_user_info" && eventData.nickname) {
-      setUserName(eventData.nickname);
+      setUserNickname(eventData.nickname);
       addEvent(eventName, eventData);
     }
   }, [eventData.nickname]);

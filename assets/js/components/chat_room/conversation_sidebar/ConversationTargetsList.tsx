@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment } from "react";
+import React, { useState, useEffect, Fragment, useRef } from "react";
 import { Button, Input } from "antd";
 import { SearchOutlined, CloseOutlined } from "@ant-design/icons";
 import ConversationTargetItem from "./ConversationTargetItem";
@@ -15,6 +15,30 @@ export default function ConversationTargetsList() {
   const [selectedContact, setSelectedContact] = useState("");
   const [userLogin, setUserLogin] = useState<any>({});
   const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH_SIZE);
+  const lastProcessedGroupAdminUpdatedRef = useRef("");
+
+  const getCurrentUserRemovedAtFromGroup = (groupData: any, nickname: string) => {
+    if (!groupData || !nickname) {
+      return null;
+    }
+
+    const members = groupData.members || [];
+    const myMember = members.find((member: any) => {
+      const memberId = member?.user_id || member?.["user_id"];
+      return memberId === nickname;
+    });
+
+    return myMember?.removed_at || myMember?.["removed_at"] || null;
+  };
+
+  const isCurrentUserGroupAdmin = (groupData: any, nickname: string) => {
+    if (!groupData || !nickname) {
+      return false;
+    }
+
+    const adminList = groupData.admin || [];
+    return adminList.includes(nickname);
+  };
 
   useEffect(() => {
     const contact = getEventData("add_contact_to_list");
@@ -112,6 +136,37 @@ export default function ConversationTargetsList() {
   }, [getEventData("add_group_to_list")]);
 
   useEffect(() => {
+    const groupAdminUpdated = getEventData("group_admin_updated");
+
+    if (!groupAdminUpdated?.group_name) {
+      return;
+    }
+
+    console.log("[ConversationTargetsList] group_admin_updated", groupAdminUpdated);
+
+    const adminUpdateSignature = `${groupAdminUpdated.chat_id || ""}:${groupAdminUpdated.group_name || ""}:${groupAdminUpdated.is_admin || false}`;
+
+    if (lastProcessedGroupAdminUpdatedRef.current === adminUpdateSignature) {
+      return;
+    }
+
+    lastProcessedGroupAdminUpdatedRef.current = adminUpdateSignature;
+
+    setContacts((prevContacts) =>
+      prevContacts.map((contact) => {
+        if (!contact?.is_group || contact.name !== groupAdminUpdated.group_name) {
+          return contact;
+        }
+
+        return {
+          ...contact,
+          is_group_admin: Boolean(groupAdminUpdated.is_admin),
+        };
+      })
+    );
+  }, [getEventData("group_admin_updated")]);
+
+  useEffect(() => {
     const results = contacts.filter((contact) =>
       contact.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -126,17 +181,24 @@ export default function ConversationTargetsList() {
   }, [searchTerm, contacts]);
 
   const normalizeContact = (contact: any) => {
+    const groupData = contact?.group_data;
+    const removedAt = getCurrentUserRemovedAtFromGroup(groupData, userLogin?.nickname);
+    const isGroupAdmin = isCurrentUserGroupAdmin(groupData, userLogin?.nickname);
+
     return {
       name:
         contact?.contact_data?.nickname ||
-        contact?.group_data?.name,
+        groupData?.name,
       image:
         contact?.contact_data?.image_profile ||
-        contact?.group_data?.image,
+        groupData?.image,
       status_request:
         contact?.request?.status ||
         contact?.status,
       is_group: Boolean(contact?.is_group),
+      is_group_member_removed: Boolean(removedAt),
+      is_group_admin: isGroupAdmin,
+      group_data_raw: groupData,
     };
   };
 
@@ -155,6 +217,35 @@ export default function ConversationTargetsList() {
       return [...prevContacts, newContact];
     });
   };
+
+  useEffect(() => {
+    if (!userLogin?.nickname) {
+      return;
+    }
+
+    setContacts((prevContacts) =>
+      prevContacts.map((contact) => {
+        if (!contact?.is_group) {
+          return contact;
+        }
+
+        const removedAt = getCurrentUserRemovedAtFromGroup(
+          contact.group_data_raw,
+          userLogin.nickname
+        );
+        const isGroupAdmin = isCurrentUserGroupAdmin(
+          contact.group_data_raw,
+          userLogin.nickname
+        );
+
+        return {
+          ...contact,
+          is_group_member_removed: Boolean(removedAt),
+          is_group_admin: isGroupAdmin,
+        };
+      })
+    );
+  }, [userLogin?.nickname]);
 
   const updateContactStatus = (request: any, new_status: any) => {
     setContacts((prevContacts) =>

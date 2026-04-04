@@ -95,48 +95,225 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
   end
 
   def handle_delete_member(group_name, member_name, user, socket) do
-    GroupChats.delete_member(group_name, user.nickname, member_name)
-    handle_member_update(group_name, user, socket)
-  end
+    case GroupChats.delete_member(group_name, user.nickname, member_name) do
+      {:ok, %{chat_deleted: true, chat_id: chat_id}} ->
+        payload = %{
+          event_name: "group_deleted",
+          event_data: %{chat_id: chat_id, group_name: group_name}
+        }
 
-  def handle_set_admin(group_name, member_name, operation, user, socket) do
-    case operation do
-      "add" ->
-        GroupChats.add_admin(group_name, user.nickname, member_name)
-        {:noreply, socket}
+        socket =
+          if socket.assigns[:chat_id] == chat_id do
+            socket
+            |> assign(:chat_id, nil)
+            |> assign(:current_group_joined_at, nil)
+            |> assign(:current_group_removed_at, nil)
+          else
+            socket
+          end
 
-      "delete" ->
-        GroupChats.delete_admin(group_name, user.nickname, member_name)
+        socket =
+          if chat_id do
+            PubSub.unsubscribe(Pomoroom.PubSub, "chat:#{chat_id}")
+            socket
+          else
+            socket
+          end
+
+        {:noreply, push_event(socket, "react", payload)}
+
+      {:ok, %{chat_id: chat_id, group_name: removed_group_name, removed_at: removed_at}} ->
+        PubSub.broadcast(
+          Pomoroom.PubSub,
+          "user:#{member_name}",
+          {:group_member_removed,
+           %{chat_id: chat_id, group_name: removed_group_name, removed_at: removed_at}}
+        )
+
+        handle_member_update(group_name, user, socket)
+
+      _ ->
         {:noreply, socket}
     end
   end
 
-  def handle_new_group_member_added(%{chat_id: chat_id}, socket) do
-    socket = ensure_group_chat_subscription(socket, chat_id)
-    push_refresh_conversations(socket)
-  end
+  def handle_set_admin(group_name, member_name, operation, user, socket) do
+    result =
+      case operation do
+        "add" -> GroupChats.add_admin(group_name, user.nickname, member_name)
+        "delete" -> GroupChats.delete_admin(group_name, user.nickname, member_name)
+      end
 
-  def handle_new_group_member_added(%{group_name: group_name}, socket) do
-    case GroupChats.get_by("name", group_name) do
-      {:ok, group_chat} ->
-        socket = ensure_group_chat_subscription(socket, group_chat.chat_id)
-        push_refresh_conversations(socket)
+    case result do
+      {:ok, _message} ->
+        case GroupChats.get_by("name", group_name) do
+          {:ok, group_chat} ->
+            payload = %{chat_id: group_chat.chat_id, group_name: group_name}
+
+            group_chat
+            |> get_active_member_nicknames()
+            |> Enum.each(fn nickname ->
+              PubSub.broadcast(
+                Pomoroom.PubSub,
+                "user:#{nickname}",
+                {:group_admin_updated, payload}
+              )
+            end)
+
+            {:noreply, socket}
+
+          {:error, _reason} ->
+            {:noreply, socket}
+        end
 
       {:error, _reason} ->
         {:noreply, socket}
     end
   end
 
+  def handle_group_admin_updated(payload, socket) do
+    chat_id = Map.get(payload, :chat_id)
+    group_name = Map.get(payload, :group_name)
+    current_user_nickname = socket.assigns.user_info.nickname
+
+    is_admin =
+      case GroupChats.is_admin?(group_name, current_user_nickname) do
+        true -> true
+        _ -> false
+      end
+
+    socket =
+      socket
+      |> push_event("react", %{event_name: "check_admin", event_data: %{is_admin: is_admin}})
+      |> push_event("react", %{
+        event_name: "group_admin_updated",
+        event_data: %{chat_id: chat_id, group_name: group_name, is_admin: is_admin}
+      })
+
+    if socket.assigns[:chat_id] == chat_id do
+      case GroupChats.get_members(group_name) do
+        {:ok, members_data} ->
+          payload = %{
+            event_name: "show_members",
+            event_data: %{members_data: members_data}
+          }
+
+          {:noreply, push_event(socket, "react", payload)}
+
+        {:error, _reason} ->
+          {:noreply, socket}
+      end
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_new_group_member_added(%{chat_id: chat_id} = payload, socket) do
+    current_user_nickname = socket.assigns.user_info.nickname
+
+    group_name =
+      Map.get(payload, :group_name) ||
+        case GroupChats.get_by("chat_id", chat_id) do
+          {:ok, group_chat} -> group_chat.name
+          {:error, _reason} -> nil
+        end
+
+    is_admin = GroupChats.is_admin?(group_name, current_user_nickname)
+
+    added_message =
+      if group_name do
+        "Has sido añadido al grupo #{group_name}"
+      else
+        "Has sido añadido al grupo"
+      end
+
+    socket =
+      socket
+      |> ensure_group_chat_subscription(chat_id)
+      |> maybe_reset_removed_state(chat_id)
+
+    payload = %{
+      event_name: "group_member_added",
+      event_data: %{
+        chat_id: chat_id,
+        group_name: group_name,
+        is_admin: is_admin,
+        message: added_message
+      }
+    }
+
+    {:noreply, push_event(socket, "react", payload)}
+  end
+
+  def handle_new_group_member_added(%{group_name: group_name}, socket) do
+    current_user_nickname = socket.assigns.user_info.nickname
+
+    case GroupChats.get_by("name", group_name) do
+      {:ok, group_chat} ->
+        is_admin = GroupChats.is_admin?(group_name, current_user_nickname)
+
+        socket =
+          socket
+          |> ensure_group_chat_subscription(group_chat.chat_id)
+          |> maybe_reset_removed_state(group_chat.chat_id)
+
+        payload = %{
+          event_name: "group_member_added",
+          event_data: %{
+            chat_id: group_chat.chat_id,
+            group_name: group_name,
+            is_admin: is_admin,
+            message: "Has sido añadido al grupo #{group_name}"
+          }
+        }
+
+        {:noreply, push_event(socket, "react", payload)}
+
+      {:error, _reason} ->
+        {:noreply, socket}
+    end
+  end
+
+  def handle_group_member_removed(payload, socket) do
+    chat_id = Map.get(payload, :chat_id)
+    group_name = Map.get(payload, :group_name)
+    removed_at = Map.get(payload, :removed_at)
+
+    socket =
+      if socket.assigns[:chat_id] == chat_id do
+        assign(socket, :current_group_removed_at, removed_at)
+      else
+        socket
+      end
+
+    payload_for_ui = %{
+      event_name: "group_member_removed",
+      event_data: %{
+        chat_id: chat_id,
+        group_name: group_name,
+        removed_at: removed_at,
+        disable_send: true
+      }
+    }
+
+    {:noreply, push_event(socket, "react", payload_for_ui)}
+  end
+
   defp get_contacts_for_group(contacts, user_nickname, group_name) do
     case GroupChats.get_by("name", group_name) do
       {:ok, group_chat} ->
-        members_set =
+        active_members_set =
           (group_chat.members || [])
           |> Enum.map(fn member ->
             cond do
-              is_map(member) -> member["user_id"]
-              is_binary(member) -> member
-              true -> nil
+              is_map(member) and is_nil(member["removed_at"] || member[:removed_at]) ->
+                member["user_id"] || member[:user_id]
+
+              is_binary(member) ->
+                member
+
+              true ->
+                nil
             end
           end)
           |> Enum.reject(&is_nil/1)
@@ -164,8 +341,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
         end)
         |> Enum.reject(&is_nil/1)
         |> Enum.reject(fn %{contact_data: contact} ->
-          # Filtra los contactos que ya están en el grupo
-          MapSet.member?(members_set, contact.nickname)
+          MapSet.member?(active_members_set, contact.nickname)
         end)
 
       {:error, _reason} ->
@@ -204,13 +380,30 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
     end
   end
 
-  defp push_refresh_conversations(socket) do
-    payload = %{
-      event_name: "refresh_conversations",
-      event_data: %{}
-    }
+  defp maybe_reset_removed_state(socket, chat_id) do
+    if socket.assigns[:chat_id] == chat_id do
+      assign(socket, :current_group_removed_at, nil)
+    else
+      socket
+    end
+  end
 
-    {:noreply, push_event(socket, "react", payload)}
+  defp get_active_member_nicknames(group_chat) do
+    (group_chat.members || [])
+    |> Enum.map(fn member ->
+      cond do
+        is_map(member) and is_nil(member["removed_at"] || member[:removed_at]) ->
+          member["user_id"] || member[:user_id]
+
+        is_binary(member) ->
+          member
+
+        true ->
+          nil
+      end
+    end)
+    |> Enum.reject(&is_nil/1)
+    |> Enum.uniq()
   end
 
   defp get_contact_list_for_group(group_name, user) do

@@ -3,7 +3,7 @@ import { Button, Dropdown } from "antd";
 import { useEventContext } from "../EventContext";
 import { DownOutlined, DeleteOutlined } from "@ant-design/icons";
 
-export default function ConversationTargetItem({ contact, isSelected, onSelect, onDelete }) {
+export default function ConversationTargetItem({ contact, isSelected, onSelect, onDelete }: any) {
   const { addEvent } = useEventContext();
   const [dropdownVisible, setDropdownVisible] = useState(false);
 
@@ -43,7 +43,7 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
     }
   };
 
-  const handleMenuClick = (e, key) => {
+  const handleMenuClick = (e: any, key: any) => {
     e.domEvent.stopPropagation(); // Prevent container selection
     if (key === "deleteChat") {
       onDelete(contact.nickname);
@@ -53,7 +53,11 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
 
   const items = [
     {
-      label: contact.is_group ? "Eliminar grupo" : "Eliminar contacto",
+      label: contact.is_group
+        ? (contact.is_group_member_removed || contact.is_group_admin)
+          ? "Eliminar grupo"
+          : "Dejar grupo"
+        : "Eliminar conversación",
       key: "deleteChat",
       icon: <DeleteOutlined />,
     },
@@ -61,14 +65,14 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
 
   const menuProps = {
     items,
-    onClick: (e) => handleMenuClick(e, e.key),
+    onClick: (e: any) => handleMenuClick(e, e.key),
   };
 
-  const handleDropdownVisibility = (visible) => {
+  const handleDropdownVisibility = (visible: any) => {
     setDropdownVisible(visible);
   };
 
-  const handleButtonClick = (e) => {
+  const handleButtonClick = (e: any) => {
     e.stopPropagation(); // Prevent click from propagating to the contact container
     setDropdownVisible(!dropdownVisible); // Toggle dropdown visibility
   };
