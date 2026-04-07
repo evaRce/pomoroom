@@ -287,7 +287,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
   def handle_event(
         "action.get_members",
-        %{"group_name" => group_name, "is_group" => _is_group, "is_visible" => _is_visible},
+        %{"group_name" => group_name, "is_group" => true, "is_visible" => true},
         socket
       ) do
     Groups.handle_get_members(group_name, socket)

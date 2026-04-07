@@ -77,10 +77,14 @@ export function useOutgoingLiveViewActions({
       removeEvent("update_status_request");
     }
     if (visibility) {
-      setIsVisibleDetail(visibility.is_visible);
-      if (visibility.is_group) {
-        pushEventToLiveView("action.get_members", visibility);
+      if (typeof visibility.is_visible === "boolean") {
+        setIsVisibleDetail(visibility.is_visible);
+
+        if (visibility.is_group && visibility.is_visible) {
+          pushEventToLiveView("action.get_members", visibility);
+        }
       }
+
       removeEvent("toggle_detail_visibility");
     }
     if (addGroup) {
