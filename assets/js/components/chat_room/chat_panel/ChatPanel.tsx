@@ -183,10 +183,10 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   }, [messages]);
 
   return (
-    <div className="flex flex-col flex-grow w-full border-l border-r">
+    <div className="flex h-full min-h-0 w-full flex-grow flex-col border-l border-r">
       <ChatHeader userLogin={userLogin} isVisibleDetail={isVisibleDetail} />
       <main
-        className="flex flex-col h-[83vh] overflow-y-auto overflow-x-hidden p-5 border-t border-b"
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden border-b border-t p-5"
         style={{ scrollbarWidth: "thin" }}
         ref={messagesEndRef}
         onScroll={handleMessagesScroll}

@@ -135,12 +135,12 @@ export default function ChatFooter({ addMessage }) {
     setInputStr("");
   };
 
-  const footerPadding = isGroupMemberRemoved && chatData.group_data ? "px-0 py-0" : "px-4 py-6";
+  const footerPadding = isGroupMemberRemoved && chatData.group_data ? "px-0 py-0" : "px-3 py-2 sm:px-4 sm:py-3";
   return (
-    <footer className={`flex justify-between ${isGroupMemberRemoved && chatData.group_data ? '' : 'bg-gray-300'} h-[7vh] ${footerPadding}`}>
+    <footer className={`shrink-0 flex min-h-16 justify-between ${isGroupMemberRemoved && chatData.group_data ? '' : 'bg-gray-300'} ${footerPadding}`}>
       {isGroupMemberRemoved && chatData.group_data ? (
         <div className="flex h-full w-full items-center justify-center bg-yellow-300 text-yellow-900 text-2xl font-bold tracking-wide" style={{padding: 0, borderRadius: 0}}>
-          <span className="mr-3" role="img" aria-label="warning">⚠️</span>
+          <span className="mx-3" role="img" aria-label="warning">⚠️</span>
           {groupMemberRemovedMessage}
         </div>
       ) : (

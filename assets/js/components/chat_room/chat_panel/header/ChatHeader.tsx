@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Button } from "antd";
-import { UsergroupAddOutlined } from "@ant-design/icons";
+import { Avatar, Button } from "antd";
+import { Info, Puzzle, UserPlus } from "lucide-react";
 import { useEventContext } from "../../EventContext";
 import AddMembersModal from "./AddMembersModal";
 import CallPanel from "../../call_panel/CallPanel";
@@ -72,9 +72,9 @@ export default function ChatHeader({ userLogin, isVisibleDetail }: ChatHeaderPro
       setChatData((prevChatData: any) =>
         prevChatData
           ? {
-              ...prevChatData,
-              removed_at: null,
-            }
+            ...prevChatData,
+            removed_at: null,
+          }
           : prevChatData
       );
 
@@ -190,55 +190,69 @@ export default function ChatHeader({ userLogin, isVisibleDetail }: ChatHeaderPro
     setIsModalVisible(isModalVisible);
   };
 
+  const openPluginMarketplace = () => {
+    console.log("Se abre el plugin marketplace...");
+  };
+
   return (
-    <header className="flex h-[10vh] justify-between items-center py-7 px-3 bg-gray-100 ">
+    <header className="shrink-0 border-b border-gray-200 bg-white shadow-sm">
       {chatData && (
-        <div className="flex items-center space-x-3">
-          <img
-            className="h-10 w-10 rounded-full bg-white cursor-pointer"
-            src={chatImage}
-            alt="default"
+        <div className="flex items-center justify-between px-4 py-3">
+          <button
+            type="button"
             onClick={showUserDetails}
-            style={{ cursor: "pointer" }}
-          />
-          <span className="text-grey-darkest ml-3">{chatName}</span>
+            className="flex items-center gap-3 text-left"
+          >
+            <Avatar
+              size={40}
+              src={chatImage}
+              className="bg-white text-blue-700 font-semibold"
+            >
+              {chatName?.charAt(0)?.toUpperCase()}
+            </Avatar>
+
+            <div className="flex items-center">
+              <span className="text-sm font-semibold text-gray-900 truncate">{chatName}</span>
+            </div>
+          </button>
+
+          <div className="flex items-center gap-2">
+            {chatData?.group_data && checkAdmin.is_admin && !isGroupMemberRemoved && (
+              <Button
+                type="text"
+                className="!h-9 !w-9 !rounded-lg text-gray-600 hover:!bg-blue-50 hover:!text-blue-600"
+                icon={<UserPlus className="h-5 w-5" />}
+                onClick={openAddMembersModal}
+                title="Añadir miembros"
+              />
+            )}
+
+            {!chatData?.group_data && <CallPanel chatName={chatName} userLogin={userLogin} />}
+
+            <Button
+              type="text"
+              className="!h-9 !w-9 !rounded-lg text-gray-600 hover:!bg-blue-50 hover:!text-blue-600"
+              icon={<Puzzle className="h-5 w-5" />}
+              onClick={openPluginMarketplace}
+              title="Plugins"
+              disabled={isGroupChat && isGroupMemberRemoved}
+            />
+
+            <Button
+              type="text"
+              className={`!h-9 !w-9 !rounded-lg ${isVisibleDetail
+                ? "!bg-blue-50 !text-blue-600"
+                : "text-gray-600 hover:!bg-gray-100 hover:!text-gray-900"
+                }`}
+              icon={<Info className="h-5 w-5" />}
+              onClick={showUserDetails}
+              title="Detalles del contacto"
+              disabled={isGroupChat && isGroupMemberRemoved}
+            />
+          </div>
         </div>
       )}
-      <div className="flex items-center gap-2">
-        {chatData?.group_data && checkAdmin.is_admin && !isGroupMemberRemoved && (
-          <Button
-            className="bg-white"
-            icon={<UsergroupAddOutlined />}
-            onClick={openAddMembersModal}
-            title="Añadir miembros"
-          />
-        )}
-        {!chatData?.group_data && (
-          <CallPanel chatName={chatName} userLogin={userLogin} />
-        )}
-        <Button
-          className="bg-white"
-          icon={
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="size-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"
-              />
-            </svg>
-          }
-          onClick={showUserDetails}
-          title="Detalles del contacto"
-          disabled={isGroupChat && isGroupMemberRemoved}
-        />
-      </div>
+      
       {chatData?.group_data && (
         <AddMembersModal
           chatData={chatData}
