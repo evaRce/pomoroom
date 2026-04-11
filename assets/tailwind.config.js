@@ -10,7 +10,8 @@ module.exports = {
   content: [
     "./js/**/*.{js,ts,jsx,tsx}",
     "../lib/pomoroom_web.ex",
-    "../lib/pomoroom_web/**/*.*ex"
+    "../lib/pomoroom_web/**/*.*ex",
+    "./components-shadcn/ui/**/*.{ts,tsx}",
   ],
   theme: {
     extend: {
