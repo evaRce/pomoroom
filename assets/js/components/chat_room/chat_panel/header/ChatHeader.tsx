@@ -4,6 +4,7 @@ import { Info, Puzzle, UserPlus } from "lucide-react";
 import { useEventContext } from "../../EventContext";
 import AddMembersModal from "./AddMembersModal";
 import CallPanel from "../../call_panel/CallPanel";
+import PluginMarketPlace, { AvailablePlugin, InstalledPlugin } from "../PluginMarketPlace";
 
 interface ChatHeaderProps {
   userLogin: any;
@@ -18,6 +19,9 @@ export default function ChatHeader({ userLogin, isVisibleDetail }: ChatHeaderPro
   const [chatName, setChatName] = useState("");
   const [chatImage, setChatImage] = useState("");
   const [isGroupMemberRemoved, setIsGroupMemberRemoved] = useState(false);
+  const [isPluginMarketplaceOpen, setIsPluginMarketplaceOpen] = useState(false);
+  const [installedPlugins, setInstalledPlugins] = useState<InstalledPlugin[]>([]);
+  const [activePluginId, setActivePluginId] = useState<string | null>(null);
   const isGroupChat = Boolean(chatData?.group_data);
   const currentChatId = chatData?.chat_id || chatData?.group_data?.chat_id || "";
   const currentGroupName = chatData?.group_data?.name || "";
@@ -191,30 +195,93 @@ export default function ChatHeader({ userLogin, isVisibleDetail }: ChatHeaderPro
   };
 
   const openPluginMarketplace = () => {
-    console.log("Se abre el plugin marketplace...");
+    setIsPluginMarketplaceOpen(true);
+  };
+
+  const handleInstallPlugin = (plugin: AvailablePlugin) => {
+    setInstalledPlugins((prevPlugins) => {
+      if (prevPlugins.some((prevPlugin) => prevPlugin.id === plugin.id)) {
+        return prevPlugins;
+      }
+
+      return [
+        ...prevPlugins,
+        {
+          id: plugin.id,
+          name: plugin.name,
+          icon: plugin.icon,
+        },
+      ];
+    });
+  };
+
+  const handleUninstallPlugin = (pluginId: string) => {
+    if (!chatName) return
+    setInstalledPlugins((prevPlugins) => prevPlugins.filter((plugin) => plugin.id !== pluginId))
+    if (activePluginId === pluginId) {
+      setActivePluginId(null)
+    }
+  }
+
+  const togglePluginTab = (pluginId: string | null) => {
+    setActivePluginId((currentActivePluginId) =>
+      currentActivePluginId === pluginId ? null : pluginId
+    );
   };
 
   return (
     <header className="shrink-0 border-b border-gray-200 bg-white shadow-sm">
       {chatData && (
         <div className="flex items-center justify-between px-4 py-3">
-          <button
-            type="button"
-            onClick={showUserDetails}
-            className="flex items-center gap-3 text-left"
-          >
-            <Avatar
-              size={40}
-              src={chatImage}
-              className="bg-white text-blue-700 font-semibold"
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={showUserDetails}
+              className="flex items-center gap-3 text-left"
             >
-              {chatName?.charAt(0)?.toUpperCase()}
-            </Avatar>
+              <Avatar
+                size={40}
+                src={chatImage}
+                className="bg-white text-blue-700 font-semibold"
+              >
+                {chatName?.charAt(0)?.toUpperCase()}
+              </Avatar>
 
-            <div className="flex items-center">
-              <span className="text-sm font-semibold text-gray-900 truncate">{chatName}</span>
-            </div>
-          </button>
+              <div className="flex items-start">
+                <span className="text-sm font-semibold text-gray-900 truncate">{chatName}</span>
+              </div>
+            </button>
+
+            {installedPlugins.length > 0 && (
+              <div className="flex items-center gap-2 overflow-x-auto">
+                <button
+                  type="button"
+                  onClick={() => togglePluginTab(null)}
+                  className={`h-8 rounded-md border px-3 text-xs font-medium transition-all ${activePluginId === null
+                    ? "border-sky-200 bg-sky-100 text-sky-800"
+                    : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                    }`}
+                >
+                  💬 Chat
+                </button>
+                {installedPlugins.map((plugin) => (
+                  <button
+                    type="button"
+                    key={plugin.id}
+                    onClick={() => togglePluginTab(plugin.id)}
+                    title={plugin.name}
+                    className={`h-8 rounded-md border px-3 text-xs font-medium transition-all ${activePluginId === plugin.id
+                      ? "border-sky-200 bg-sky-100 text-sky-800"
+                      : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                      }`}
+                  >
+                    <span className="mr-1">{plugin.icon}</span>
+                    {plugin.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div className="flex items-center gap-2">
             {chatData?.group_data && checkAdmin.is_admin && !isGroupMemberRemoved && (
@@ -252,7 +319,7 @@ export default function ChatHeader({ userLogin, isVisibleDetail }: ChatHeaderPro
           </div>
         </div>
       )}
-      
+
       {chatData?.group_data && (
         <AddMembersModal
           chatData={chatData}
@@ -260,6 +327,14 @@ export default function ChatHeader({ userLogin, isVisibleDetail }: ChatHeaderPro
           isModalVisibleFromHeader={isModalVisible}
         />
       )}
+
+      <PluginMarketPlace
+        open={isPluginMarketplaceOpen}
+        onOpenChange={setIsPluginMarketplaceOpen}
+        installedPlugins={installedPlugins}
+        onInstallPlugin={handleInstallPlugin}
+        onUninstallPlugin={handleUninstallPlugin}
+      />
     </header>
   );
 }
