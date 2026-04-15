@@ -3,6 +3,7 @@ import { useEventContext } from "../EventContext";
 import MessageItem from "./body/MessageItem";
 import ChatHeader from "./header/ChatHeader";
 import ChatFooter from "./footer/ChatFooter";
+import { PomodoroTimer } from "../pomodoro_timer/PomodoroTimer";
 
 interface ChatPanelProps {
   isVisibleDetail: boolean;
@@ -22,6 +23,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   const [isPrivateChat, setIsPrivateChat] = useState(false);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [hasMoreOlder, setHasMoreOlder] = useState(true);
+  const [activePluginId, setActivePluginId] = useState<string | null>(null)
 
   const getMessageUniqueKey = (message: any) => {
     const data = message?.data || {};
@@ -182,32 +184,65 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
     container.scrollTop = container.scrollHeight;
   }, [messages]);
 
+  const renderPlugin = (pluginId: string) => {
+    switch (pluginId) {
+      case "pomodoro":
+        return <PomodoroTimer />
+      case "kanban":
+        return <p className="p-4">Aquí se mostraría el plugin de Kanban</p>
+      default:
+        return null
+    }
+  }
+
+  const handleTogglePluginTab = (pluginId: string | null) => {
+    setActivePluginId(pluginId);
+  };
+
   return (
     <div className="flex h-full min-h-0 w-full flex-grow flex-col border-l border-r">
-      <ChatHeader userLogin={userLogin} isVisibleDetail={isVisibleDetail} />
-      <main
-        className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden border-b border-t p-5"
-        style={{ scrollbarWidth: "thin" }}
-        ref={messagesEndRef}
-        onScroll={handleMessagesScroll}
-      >
-        {messages.length > 0 &&
-          messages.map((message) => {
-            const isMyMessage = message.data.from_user === userLogin?.nickname;
-            const shouldHideIdentity = isPrivateChat || (isMyMessage && !isPrivateChat);
-            
-            return (
-              <MessageItem
-                key={getMessageUniqueKey(message)}
-                message={message}
-                userLogin={userLogin}
-                hideSenderIdentity={shouldHideIdentity}
-              />
-            );
-          })}
-        <div></div>
-      </main>
-      <ChatFooter addMessage={addMessage} />
+      <ChatHeader
+        userLogin={userLogin}
+        isVisibleDetail={isVisibleDetail}
+        activePluginId={activePluginId}
+        onTogglePluginTab={handleTogglePluginTab}
+      />
+
+      {/* Content area - either chat messages or plugin */}
+      {activePluginId && renderPlugin ? (
+        <div className="flex-1 overflow-hidden">
+          {renderPlugin(activePluginId)}
+        </div>
+      ) : (
+        <>
+          {/* Messages area */}
+          <main
+            className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden border-b border-t p-5"
+            style={{ scrollbarWidth: "thin" }}
+            ref={messagesEndRef}
+            onScroll={handleMessagesScroll}
+          >
+            {messages.length > 0 &&
+              messages.map((message) => {
+                const isMyMessage = message.data.from_user === userLogin?.nickname;
+                const shouldHideIdentity = isPrivateChat || (isMyMessage && !isPrivateChat);
+                
+                return (
+                  <MessageItem
+                    key={getMessageUniqueKey(message)}
+                    message={message}
+                    userLogin={userLogin}
+                    hideSenderIdentity={shouldHideIdentity}
+                  />
+                );
+              })}
+            <div></div>
+          </main>
+
+          {/* Message input area */}
+          <ChatFooter addMessage={addMessage} />
+        </>
+      )}
     </div>
   );
 }

@@ -9,9 +9,16 @@ import PluginMarketPlace, { AvailablePlugin, InstalledPlugin } from "../PluginMa
 interface ChatHeaderProps {
   userLogin: any;
   isVisibleDetail: boolean;
+  activePluginId: string | null;
+  onTogglePluginTab: (pluginId: string | null) => void;
 }
 
-export default function ChatHeader({ userLogin, isVisibleDetail }: ChatHeaderProps) {
+export default function ChatHeader({
+  userLogin,
+  isVisibleDetail,
+  activePluginId,
+  onTogglePluginTab,
+}: ChatHeaderProps) {
   const { addEvent, getEventData, removeEvent } = useEventContext() as any;
   const [chatData, setChatData] = useState<any>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -21,7 +28,6 @@ export default function ChatHeader({ userLogin, isVisibleDetail }: ChatHeaderPro
   const [isGroupMemberRemoved, setIsGroupMemberRemoved] = useState(false);
   const [isPluginMarketplaceOpen, setIsPluginMarketplaceOpen] = useState(false);
   const [installedPlugins, setInstalledPlugins] = useState<InstalledPlugin[]>([]);
-  const [activePluginId, setActivePluginId] = useState<string | null>(null);
   const isGroupChat = Boolean(chatData?.group_data);
   const currentChatId = chatData?.chat_id || chatData?.group_data?.chat_id || "";
   const currentGroupName = chatData?.group_data?.name || "";
@@ -76,9 +82,9 @@ export default function ChatHeader({ userLogin, isVisibleDetail }: ChatHeaderPro
       setChatData((prevChatData: any) =>
         prevChatData
           ? {
-            ...prevChatData,
-            removed_at: null,
-          }
+              ...prevChatData,
+              removed_at: null,
+            }
           : prevChatData
       );
 
@@ -219,14 +225,17 @@ export default function ChatHeader({ userLogin, isVisibleDetail }: ChatHeaderPro
     if (!chatName) return
     setInstalledPlugins((prevPlugins) => prevPlugins.filter((plugin) => plugin.id !== pluginId))
     if (activePluginId === pluginId) {
-      setActivePluginId(null)
+      onTogglePluginTab(null)
     }
   }
 
   const togglePluginTab = (pluginId: string | null) => {
-    setActivePluginId((currentActivePluginId) =>
-      currentActivePluginId === pluginId ? null : pluginId
-    );
+    if (activePluginId === pluginId) {
+      onTogglePluginTab(null);
+      return;
+    }
+
+    onTogglePluginTab(pluginId);
   };
 
   return (
