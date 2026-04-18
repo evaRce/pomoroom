@@ -4,6 +4,7 @@ import MessageItem from "./body/MessageItem";
 import ChatHeader from "./header/ChatHeader";
 import ChatFooter from "./footer/ChatFooter";
 import { PomodoroTimer } from "../pomodoro_timer/PomodoroTimer";
+import { KanbanBoard } from "../kanban_board_panel/KanbanBoard";
 
 interface ChatPanelProps {
   isVisibleDetail: boolean;
@@ -189,7 +190,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
       case "pomodoro":
         return <PomodoroTimer />
       case "kanban":
-        return <p className="p-4">Aquí se mostraría el plugin de Kanban</p>
+        return <KanbanBoard />
       default:
         return null
     }
