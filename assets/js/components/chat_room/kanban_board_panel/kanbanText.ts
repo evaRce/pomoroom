@@ -21,9 +21,9 @@ export const KANBAN_TEXT = {
 
   column: {
     initialTitle: {
-      todo: "To Do",
-      inProgress: "In Progress",
-      done: "Done",
+      todo: "Por hacer",
+      inProgress: "En progreso",
+      done: "Hecho",
     },
     delete: {
       title: "Eliminar columna",
