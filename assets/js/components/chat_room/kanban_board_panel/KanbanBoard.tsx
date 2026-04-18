@@ -428,8 +428,11 @@ export function KanbanBoard() {
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="flex h-full w-full bg-gray-50 overflow-hidden">
-        <div className="flex-1 overflow-x-auto">
+      <div className="flex h-full min-w-0 w-full bg-gray-50">
+        <div
+          className="kanban-horizontal-scroll min-w-0 flex-1 overflow-x-auto overflow-y-hidden"
+          style={{ scrollbarWidth: "thin" }}
+        >
           <div className="flex w-max min-w-full gap-4 p-4">
             {columns.map((column) => (
               <KanbanColumn

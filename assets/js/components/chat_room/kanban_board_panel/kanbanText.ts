@@ -1,5 +1,3 @@
-  
-// Constantes de texto para la UI del Kanban
 export const KANBAN_TEXT = {
   task: {
     delete: {

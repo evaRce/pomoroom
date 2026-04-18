@@ -201,7 +201,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   };
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-grow flex-col border-l border-r">
+    <div className="flex h-full min-h-0 min-w-0 w-full flex-grow flex-col border-l border-r">
       <ChatHeader
         userLogin={userLogin}
         isVisibleDetail={isVisibleDetail}
@@ -211,7 +211,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
 
       {/* Content area - either chat messages or plugin */}
       {activePluginId && renderPlugin ? (
-        <div className="flex-1 overflow-hidden">
+        <div className="flex min-h-0 min-w-0 flex-1">
           {renderPlugin(activePluginId)}
         </div>
       ) : (
