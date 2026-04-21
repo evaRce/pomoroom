@@ -13,6 +13,7 @@ import { Input } from "../../../../components-shadcn/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "../../../../components-shadcn/ui/popover";
 import { cn } from "../../../../lib/utils";
 import { Switch } from "antd";
+import pomodoroTimerText from "./pomodoroTimerText";
 
 type TimerMode = "work" | "shortBreak" | "longBreak";
 
@@ -131,11 +132,11 @@ export function PomodoroTimer() {
   const getModeInfo = () => {
     switch (mode) {
       case "work":
-        return { label: "Trabajo", icon: Brain, color: "text-sky-500" }
+        return { label: pomodoroTimerText.work, icon: Brain, color: "text-sky-500" }
       case "shortBreak":
-        return { label: "Descanso corto", icon: Coffee, color: "text-green-500" }
+        return { label: pomodoroTimerText.shortBreak, icon: Coffee, color: "text-green-500" }
       case "longBreak":
-        return { label: "Descanso largo", icon: Sparkles, color: "text-yellow-500" }
+        return { label: pomodoroTimerText.longBreak, icon: Sparkles, color: "text-yellow-500" }
     }
   };
 
@@ -145,7 +146,7 @@ export function PomodoroTimer() {
   const validateLongBreak = (newLongBreak: number, shortBreak: number) => {
     if (newLongBreak <= shortBreak) {
       alert(
-        "El tiempo de `descanso corto` debe ser menor que el tiempo de `descanso largo`."
+        pomodoroTimerText.alertShortVsLong
       );
       return false;
     }
@@ -153,7 +154,7 @@ export function PomodoroTimer() {
   };
   
   return (
-    <div className="flex flex-col items-center justify-center h-full bg-gray-50 p-6">
+    <div className="flex flex-col items-center justify-center h-full w-full bg-gray-50 p-6">
       {/* Mode selector */}
       <div className="flex items-center gap-2 mb-8">
         <Button
@@ -168,7 +169,7 @@ export function PomodoroTimer() {
           onClick={() => handleModeChange("work")}
         >
           <Brain className="h-3.5 w-3.5 mr-1.5" />
-          Trabajo
+          {pomodoroTimerText.work}
         </Button>
         <Button
           variant="ghost"
@@ -182,7 +183,7 @@ export function PomodoroTimer() {
           onClick={() => handleModeChange("shortBreak")}
         >
           <Coffee className="h-3.5 w-3.5 mr-1.5" />
-          Descanso corto
+          {pomodoroTimerText.shortBreak}
         </Button>
         <Button
           variant="ghost"
@@ -196,7 +197,7 @@ export function PomodoroTimer() {
           onClick={() => handleModeChange("longBreak")}
         >
           <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-          Descanso largo
+          {pomodoroTimerText.longBreak}
         </Button>
       </div>
 
@@ -244,7 +245,7 @@ export function PomodoroTimer() {
             {formatTime(timeLeft)}
           </span>
           <span className="text-sm text-slate-500 mt-2">
-            Ciclo {cyclesCompleted + 1}
+            {pomodoroTimerText.cycle} {cyclesCompleted + 1}
           </span>
         </div>
       </div>
@@ -311,12 +312,12 @@ export function PomodoroTimer() {
           <PopoverContent className="w-72 bg-gray-100" align="center">
             <div className="flex flex-col gap-4">
               <h4 className="text-base font-semibold text-slate-900">
-                Configuración del temporizador
+                {pomodoroTimerText.timerSettings}
               </h4>
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <label className="text-sm text-slate-700">
-                    Trabajo (minutos)
+                    {pomodoroTimerText.workMinutes}
                   </label>
                   <Input
                     type="number"
@@ -334,7 +335,7 @@ export function PomodoroTimer() {
                 </div>
                 <div className="flex items-center justify-between">
                   <label className="text-sm text-slate-700">
-                    Descanso corto (minutos)
+                    {pomodoroTimerText.shortBreakMinutes}
                   </label>
                   <Input
                     type="number"
@@ -352,7 +353,7 @@ export function PomodoroTimer() {
                 </div>
                 <div className="flex items-center justify-between">
                   <label className="text-sm text-slate-700">
-                    Descanso largo (minutos)
+                    {pomodoroTimerText.longBreakMinutes}
                   </label>
                   <Input
                     type="number"
@@ -373,7 +374,7 @@ export function PomodoroTimer() {
                 </div>
                 <div className="flex items-center justify-between">
                   <label className="text-sm text-slate-700">
-                    Ciclos antes de descanso largo
+                    {pomodoroTimerText.cyclesBeforeLongBreak}
                   </label>
                   <Input
                     type="number"
@@ -391,7 +392,7 @@ export function PomodoroTimer() {
                 </div>
                 <div className="flex items-center justify-between mt-2">
                   <label className="text-sm text-slate-700">
-                    Sonido fin de periodo
+                    {pomodoroTimerText.soundEndPeriod}
                   </label>
                   <Switch className="bg-gray-500" checked={soundEnabled} onChange={setSoundEnabled} />
                 </div>
@@ -436,7 +437,7 @@ export function PomodoroTimer() {
         })}
       </div>
       <p className="text-xs text-slate-500 mt-2">
-        {cyclesCompleted} {cyclesCompleted === 1 ? "ciclo completado" : "ciclos completados"} hoy
+        {pomodoroTimerText.cyclesCompleted(cyclesCompleted)}
       </p>
     </div>
   )

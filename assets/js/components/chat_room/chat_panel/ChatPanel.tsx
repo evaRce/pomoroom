@@ -211,7 +211,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
 
       {/* Content area - either chat messages or plugin */}
       {activePluginId && renderPlugin ? (
-        <div className="flex min-h-0 min-w-0 flex-1">
+        <div className="flex min-h-0 min-w-0 flex-1 justify-center items-center">
           {renderPlugin(activePluginId)}
         </div>
       ) : (
