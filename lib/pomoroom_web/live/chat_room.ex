@@ -4,6 +4,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
   alias PomoroomWeb.ChatLive.ChatRoom.Contacts
   alias PomoroomWeb.ChatLive.ChatRoom.FriendRequests
   alias PomoroomWeb.ChatLive.ChatRoom.Groups
+  alias PomoroomWeb.ChatLive.ChatRoom.Plugins
   alias PomoroomWeb.ChatLive.ChatRoom.Runtime
   alias Phoenix.Socket.Broadcast
   alias Phoenix.PubSub
@@ -221,6 +222,22 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         %{assigns: %{user_info: user}} = socket
       ) do
     Chats.handle_send_group_message(message, to_group_name, user, socket)
+  end
+
+  def handle_event(
+        "action.install_chat_plugin",
+        %{"chat_id" => chat_id, "chat_type" => chat_type, "plugin_id" => plugin_id},
+        %{assigns: %{user_info: user}} = socket
+      ) do
+    Plugins.handle_install_chat_plugin(chat_id, chat_type, plugin_id, user, socket)
+  end
+
+  def handle_event(
+        "action.uninstall_chat_plugin",
+        %{"chat_id" => chat_id, "chat_type" => chat_type, "plugin_id" => plugin_id},
+        %{assigns: %{user_info: user}} = socket
+      ) do
+    Plugins.handle_uninstall_chat_plugin(chat_id, chat_type, plugin_id, user, socket)
   end
 
   def handle_event(

@@ -41,6 +41,8 @@ export function useOutgoingLiveViewActions({
     const newAnswer = getEventData("new_answer");
     const endCall = getEventData("end_private_call");
     const loadOlderMessages = getEventData("load_older_messages");
+    const installChatPlugin = getEventData("install_chat_plugin");
+    const uninstallChatPlugin = getEventData("uninstall_chat_plugin");
     const refreshConversations = getEventData("refresh_conversations");
     const groupDeleted = getEventData("group_deleted");
     const logout = getEventData("logout");
@@ -149,6 +151,14 @@ export function useOutgoingLiveViewActions({
     if (loadOlderMessages) {
       pushEventToLiveView("action.load_older_messages", loadOlderMessages);
       removeEvent("load_older_messages");
+    }
+    if (installChatPlugin) {
+      pushEventToLiveView("action.install_chat_plugin", installChatPlugin);
+      removeEvent("install_chat_plugin");
+    }
+    if (uninstallChatPlugin) {
+      pushEventToLiveView("action.uninstall_chat_plugin", uninstallChatPlugin);
+      removeEvent("uninstall_chat_plugin");
     }
     if (refreshConversations) {
       pushEventToLiveView("action.get_list_contact", {});

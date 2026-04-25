@@ -48,4 +48,16 @@ export function useChatSessionEvents({
       addEvent(eventName, eventData);
     }
   }, [eventData.messages, eventData.has_more]);
+
+  useEffect(() => {
+    if (eventName === "chat_plugin_installed") {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.chat_id, eventData.plugin]);
+
+  useEffect(() => {
+    if (eventName === "chat_plugin_uninstalled") {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.chat_id, eventData.plugin]);
 }

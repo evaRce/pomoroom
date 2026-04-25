@@ -37,6 +37,8 @@ export default function ChatHeader({
 
     if (privateChat) {
       setChatData(privateChat);
+      setInstalledPlugins(privateChat.installed_plugins || []);
+      onTogglePluginTab(null);
     }
   }, [getEventData("open_private_chat")]);
 
@@ -45,8 +47,60 @@ export default function ChatHeader({
     if (groupChat) {
       setChatData(groupChat);
       setIsGroupMemberRemoved(Boolean(groupChat.removed_at));
+      setInstalledPlugins(groupChat.installed_plugins || []);
+      onTogglePluginTab(null);
     }
   }, [getEventData("open_group_chat")]);
+
+  useEffect(() => {
+    const pluginInstalledEvent = getEventData("chat_plugin_installed");
+
+    if (!pluginInstalledEvent) {
+      return;
+    }
+
+    if (pluginInstalledEvent.chat_id !== currentChatId) {
+      removeEvent("chat_plugin_installed");
+      return;
+    }
+
+    const installedPlugin = pluginInstalledEvent.plugin;
+
+    setInstalledPlugins((prevPlugins) => {
+      if (prevPlugins.some((plugin) => plugin.id === installedPlugin.id)) {
+        return prevPlugins;
+      }
+
+      return [...prevPlugins, installedPlugin];
+    });
+
+    removeEvent("chat_plugin_installed");
+  }, [getEventData("chat_plugin_installed"), currentChatId]);
+
+  useEffect(() => {
+    const pluginUninstalledEvent = getEventData("chat_plugin_uninstalled");
+
+    if (!pluginUninstalledEvent) {
+      return;
+    }
+
+    if (pluginUninstalledEvent.chat_id !== currentChatId) {
+      removeEvent("chat_plugin_uninstalled");
+      return;
+    }
+
+    const uninstalledPlugin = pluginUninstalledEvent.plugin;
+
+    setInstalledPlugins((prevPlugins) =>
+      prevPlugins.filter((plugin) => plugin.id !== uninstalledPlugin.id)
+    );
+
+    if (activePluginId === uninstalledPlugin.id) {
+      onTogglePluginTab(null);
+    }
+
+    removeEvent("chat_plugin_uninstalled");
+  }, [getEventData("chat_plugin_uninstalled"), currentChatId, activePluginId]);
 
   useEffect(() => {
     const groupMemberRemovedEvent = getEventData("group_member_removed");
@@ -205,29 +259,28 @@ export default function ChatHeader({
   };
 
   const handleInstallPlugin = (plugin: AvailablePlugin) => {
-    setInstalledPlugins((prevPlugins) => {
-      if (prevPlugins.some((prevPlugin) => prevPlugin.id === plugin.id)) {
-        return prevPlugins;
-      }
+    if (!currentChatId) {
+      return;
+    }
 
-      return [
-        ...prevPlugins,
-        {
-          id: plugin.id,
-          name: plugin.name,
-          icon: plugin.icon,
-        },
-      ];
+    addEvent("install_chat_plugin", {
+      chat_id: currentChatId,
+      chat_type: isGroupChat ? "group" : "private",
+      plugin_id: plugin.id,
     });
   };
 
   const handleUninstallPlugin = (pluginId: string) => {
-    if (!chatName) return
-    setInstalledPlugins((prevPlugins) => prevPlugins.filter((plugin) => plugin.id !== pluginId))
-    if (activePluginId === pluginId) {
-      onTogglePluginTab(null)
+    if (!currentChatId) {
+      return;
     }
-  }
+
+    addEvent("uninstall_chat_plugin", {
+      chat_id: currentChatId,
+      chat_type: isGroupChat ? "group" : "private",
+      plugin_id: pluginId,
+    });
+  };
 
   const togglePluginTab = (pluginId: string | null) => {
     if (activePluginId === pluginId) {

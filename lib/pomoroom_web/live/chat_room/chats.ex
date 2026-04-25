@@ -3,6 +3,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
   import Phoenix.LiveView, only: [push_event: 3]
 
   alias Pomoroom.ChatRoom.ChatServer
+  alias Pomoroom.ChatPlugins
   alias Pomoroom.FriendRequests
   alias Pomoroom.GroupChats
   alias Pomoroom.PrivateChats
@@ -170,12 +171,15 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
         }
       end)
 
+    installed_plugins = ChatPlugins.list_installed_plugins(group_chat.chat_id, "group")
+
     payload = %{
       event_name: "open_group_chat",
       event_data: %{
         chat_id: group_chat.chat_id,
         is_admin: is_admin,
         group_data: group_chat,
+        installed_plugins: installed_plugins,
         messages: messages_with_images_user,
         has_more: length(messages_with_images_user) == @initial_messages_limit,
         removed_at: removed_at
@@ -261,8 +265,12 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
             %{data: msg, image_user: image_user}
           end)
 
-        socket = assign(socket, :chat_id, private_chat.chat_id)
-        socket = assign(socket, :current_group_joined_at, joined_at)
+        socket =
+          socket
+          |> assign(:chat_id, private_chat.chat_id)
+          |> assign(:current_group_joined_at, joined_at)
+
+        installed_plugins = ChatPlugins.list_installed_plugins(private_chat.chat_id, "private")
 
         payload = %{
           event_name: "open_private_chat",
@@ -270,6 +278,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
             chat_id: private_chat.chat_id,
             from_user_data: user,
             to_user_data: to_user_data,
+            installed_plugins: installed_plugins,
             messages: messages_with_images_user,
             has_more: length(messages_with_images_user) == @initial_messages_limit
           }

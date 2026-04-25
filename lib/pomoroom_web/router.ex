@@ -31,11 +31,10 @@ defmodule PomoroomWeb.Router do
     live "/chat", ChatLive.ChatRoom
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", PomoroomWeb do
-  #   pipe_through :api
-  #   get "/", PageController, :home
-  # end
+  scope "/api", PomoroomWeb do
+    pipe_through :api
+    get "/plugins", PluginController, :index
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:pomoroom, :dev_routes) do

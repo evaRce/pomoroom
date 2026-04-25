@@ -1,15 +1,16 @@
-import React from "react";
-import { LayoutGrid, Timer, X } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { LayoutGrid, Puzzle, Timer } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, } from "../../../../components-shadcn/ui/dialog";
 import { Button } from "../../../../components-shadcn/ui/button"
 import { cn } from "../../../../lib/utils";
+import pluginMarketPlaceText from "./pluginMarketPlaceText";
 
 export interface AvailablePlugin {
   id: string;
   name: string;
   description: string;
   icon: string;
-  iconComponent: React.ReactNode;
+  iconComponent?: React.ReactNode;
 }
 
 export interface InstalledPlugin {
@@ -18,24 +19,14 @@ export interface InstalledPlugin {
   icon: string;
 }
 
-const availablePlugins: AvailablePlugin[] = [
-  {
-    id: "pomodoro",
-    name: "Temporizador Pomodoro",
-    description:
-      "Temporizador compartido para sesiones de trabajo y descanso dentro del chat.",
-    icon: "⏱️",
-    iconComponent: <Timer className="h-6 w-6 text-sky-500" />,
-  },
-  {
-    id: "kanban",
-    name: "Tablero Kanban",
-    description:
-      "Tablero compartido para organizar tareas en columnas To Do, In Progress y Done.",
-    icon: "📋",
-    iconComponent: <LayoutGrid className="h-6 w-6 text-green-500" />,
-  },
-];
+type AvailablePluginApiResponse = {
+  data: Omit<AvailablePlugin, "iconComponent">[];
+};
+
+const iconComponentMap: Record<string, React.ReactNode> = {
+  pomodoro: <Timer className="h-6 w-6 text-sky-500" />,
+  kanban: <LayoutGrid className="h-6 w-6 text-green-500" />,
+};
 
 interface PluginMarketPlaceProps {
   open: boolean;
@@ -52,19 +43,81 @@ export default function PluginMarketPlace({
   onInstallPlugin,
   onUninstallPlugin,
 }: PluginMarketPlaceProps) {
+  const [availablePlugins, setAvailablePlugins] = useState<AvailablePlugin[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadPlugins = async () => {
+      setIsLoading(true);
+      setLoadError(null);
+
+      try {
+        const response = await fetch("/api/plugins", {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(pluginMarketPlaceText.fetchError);
+        }
+
+        const payload = (await response.json()) as AvailablePluginApiResponse;
+        const plugins = Array.isArray(payload?.data) ? payload.data : [];
+
+        if (!cancelled) {
+          setAvailablePlugins(
+            plugins.map((plugin) => ({
+              ...plugin,
+              iconComponent: iconComponentMap[plugin.id],
+            }))
+          );
+        }
+      } catch (_error) {
+        if (!cancelled) {
+          setLoadError(pluginMarketPlaceText.loadError);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadPlugins();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+
   const isInstalled = (pluginId: string) => installedPlugins.some((plugin) => plugin.id === pluginId);
+  const hasPlugins = useMemo(() => availablePlugins.length > 0, [availablePlugins.length]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg mx-auto md:max-w-xl bg-gray-50">
         <DialogHeader>
-          <DialogTitle>Tienda de Plugins</DialogTitle>
+          <DialogTitle>{pluginMarketPlaceText.title}</DialogTitle>
           <DialogDescription>
-            Instala plugins compartidos para esta conversacion.
+            {pluginMarketPlaceText.description}
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
+          {isLoading && <p className="text-sm text-slate-500">{pluginMarketPlaceText.loading}</p>}
+          {loadError && <p className="text-sm text-red-500">{loadError}</p>}
+          {!isLoading && !loadError && !hasPlugins && (
+            <p className="text-sm text-slate-500">{pluginMarketPlaceText.empty}</p>
+          )}
           {availablePlugins.map((plugin) => {
             const installed = isInstalled(plugin.id);
             return (
@@ -80,7 +133,7 @@ export default function PluginMarketPlace({
                 <div className="flex items-start gap-4">
                   {/* Icon */}
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-200 self-center">
-                    {plugin.iconComponent}
+                    {plugin.iconComponent || <Puzzle className="h-6 w-6 text-slate-500" />}
                   </div>
 
                   {/* Content */}
@@ -101,7 +154,7 @@ export default function PluginMarketPlace({
                           className="h-8 text-xs !font-extrabold text-red-400 bg-gray-50 border-red-300 hover:bg-red-50 hover:border-red-200"
                           onClick={() => onUninstallPlugin(plugin.id)}
                         >
-                          Desinstalar
+                          {pluginMarketPlaceText.uninstall}
                         </Button>
                       ) : (
                           <Button
@@ -109,7 +162,7 @@ export default function PluginMarketPlace({
                             className="h-8 text-xs !font-extrabold text-white bg-green-600 hover:bg-green-700"
                             onClick={() => onInstallPlugin(plugin)}
                           >
-                            Instalar
+                            {pluginMarketPlaceText.install}
                           </Button>
                       )}
                     </div>
