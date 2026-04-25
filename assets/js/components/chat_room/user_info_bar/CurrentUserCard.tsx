@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Button, Modal, Dropdown } from "antd";
-import { ClockCircleOutlined, UserAddOutlined, MoreOutlined } from '@ant-design/icons';
+import { UserAddOutlined, MoreOutlined } from '@ant-design/icons';
 import { useEventContext } from "../EventContext";
-import PomodoroCountdown from "../pomodoro_timer/PomodoroCountdown";
 import AddContactOrGroup from "./AddContactOrGroup";
 
 export default function CurrentUserCard() {
 	const [userLogin, setUserLogin] = useState(null);
 	const [showModal, setShowModal] = useState(false);
 	const { addEvent, getEventData, removeEvent } = useEventContext();
-	const [showTimerModal, setShowTimerModal] = useState(false);
 	const [dropdownVisible, setDropdownVisible] = useState(false);
 
 	useEffect(() => {
@@ -26,14 +24,6 @@ export default function CurrentUserCard() {
 
 	const handleDataFromChild = (showModal) => {
 		setShowModal(showModal);
-	};
-
-	const showTimerModalHandler = () => {
-		setShowTimerModal(true);
-	};
-
-	const closeTimerModalHandler = () => {
-		setShowTimerModal(false);
 	};
 
 	const handleMenuClick = (e, key) => {
@@ -104,7 +94,6 @@ export default function CurrentUserCard() {
 						</span>
 						<div className="flex gap-1">
 							<Button icon={<UserAddOutlined />} onClick={showAddEntryModal} title="Añadir contacto/grupo" />
-							<Button className="hidden lg:block" icon={<ClockCircleOutlined />} onClick={showTimerModalHandler} title="Temporizador Pomodoro" />
 							<Dropdown
 								menu={menuProps}
 								trigger={["click"]}
@@ -122,16 +111,6 @@ export default function CurrentUserCard() {
 				</div>)
 			}
 			<AddContactOrGroup sendDataToParent={handleDataFromChild} receiveDataFromParent={showModal} />
-			<Modal
-				width="auto"
-				open={showTimerModal}
-				onCancel={closeTimerModalHandler}
-				footer={null}
-				centered
-				className="m-5"
-			>
-				<PomodoroCountdown />
-			</Modal>
 		</div>
 	);
 }
