@@ -188,7 +188,12 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   const renderPlugin = (pluginId: string) => {
     switch (pluginId) {
       case "pomodoro":
-        return <PomodoroTimer />
+        return (
+          <PomodoroTimer
+            chatId={currentChatId}
+            chatType={isPrivateChat ? "private" : "group"}
+          />
+        )
       case "kanban":
         return <KanbanBoard />
       default:

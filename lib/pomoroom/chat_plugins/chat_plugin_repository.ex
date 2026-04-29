@@ -36,7 +36,7 @@ defmodule Pomoroom.ChatPlugins.ChatPluginRepository do
     Mongo.delete_many(:mongo, @collection, %{})
   end
 
-  defp get_changes_from_changeset(args) do
+  def get_changes_from_changeset(args) do
     ChatPluginSchema.chat_plugin_changeset(args).changes
   end
 end

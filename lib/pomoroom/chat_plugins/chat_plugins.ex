@@ -5,5 +5,6 @@ defmodule Pomoroom.ChatPlugins do
   defdelegate uninstall_plugin(chat_id, chat_type, plugin_id), to: ChatPluginService
   defdelegate list_installed_plugins(chat_id, chat_type), to: ChatPluginService
   defdelegate list_available_plugins(), to: ChatPluginService
+  defdelegate plugin_installed?(chat_id, chat_type, plugin_id), to: ChatPluginService
   defdelegate get_plugin_data(plugin_id), to: ChatPluginService
 end

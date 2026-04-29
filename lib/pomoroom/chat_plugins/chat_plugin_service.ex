@@ -1,5 +1,6 @@
 defmodule Pomoroom.ChatPlugins.ChatPluginService do
   alias Pomoroom.ChatPlugins.{ChatPluginRepository, ChatPluginSchema}
+  alias Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerService
 
   @plugins %{
     "pomodoro" => %{
@@ -11,7 +12,8 @@ defmodule Pomoroom.ChatPlugins.ChatPluginService do
     "kanban" => %{
       id: "kanban",
       name: "Tablero Kanban",
-      description: "Tablero compartido para organizar tareas en columnas To Do, In Progress y Done.",
+      description:
+        "Tablero compartido para organizar tareas en columnas To Do, In Progress y Done.",
       icon: "📋"
     }
   }
@@ -39,7 +41,15 @@ defmodule Pomoroom.ChatPlugins.ChatPluginService do
 
       {:ok, plugin_data} ->
         ChatPluginRepository.delete(chat_id, chat_type, plugin_id)
+        maybe_cleanup_plugin_data(chat_id, chat_type, plugin_id)
         {:ok, plugin_data}
+    end
+  end
+
+  def plugin_installed?(chat_id, chat_type, plugin_id) do
+    case ChatPluginRepository.get_by_chat_type_and_plugin(chat_id, chat_type, plugin_id) do
+      {:ok, _installation} -> true
+      {:error, :not_found} -> false
     end
   end
 
@@ -88,4 +98,10 @@ defmodule Pomoroom.ChatPlugins.ChatPluginService do
       {:error, :invalid_plugin_installation}
     end
   end
+
+  defp maybe_cleanup_plugin_data(chat_id, chat_type, "pomodoro") do
+    PomodoroTimerService.delete_timer(chat_id, chat_type)
+  end
+
+  defp maybe_cleanup_plugin_data(_chat_id, _chat_type, _plugin_id), do: :ok
 end

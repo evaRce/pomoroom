@@ -60,4 +60,22 @@ export function useChatSessionEvents({
       addEvent(eventName, eventData);
     }
   }, [eventName, eventData.chat_id, eventData.plugin]);
+
+  useEffect(() => {
+    if (eventName === "pomodoro_plugin_config_loaded") {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.chat_id, eventData.timer_id, eventData.config]);
+
+  useEffect(() => {
+    if (eventName === "pomodoro_plugin_config_updated") {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.chat_id, eventData.timer_id, eventData.config]);
+
+  useEffect(() => {
+    if (eventName === "pomodoro_plugin_config_error") {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.chat_id, eventData.reason]);
 }

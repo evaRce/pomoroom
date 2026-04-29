@@ -1,40 +1,42 @@
-import React, { createContext, useState, useContext } from "react";
+import React, { createContext, useState, useContext, useCallback } from "react";
 
-type EventContext = {
-  eventsData: any,
-  addEvent: (eventName: string, eventData: object) => void,
-  getEventData: (eventName:string) => object,
+type EventsDataMap = Record<string, any>;
+
+type EventContextType = {
+  eventsData: EventsDataMap,
+  addEvent: (eventName: string, eventData: any) => void,
+  getEventData: (eventName:string) => any,
   removeEvent: (eventName: string) => void
 };
 
-const EventContext = createContext({
+const EventContext = createContext<EventContextType>({
   eventsData: {},
-  addEvent: (eventName, eventData) => {},
-  getEventData: (eventName) => {},
-  removeEvent: (eventName) => {},
+  addEvent: () => {},
+  getEventData: () => {},
+  removeEvent: () => {},
 });
 
 export const EventProvider = ({ children }) => {
-  const [eventsData, setEventsData] = useState({});
+  const [eventsData, setEventsData] = useState<EventsDataMap>({});
 
-  const addEvent = (eventName, eventData) => {
+  const addEvent = useCallback((eventName: string, eventData: any) => {
     setEventsData((prevEventsData) => ({
       ...prevEventsData,
       [eventName]: eventData,
     }));
-  };
+  }, []);
 
-  const getEventData = (eventName) => {
+  const getEventData = (eventName: string) => {
     return eventsData[eventName];
   };
 
-  const removeEvent = (eventName) => {
+  const removeEvent = useCallback((eventName: string) => {
     setEventsData((prevEventsData) => {
       const newEventsData = { ...prevEventsData };
       delete newEventsData[eventName];
       return newEventsData;
     });
-  };
+  }, []);
 
   return (
     <EventContext.Provider value={{ eventsData, addEvent, getEventData, removeEvent }}>
@@ -44,3 +46,8 @@ export const EventProvider = ({ children }) => {
 };
 
 export const useEventContext = () => useContext(EventContext);
+
+export const useEvent = (eventName: string) => {
+  const { eventsData } = useEventContext();
+  return eventsData[eventName];
+};

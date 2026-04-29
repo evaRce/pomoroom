@@ -241,6 +241,22 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
   end
 
   def handle_event(
+        "action.get_pomodoro_plugin_config",
+        %{"chat_id" => chat_id, "chat_type" => chat_type},
+        %{assigns: %{user_info: user}} = socket
+      ) do
+    Plugins.handle_get_pomodoro_plugin_config(chat_id, chat_type, user, socket)
+  end
+
+  def handle_event(
+        "action.update_pomodoro_plugin_config",
+        %{"chat_id" => chat_id, "chat_type" => chat_type, "config" => config},
+        %{assigns: %{user_info: user}} = socket
+      ) do
+    Plugins.handle_update_pomodoro_plugin_config(chat_id, chat_type, config, user, socket)
+  end
+
+  def handle_event(
         "action.load_older_messages",
         %{
           "chat_id" => chat_id,

@@ -43,6 +43,8 @@ export function useOutgoingLiveViewActions({
     const loadOlderMessages = getEventData("load_older_messages");
     const installChatPlugin = getEventData("install_chat_plugin");
     const uninstallChatPlugin = getEventData("uninstall_chat_plugin");
+    const getPomodoroPluginConfig = getEventData("get_pomodoro_plugin_config");
+    const updatePomodoroPluginConfig = getEventData("update_pomodoro_plugin_config");
     const refreshConversations = getEventData("refresh_conversations");
     const groupDeleted = getEventData("group_deleted");
     const logout = getEventData("logout");
@@ -159,6 +161,14 @@ export function useOutgoingLiveViewActions({
     if (uninstallChatPlugin) {
       pushEventToLiveView("action.uninstall_chat_plugin", uninstallChatPlugin);
       removeEvent("uninstall_chat_plugin");
+    }
+    if (getPomodoroPluginConfig) {
+      pushEventToLiveView("action.get_pomodoro_plugin_config", getPomodoroPluginConfig);
+      removeEvent("get_pomodoro_plugin_config");
+    }
+    if (updatePomodoroPluginConfig) {
+      pushEventToLiveView("action.update_pomodoro_plugin_config", updatePomodoroPluginConfig);
+      removeEvent("update_pomodoro_plugin_config");
     }
     if (refreshConversations) {
       pushEventToLiveView("action.get_list_contact", {});
