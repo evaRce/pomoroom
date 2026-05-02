@@ -3,35 +3,28 @@ import {
   Play,
   Pause,
   RotateCcw,
-  Settings,
   Coffee,
   Brain,
   Sparkles,
 } from "lucide-react";
+import { message } from "antd";
 import { Button } from "../../../../components-shadcn/ui/button";
-import { Input } from "../../../../components-shadcn/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "../../../../components-shadcn/ui/popover";
 import { cn } from "../../../../lib/utils";
-import { Switch } from "antd";
 import pomodoroTimerText from "./pomodoroTimerText";
 import { useEventContext, useEvent } from "../EventContext";
-
-type TimerMode = "work" | "shortBreak" | "longBreak";
-
-interface TimerSettings {
-  workDuration: number;
-  shortBreakDuration: number;
-  longBreakDuration: number;
-  cyclesBeforeLongBreak: number;
-}
+import {
+  PomodoroSettingsPopover,
+  MAX_CYCLE_BEFORE_LONG_BREAK,
+  MIN_CYCLE_BEFORE_LONG_BREAK,
+  SaveState,
+  TimerMode,
+  TimerSettings,
+} from "./PomodoroSettingsPopover";
 
 interface PomodoroTimerProps {
   chatId: string;
   chatType: "private" | "group";
 }
-
-const MIN_CYCLE_BEFORE_LONG_BREAK = 2;
-const MAX_CYCLE_BEFORE_LONG_BREAK = 10;
 
 export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   const { addEvent, removeEvent } = useEventContext() as any;
@@ -42,7 +35,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   const [cyclesCompleted, setCyclesCompleted] = useState(0);
   const [hasPendingWorkHalfCycle, setHasPendingWorkHalfCycle] = useState(false);
   const [timerId, setTimerId] = useState("");
-  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const [saveState, setSaveState] = useState<SaveState>("idle");
   const completionHandledRef = useRef(false);
   const configRequestedRef = useRef(false);
   const soundEndWork = useRef(new Audio("/sounds/bell-notification.wav"));
@@ -123,7 +116,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
       return;
     }
 
-    setSaveState("idle");
+    setSaveState("error");
     setSaveMessage({
       type: "error",
       text: pomodoroTimerText.syncError,
@@ -133,10 +126,15 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
 
   useEffect(() => {
     if (saveState === "saved") {
-      const timer = setTimeout(() => {
-        setSaveState("idle");
-      }, 2500);
-      return () => clearTimeout(timer);
+      message.success({
+        content: pomodoroTimerText.settingsSaved,
+      });
+    }
+
+    if (saveState === "error") {
+      message.error({
+        content: pomodoroTimerText.syncError,
+      });
     }
   }, [saveState]);
 
@@ -369,7 +367,6 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
           <Brain className="h-3.5 w-3.5 mr-1.5" />
           {pomodoroTimerText.work}
         </Button>
-
         <Button
           variant="ghost"
           size="sm"
@@ -384,7 +381,6 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
           <Coffee className="h-3.5 w-3.5 mr-1.5" />
           {pomodoroTimerText.shortBreak}
         </Button>
-
         <Button
           variant="ghost"
           size="sm"
@@ -403,18 +399,15 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
 
       {/* Timer display */}
       <div className="relative flex items-center justify-center mb-8">
-        {/* Progress ring */}
         <svg className="w-64 h-64 -rotate-90" viewBox="0 0 200 200">
-          {/* Background circle */}
           <circle
             cx="100"
             cy="100"
             r="90"
             fill="none"
-            stroke="#dedee2" // gray-600
+            stroke="#dedee2"
             strokeWidth="8"
           />
-          {/* Progress circle */}
           <circle
             cx="100"
             cy="100"
@@ -435,7 +428,6 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
           />
         </svg>
 
-        {/* Time display */}
         <div className="absolute flex flex-col items-center">
           <div className={cn("flex items-center gap-2 mb-2", modeInfo.color)}>
             <ModeIcon className="h-5 w-5" />
@@ -468,7 +460,6 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
         >
           <RotateCcw className="h-5 w-5" />
         </Button>
-
         <Button
           size="icon"
           className={cn(
@@ -489,222 +480,56 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
           )}
         </Button>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className={cn(
-                "h-12 w-12 rounded-full",
-                mode === "work"
-                  ? "hover:bg-sky-200"
-                  : mode === "shortBreak"
-                    ? "hover:bg-green-200"
-                    : "hover:bg-yellow-200"
-              )}
-              aria-label="Timer settings"
-            >
-              <Settings className="h-5 w-5" />
-            </Button>
-          </PopoverTrigger>
-
-          {/* Timer settings content */}
-          <PopoverContent className="w-72 bg-gray-100" align="center">
-            <div className="flex flex-col gap-4">
-              <h4 className="text-base font-semibold text-slate-900">
-                {pomodoroTimerText.timerSettings}
-              </h4>
-
-              <div className="flex flex-col gap-4">
-
-                {/* Work */}
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between gap-3">
-                    <label className="text-sm text-slate-700">
-                      {pomodoroTimerText.workMinutes}
-                    </label>
-
-                    <Input
-                      type="number"
-                      min={1}
-                      max={900}
-                      value={settings.workDuration}
-                      onChange={(e) =>
-                        handleChange("workDuration", e.target.value)
-                      }
-                      className="w-20 h-8 text-sm text-center focus:border-blue-400"
-                    />
-                  </div>
-
-                  {errors.workDuration && (
-                    <p className="text-xs text-red-500 mt-1 pl-1">
-                      {errors.workDuration}
-                    </p>
-                  )}
-                </div>
-
-                {/* Short break */}
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between gap-3">
-                    <label className="text-sm text-slate-700">
-                      {pomodoroTimerText.shortBreakMinutes}
-                    </label>
-
-                    <Input
-                      type="number"
-                      min={1}
-                      max={900}
-                      value={settings.shortBreakDuration}
-                      onChange={(e) =>
-                        handleChange("shortBreakDuration", e.target.value)
-                      }
-                      className="w-20 h-8 text-sm text-center focus:border-blue-400"
-                    />
-                  </div>
-
-                  {errors.shortBreakDuration && (
-                    <p className="text-xs text-red-500 mt-1 pl-1">
-                      {errors.shortBreakDuration}
-                    </p>
-                  )}
-                </div>
-
-                {/* Long break */}
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between gap-3">
-                    <label className="text-sm text-slate-700">
-                      {pomodoroTimerText.longBreakMinutes}
-                    </label>
-
-                    <Input
-                      type="number"
-                      min={1}
-                      max={900}
-                      value={settings.longBreakDuration}
-                      onChange={(e) =>
-                        handleChange("longBreakDuration", e.target.value)
-                      }
-                      className="w-20 h-8 text-sm text-center focus:border-blue-400"
-                    />
-                  </div>
-
-                  {errors.longBreakDuration && (
-                    <p className="text-xs text-red-500 mt-1 pl-1">
-                      {errors.longBreakDuration}
-                    </p>
-                  )}
-                </div>
-
-                {/* Cycles before long break */}
-                <div className="flex flex-col gap-1"></div>
-                <div className="flex items-center justify-between gap-3">
-                  <label className="text-sm text-slate-700">
-                    {pomodoroTimerText.cyclesBeforeLongBreak}
-                  </label>
-
-                  <Input
-                    type="number"
-                    min={2}
-                    max={10}
-                    value={settings.cyclesBeforeLongBreak}
-                    onChange={(e) =>
-                      handleChange("cyclesBeforeLongBreak", e.target.value)
-                    }
-                    className="w-20 h-8 text-sm text-center focus:border-blue-400"
-                  />
-                </div>
-                {errors.cyclesBeforeLongBreak && (
-                  <p className="text-xs text-red-500 mt-1 pl-1">
-                    {errors.cyclesBeforeLongBreak}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Sound */}
-            <div className="flex items-center justify-between mt-2">
-              <label className="text-sm text-slate-700">
-                {pomodoroTimerText.soundEndPeriod}
-              </label>
-
-              <Switch
-                className="bg-gray-500"
-                checked={soundEnabled}
-                onChange={setSoundEnabled}
-              />
-            </div>
-
-            {/* Save settings */}
-            <div className="mt-3 flex items-center justify-end gap-3">
-              {saveState === "saved" && (
-                <span className="text-xs text-green-600">
-                  {pomodoroTimerText.settingsSaved}
-                </span>
-              )}
-
-              <Button
-                size="sm"
-                className="h-8 bg-sky-400 hover:bg-sky-600 text-stone-700"
-                onClick={handleSaveSettings}
-                disabled={saveState === "saving" || hasErrors}
-              >
-                {pomodoroTimerText.saveSettings}
-              </Button>
-            </div>
-
-            {saveMessage && (
-              <div className={cn(
-                "text-xs p-2 rounded-md border",
-                saveMessage.type === "success"
-                  ? "bg-green-50 border-green-200 text-green-700"
-                  : "bg-red-50 border-red-200 text-red-700"
-              )}>
-                {saveMessage.text}
-              </div>
-            )}
-          </PopoverContent>
-        </Popover >
-      </div >
+        <PomodoroSettingsPopover
+          mode={mode}
+          settings={settings}
+          errors={errors}
+          soundEnabled={soundEnabled}
+          saveState={saveState}
+          hasErrors={hasErrors}
+          onChange={handleChange}
+          onToggleSound={setSoundEnabled}
+          onSave={handleSaveSettings}
+        />
+      </div>
 
       {/* Completed cycles */}
-      < div className="flex items-center gap-2" >
-        {
-          Array.from({ length: settings.cyclesBeforeLongBreak }).map((_, i) => {
-            const remainder = cyclesCompleted % settings.cyclesBeforeLongBreak;
-            const filledCount =
-              remainder === 0
-                ? cyclesCompleted > 0 && !hasPendingWorkHalfCycle
-                  ? settings.cyclesBeforeLongBreak
-                  : 0
-                : remainder;
+      <div className="flex items-center gap-2 mt-4">
+        {Array.from({ length: settings.cyclesBeforeLongBreak }).map((_, i) => {
+          const remainder = cyclesCompleted % settings.cyclesBeforeLongBreak;
+          const filledCount =
+            remainder === 0
+              ? cyclesCompleted > 0 && !hasPendingWorkHalfCycle
+                ? settings.cyclesBeforeLongBreak
+                : 0
+              : remainder;
 
-            const isFull = i < filledCount;
-            const isHalf = hasPendingWorkHalfCycle && i === filledCount;
+          const isFull = i < filledCount;
+          const isHalf = hasPendingWorkHalfCycle && i === filledCount;
 
-            return (
-              <div
-                key={i}
-                className={cn(
-                  "relative h-3 w-3 rounded-full bg-gray-300 overflow-hidden",
-                  "transition-colors"
-                )}
-              >
-                {(isFull || isHalf) && (
-                  <div
-                    className={cn(
-                      "absolute inset-y-0 left-0 bg-gray-500",
-                      isFull ? "w-full" : "w-1/2"
-                    )}
-                  />
-                )}
-              </div>
-            );
-          })
-        }
-      </div >
+          return (
+            <div
+              key={i}
+              className={cn(
+                "relative h-3 w-3 rounded-full bg-gray-300 overflow-hidden",
+                "transition-colors"
+              )}
+            >
+              {(isFull || isHalf) && (
+                <div
+                  className={cn(
+                    "absolute inset-y-0 left-0 bg-gray-500",
+                    isFull ? "w-full" : "w-1/2"
+                  )}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
       <p className="text-xs text-slate-500 mt-2">
         {pomodoroTimerText.cyclesCompleted(cyclesCompleted)}
       </p>
-    </div >
+    </div>
   );
 }
