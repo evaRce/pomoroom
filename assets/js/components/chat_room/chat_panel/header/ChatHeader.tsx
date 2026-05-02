@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useSyncExternalStore } from "react";
 import { Avatar, Button } from "antd";
 import { Info, Puzzle, UserPlus } from "lucide-react";
 import { useEventContext } from "../../EventContext";
 import AddMembersModal from "./AddMembersModal";
 import CallPanel from "../../call_panel/CallPanel";
 import PluginMarketPlace, { AvailablePlugin, InstalledPlugin } from "../PluginMarketPlace";
+import { getTimer, subscribeTimer, type TimerState } from "../../pomodoro_timer/pomodoroTimerStore";
 
 interface ChatHeaderProps {
   userLogin: any;
@@ -32,12 +33,23 @@ export default function ChatHeader({
   const currentChatId = chatData?.chat_id || chatData?.group_data?.chat_id || "";
   const currentGroupName = chatData?.group_data?.name || "";
 
+  const pomodoroTimer = useSyncExternalStore(
+    (listener) => {
+      if (!currentChatId) return () => { };
+      return subscribeTimer(currentChatId, () => listener());
+    },
+    () => (currentChatId ? getTimer(currentChatId) : undefined),
+    () => undefined
+  ) as TimerState | undefined;
+
   useEffect(() => {
     const privateChat = getEventData("open_private_chat");
 
     if (privateChat) {
       setChatData(privateChat);
       setInstalledPlugins(privateChat.installed_plugins || []);
+      removeEvent("active_chat_context");
+      addEvent("active_chat_context", privateChat);
       onTogglePluginTab(null);
     }
   }, [getEventData("open_private_chat")]);
@@ -48,6 +60,8 @@ export default function ChatHeader({
       setChatData(groupChat);
       setIsGroupMemberRemoved(Boolean(groupChat.removed_at));
       setInstalledPlugins(groupChat.installed_plugins || []);
+      removeEvent("active_chat_context");
+      addEvent("active_chat_context", groupChat);
       onTogglePluginTab(null);
     }
   }, [getEventData("open_group_chat")]);
@@ -136,9 +150,9 @@ export default function ChatHeader({
       setChatData((prevChatData: any) =>
         prevChatData
           ? {
-              ...prevChatData,
-              removed_at: null,
-            }
+            ...prevChatData,
+            removed_at: null,
+          }
           : prevChatData
       );
 
@@ -332,13 +346,23 @@ export default function ChatHeader({
                     key={plugin.id}
                     onClick={() => togglePluginTab(plugin.id)}
                     title={plugin.name}
-                    className={`h-8 rounded-md border px-3 text-xs font-medium transition-all ${activePluginId === plugin.id
+                    className={`inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-md border px-3 text-xs font-medium transition-all ${activePluginId === plugin.id
                       ? "border-sky-200 bg-sky-100 text-sky-800"
                       : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
                       }`}
                   >
-                    <span className="mr-1">{plugin.icon}</span>
+                    <span className="shrink-0">{plugin.icon}</span>
                     {plugin.name}
+                    {plugin.id === "pomodoro" && pomodoroTimer?.isRunning && (
+                      <span
+                        className={`ml-1 inline-block h-2 w-2 shrink-0 rounded-full ${pomodoroTimer.mode === "work"
+                            ? "bg-sky-500"
+                            : pomodoroTimer.mode === "shortBreak"
+                              ? "bg-green-500"
+                              : "bg-yellow-500"
+                          }`}
+                      />
+                    )}
                   </button>
                 ))}
               </div>

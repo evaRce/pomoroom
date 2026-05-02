@@ -8,18 +8,17 @@ import {
 } from "@ant-design/icons";
 import { useEventContext } from "../../EventContext";
 
-export default function ChatFooter({ addMessage }) {
+export default function ChatFooter() {
   const [inputStr, setInputStr] = useState("");
   const [showPicker, setShowPicker] = useState(false);
   const { addEvent, getEventData, removeEvent } = useEventContext();
-  const [chatData, setChatData] = useState({});
+  const [chatData, setChatData] = useState<any>({});
   const [modalVisible, setModalVisible] = useState(false);
   const [isGroupMemberRemoved, setIsGroupMemberRemoved] = useState(false);
   const [groupMemberRemovedMessage, setGroupMemberRemovedMessage] = useState("");
   const lastProcessedGroupMemberRemovedEventSignatureRef = useRef("");
   const lastProcessedGroupMemberAddedEventSignatureRef = useRef("");
-
-  const onEmojiClick = (emojiObject, event) => {
+  const onEmojiClick = (emojiObject: any, event: any) => {
     setInputStr((prevInput) => prevInput + emojiObject.emoji);
     setShowPicker(false);
   };
@@ -37,6 +36,20 @@ export default function ChatFooter({ addMessage }) {
       removeEvent("open_private_chat");
     }
   }, [getEventData("open_private_chat")]);
+
+  useEffect(() => {
+    const activeChatContext = getEventData("active_chat_context");
+
+    if (activeChatContext) {
+      setChatData(activeChatContext);
+      setIsGroupMemberRemoved(Boolean(activeChatContext.removed_at));
+      setGroupMemberRemovedMessage(
+        activeChatContext.removed_at
+          ? buildRemovedMessage(activeChatContext.group_data?.name)
+          : ""
+      );
+    }
+  }, [getEventData("active_chat_context")]);
 
   useEffect(() => {
       const groupChat = getEventData("open_group_chat");
@@ -109,29 +122,32 @@ export default function ChatFooter({ addMessage }) {
     }
   }, [getEventData("group_member_added")]);
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = (e: any) => {
     e.preventDefault();
 
-    if (isGroupMemberRemoved && chatData.group_data) {
+    const activeChatContext = getEventData("active_chat_context");
+    const currentData = chatData?.chat_id ? chatData : activeChatContext || chatData;
+
+    if (isGroupMemberRemoved && currentData?.group_data) {
       return;
     }
 
     if (inputStr.trim() === "") {
       return;
     }
-    console.log(inputStr);
-    if (chatData.group_data) {
+
+    if (currentData?.group_data) {
       addEvent("send_message", {
         message: inputStr,
-        to_group_name: chatData.group_data.name,
+        to_group_name: currentData?.group_data?.name,
       });
-    } else {
+    } else if (currentData?.to_user_data) {
       addEvent("send_message", {
         message: inputStr,
-        to_user: chatData.to_user_data.nickname,
+        to_user: currentData.to_user_data.nickname,
       });
     }
-    addMessage(inputStr);
+
     setInputStr("");
   };
 

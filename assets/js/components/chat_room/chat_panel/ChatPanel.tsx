@@ -215,8 +215,11 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
       />
 
       {/* Content area - either chat messages or plugin */}
-      {activePluginId && renderPlugin ? (
-        <div className="flex min-h-0 min-w-0 flex-1 justify-center items-center">
+      {activePluginId ? (
+        <div
+          className="min-h-0 min-w-0 flex-1 overflow-y-auto"
+          style={{ scrollbarWidth: "thin" }}
+        >
           {renderPlugin(activePluginId)}
         </div>
       ) : (
@@ -246,7 +249,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
           </main>
 
           {/* Message input area */}
-          <ChatFooter addMessage={addMessage} />
+          <ChatFooter />
         </>
       )}
     </div>

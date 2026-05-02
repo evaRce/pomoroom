@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useEventContext, useEvent } from "../components/chat_room/EventContext";
 
 type UseOutgoingLiveViewActionsParams = {
   getEventData: (eventName: string) => any;
@@ -21,34 +22,34 @@ export function useOutgoingLiveViewActions({
   setInfoChatSelected,
   setComponent,
 }: UseOutgoingLiveViewActionsParams) {
-  useEffect(() => {
-    const contactToDelete = getEventData("delete_contact");
-    const selectedPrivateChat = getEventData("selected_private_chat");
-    const sendMessage = getEventData("send_message");
-    const sendFriendRequest = getEventData("send_friend_request");
-    const statusFriendRequest = getEventData("update_status_request");
-    const visibility = getEventData("toggle_detail_visibility");
-    const addGroup = getEventData("add_group");
-    const selectedGroupChat = getEventData("selected_group_chat");
-    const groupToDelete = getEventData("delete_group");
-    const showMyContactsInGroup = getEventData("get_my_contacts");
-    const addContactToGroup = getEventData("add_member");
-    const deleteMember = getEventData("delete_member");
-    const setAdmin = getEventData("set_admin");
-    const startCall = getEventData("start_private_call");
-    const newIceCandidate = getEventData("new_ice_candidate");
-    const newSdpOffer = getEventData("new_sdp_offer");
-    const newAnswer = getEventData("new_answer");
-    const endCall = getEventData("end_private_call");
-    const loadOlderMessages = getEventData("load_older_messages");
-    const installChatPlugin = getEventData("install_chat_plugin");
-    const uninstallChatPlugin = getEventData("uninstall_chat_plugin");
-    const getPomodoroPluginConfig = getEventData("get_pomodoro_plugin_config");
-    const updatePomodoroPluginConfig = getEventData("update_pomodoro_plugin_config");
-    const refreshConversations = getEventData("refresh_conversations");
-    const groupDeleted = getEventData("group_deleted");
-    const logout = getEventData("logout");
+  const contactToDelete = useEvent("delete_contact");
+  const selectedPrivateChat = useEvent("selected_private_chat");
+  const sendMessage = useEvent("send_message");
+  const sendFriendRequest = useEvent("send_friend_request");
+  const statusFriendRequest = useEvent("update_status_request");
+  const visibility = useEvent("toggle_detail_visibility");
+  const addGroup = useEvent("add_group");
+  const selectedGroupChat = useEvent("selected_group_chat");
+  const groupToDelete = useEvent("delete_group");
+  const showMyContactsInGroup = useEvent("get_my_contacts");
+  const addContactToGroup = useEvent("add_member");
+  const deleteMember = useEvent("delete_member");
+  const setAdmin = useEvent("set_admin");
+  const startCall = useEvent("start_private_call");
+  const newIceCandidate = useEvent("new_ice_candidate");
+  const newSdpOffer = useEvent("new_sdp_offer");
+  const newAnswer = useEvent("new_answer");
+  const endCall = useEvent("end_private_call");
+  const loadOlderMessages = useEvent("load_older_messages");
+  const installChatPlugin = useEvent("install_chat_plugin");
+  const uninstallChatPlugin = useEvent("uninstall_chat_plugin");
+  const getPomodoroPluginConfig = useEvent("get_pomodoro_plugin_config");
+  const updatePomodoroPluginConfig = useEvent("update_pomodoro_plugin_config");
+  const refreshConversations = useEvent("refresh_conversations");
+  const groupDeleted = useEvent("group_deleted");
+  const logout = useEvent("logout");
 
+  useEffect(() => {
     if (contactToDelete) {
       pushEventToLiveView("action.delete_contact", contactToDelete);
       if (infoChatSelected?.contact_name === contactToDelete) {
@@ -69,6 +70,7 @@ export function useOutgoingLiveViewActions({
       removeEvent("selected_private_chat");
     }
     if (sendMessage) {
+      console.debug("[useOutgoingLiveViewActions] forwarding send_message", sendMessage);
       pushEventToLiveView("action.send_message", sendMessage);
       removeEvent("send_message");
     }
@@ -195,13 +197,38 @@ export function useOutgoingLiveViewActions({
       removeEvent("logout");
     }
   }, [
-    getEventData,
-    removeEvent,
+    contactToDelete,
+    selectedPrivateChat,
+    sendMessage,
+    sendFriendRequest,
+    statusFriendRequest,
+    visibility,
+    addGroup,
+    selectedGroupChat,
+    groupToDelete,
+    showMyContactsInGroup,
+    addContactToGroup,
+    deleteMember,
+    setAdmin,
+    startCall,
+    newIceCandidate,
+    newSdpOffer,
+    newAnswer,
+    endCall,
+    loadOlderMessages,
+    installChatPlugin,
+    uninstallChatPlugin,
+    getPomodoroPluginConfig,
+    updatePomodoroPluginConfig,
+    refreshConversations,
+    groupDeleted,
+    logout,
     pushEventToLiveView,
     infoChatSelected,
     isVisibleDetail,
     setIsVisibleDetail,
     setInfoChatSelected,
     setComponent,
+    removeEvent,
   ]);
 }

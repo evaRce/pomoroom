@@ -36,6 +36,7 @@ interface PomodoroSettingsPopoverProps {
   soundEnabled: boolean;
   saveState: SaveState;
   hasErrors: boolean;
+  disabled?: boolean;
   onChange: (field: keyof TimerSettings, value: string) => void;
   onToggleSound: (checked: boolean) => void;
   onSave: () => void;
@@ -48,6 +49,7 @@ export function PomodoroSettingsPopover({
   soundEnabled,
   saveState,
   hasErrors,
+  disabled,
   onChange,
   onToggleSound,
   onSave,
@@ -66,6 +68,7 @@ export function PomodoroSettingsPopover({
                 ? "hover:bg-green-200"
                 : "hover:bg-yellow-200"
           )}
+          disabled={disabled}
           aria-label="Timer settings"
         >
           <Settings className="h-5 w-5" />
