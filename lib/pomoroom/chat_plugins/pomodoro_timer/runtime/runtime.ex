@@ -20,8 +20,8 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.Runtime do
     end
   end
 
-  def delete_timer(timer_id, chat_id, chat_type, plugin_id) do
-    PomodoroTimerRepository.delete_by_chat(chat_id, chat_type, plugin_id)
+  def delete_timer(timer_id, chat_id, chat_type) do
+    PomodoroTimerRepository.delete_by_chat(chat_id, chat_type)
 
     case Registry.lookup(Registry.PomodoroPluginTimer, timer_id) do
       [{pid, _value}] ->

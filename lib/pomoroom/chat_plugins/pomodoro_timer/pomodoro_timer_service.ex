@@ -1,14 +1,8 @@
 defmodule Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerService do
   alias Pomoroom.ChatPlugins.PomodoroTimer.Runtime.{PomodoroTimerServer, Runtime}
 
-  @plugin_id "pomodoro"
-
   def get_config(chat_id, chat_type) do
-    get_config(chat_id, chat_type, @plugin_id)
-  end
-
-  def get_config(chat_id, chat_type, plugin_id) do
-    case ensure_started(chat_id, chat_type, plugin_id) do
+    case ensure_started(chat_id, chat_type) do
       {:ok, process_id} ->
         PomodoroTimerServer.get_config(process_id)
 
@@ -17,33 +11,29 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerService do
     end
   end
 
-  def ensure_started(chat_id, chat_type, plugin_id \\ @plugin_id) do
+  def ensure_started(chat_id, chat_type) do
     Runtime.ensure_pomodoro_plugin_started(
-      process_id(chat_id, chat_type, plugin_id),
+      process_id(chat_id, chat_type),
       chat_id,
       chat_type
     )
   end
 
-  def update_config(chat_id, chat_type, config, updated_by) do
-    update_config(chat_id, chat_type, @plugin_id, config, updated_by)
-  end
-
-  def update_config(chat_id, chat_type, plugin_id, config, updated_by) do
-    case ensure_started(chat_id, chat_type, plugin_id) do
+  def update_config(chat_id, chat_type, config) do
+    case ensure_started(chat_id, chat_type) do
       {:ok, process_id} ->
-        PomodoroTimerServer.update_config(process_id, config, updated_by)
+        PomodoroTimerServer.update_config(process_id, config)
 
       {:error, reason} ->
         {:error, reason}
     end
   end
 
-  def delete_timer(chat_id, chat_type, plugin_id \\ @plugin_id) do
-    Runtime.delete_timer(process_id(chat_id, chat_type, plugin_id), chat_id, chat_type, plugin_id)
+  def delete_timer(chat_id, chat_type) do
+    Runtime.delete_timer(process_id(chat_id, chat_type), chat_id, chat_type)
   end
 
-  defp process_id(chat_id, chat_type, plugin_id) do
-    "#{plugin_id}:#{chat_type}:#{chat_id}"
+  defp process_id(chat_id, chat_type) do
+    "pomodoro:#{chat_type}:#{chat_id}"
   end
 end

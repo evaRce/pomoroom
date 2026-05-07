@@ -34,12 +34,7 @@ defmodule Pomoroom.Startup do
     ]
 
     pomodoro_timers_indexes = [
-      [key: %{timer_id: 1}, name: "pomodoro_timer_id_unique_index", unique: true],
-      [
-        key: %{chat_id: 1, chat_type: 1, plugin_id: 1},
-        name: "pomodoro_chat_plugin_unique_index",
-        unique: true
-      ]
+      [key: %{timer_id: 1}, name: "pomodoro_timer_id_unique_index", unique: true]
     ]
 
     Mongo.create_indexes(:mongo, "users", user_indexes)

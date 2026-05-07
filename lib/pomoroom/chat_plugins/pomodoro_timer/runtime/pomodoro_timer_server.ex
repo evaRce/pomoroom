@@ -3,7 +3,6 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
 
   alias Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerRepository, as: Repository
 
-  @plugin_id "pomodoro"
   @default_config %{
     work_duration: 25,
     short_break_duration: 5,
@@ -19,8 +18,8 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
     GenServer.call(via_tuple(timer_id), :get_config)
   end
 
-  def update_config(timer_id, config, updated_by \\ nil) do
-    GenServer.call(via_tuple(timer_id), {:update_config, config, updated_by})
+  def update_config(timer_id, config) do
+    GenServer.call(via_tuple(timer_id), {:update_config, config})
   end
 
   def via_tuple(timer_id) do
@@ -34,7 +33,6 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
       timer_id: Ecto.UUID.generate(),
       chat_id: chat_id,
       chat_type: chat_type,
-      plugin_id: @plugin_id,
       config: @default_config
     }
 
@@ -47,10 +45,10 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
   end
 
   @impl true
-  def handle_call({:update_config, raw_config, updated_by}, _from, state) do
+  def handle_call({:update_config, raw_config}, _from, state) do
     config = normalize_config(raw_config)
 
-    case persist_if_custom(config, state, updated_by) do
+    case persist_if_custom(config, state) do
       :ok ->
         next_state = %{state | config: config}
         {:reply, {:ok, format_payload(next_state)}, next_state}
@@ -61,7 +59,7 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
   end
 
   defp maybe_load_persisted_config(state) do
-    case Repository.get_by_chat(state.chat_id, state.chat_type, state.plugin_id) do
+    case Repository.get_by_chat(state.chat_id, state.chat_type) do
       {:ok, timer_data} ->
         %{state | config: extract_config(timer_data), timer_id: timer_data.timer_id}
 
@@ -70,21 +68,19 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
     end
   end
 
-  defp persist_if_custom(config, state, updated_by) do
+  defp persist_if_custom(config, state) do
     if config == @default_config do
-      Repository.delete_by_chat(state.chat_id, state.chat_type, state.plugin_id)
+      Repository.delete_by_chat(state.chat_id, state.chat_type)
       :ok
     else
       changes = %{
         timer_id: state.timer_id,
         chat_id: state.chat_id,
         chat_type: state.chat_type,
-        plugin_id: state.plugin_id,
         work_duration: config.work_duration,
         short_break_duration: config.short_break_duration,
         long_break_duration: config.long_break_duration,
-        cycles_before_long_break: config.cycles_before_long_break,
-        updated_by: updated_by || "unknown"
+        cycles_before_long_break: config.cycles_before_long_break
       }
 
       case Repository.upsert(changes) do
@@ -123,7 +119,6 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
       timer_id: state.timer_id,
       chat_id: state.chat_id,
       chat_type: state.chat_type,
-      plugin_id: state.plugin_id,
       config: state.config
     }
   end

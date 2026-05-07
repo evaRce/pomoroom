@@ -82,7 +82,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
   def handle_update_pomodoro_plugin_config(chat_id, chat_type, config, user, socket) do
     case authorize_and_validate_plugin(chat_id, chat_type, "pomodoro", user.nickname) do
       :ok ->
-        case PomodoroTimerService.update_config(chat_id, chat_type, config, user.nickname) do
+        case PomodoroTimerService.update_config(chat_id, chat_type, config) do
           {:ok, timer_data} ->
             payload = %{
               event_name: "pomodoro_plugin_config_updated",
@@ -112,6 +112,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
 
   def handle_disconnect_cleanup(socket) do
     user_nickname = socket.assigns.user_info.nickname
+
     try do
       Presence.untrack(self(), "online_users", user_nickname)
     rescue
