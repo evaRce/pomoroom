@@ -5,6 +5,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
   alias Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerService
   alias Pomoroom.GroupChats
   alias Pomoroom.PrivateChats
+  alias Pomoroom.Users
+  alias PomoroomWeb.Presence
 
   def handle_install_chat_plugin(chat_id, chat_type, plugin_id, user, socket) do
     case authorize_chat_access(chat_id, user.nickname) do
@@ -98,6 +100,31 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
     end
   end
 
+  def handle_presence_diff(socket) do
+    user_nickname = socket.assigns.user_info.nickname
+
+    Users.get_all_my_chats_id(user_nickname)
+    |> Enum.uniq()
+    |> Enum.each(&maybe_cleanup_pomodoro_timer/1)
+
+    {:noreply, socket}
+  end
+
+  def handle_disconnect_cleanup(socket) do
+    user_nickname = socket.assigns.user_info.nickname
+    try do
+      Presence.untrack(self(), "online_users", user_nickname)
+    rescue
+      _ -> :ok
+    end
+
+    Users.get_all_my_chats_id(user_nickname)
+    |> Enum.uniq()
+    |> Enum.each(&maybe_cleanup_pomodoro_timer/1)
+
+    :ok
+  end
+
   defp authorize_and_validate_plugin(chat_id, chat_type, plugin_id, user_nickname) do
     case authorize_chat_access(chat_id, user_nickname) do
       :ok ->
@@ -123,6 +150,66 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
 
     {:noreply, push_event(socket, "react", payload)}
   end
+
+  defp maybe_cleanup_pomodoro_timer(chat_id) do
+    case chat_context(chat_id) do
+      {:ok, chat_type, members} ->
+        case ChatPlugins.plugin_installed?(chat_id, chat_type, "pomodoro") do
+          true ->
+            if Enum.any?(members, &user_online?/1) do
+              :ok
+            else
+              PomodoroTimerService.delete_timer(chat_id, chat_type)
+            end
+
+          false ->
+            :ok
+        end
+
+      {:error, _reason} ->
+        :ok
+    end
+  end
+
+  defp chat_context(chat_id) do
+    case GroupChats.get_by("chat_id", chat_id) do
+      {:ok, group_chat} ->
+        members = group_chat.members || []
+
+        member_ids =
+          Enum.map(members, fn member ->
+            member[:user_id] || member["user_id"]
+          end)
+
+        {:ok, "group", Enum.reject(member_ids, &is_nil/1)}
+
+      {:error, _group_error} ->
+        case PrivateChats.get(chat_id) do
+          {:ok, private_chat} ->
+            members = private_chat.members || []
+
+            member_ids =
+              Enum.map(members, fn member ->
+                member[:user_id] || member["user_id"]
+              end)
+
+            {:ok, "private", Enum.reject(member_ids, &is_nil/1)}
+
+          {:error, reason} ->
+            {:error, reason}
+        end
+    end
+  end
+
+  defp user_online?(user_key) when is_binary(user_key) do
+    case Presence.get_by_key("online_users", user_key) do
+      nil -> false
+      [] -> false
+      _ -> true
+    end
+  end
+
+  defp user_online?(_), do: false
 
   defp authorize_chat_access(chat_id, user_nickname) do
     case GroupChats.get_by("chat_id", chat_id) do

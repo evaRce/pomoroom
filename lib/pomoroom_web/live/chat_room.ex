@@ -10,6 +10,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
   alias Phoenix.PubSub
   alias Pomoroom.ChatRoom.ChatServer
   alias Pomoroom.Users
+  alias PomoroomWeb.Presence
 
   use PomoroomWeb, :live_view
 
@@ -30,6 +31,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
           user_nickname = socket.assigns.user_info.nickname
           PubSub.subscribe(Pomoroom.PubSub, "friend_request:#{user_nickname}")
           PubSub.subscribe(Pomoroom.PubSub, "user:#{user_nickname}")
+          PubSub.subscribe(Pomoroom.PubSub, "online_users")
+          Presence.track(self(), "online_users", user_nickname, %{nickname: user_nickname})
           all_chats_id = Users.get_all_my_chats_id(user_nickname)
 
           Enum.each(Enum.uniq(all_chats_id), fn chat_id ->
@@ -124,6 +127,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         socket
       ) do
     FriendRequests.handle_friend_request_rejected(payload, socket)
+  end
+
+  def handle_info(%Broadcast{topic: "online_users", event: "presence_diff"}, socket) do
+    Plugins.handle_presence_diff(socket)
   end
 
   def handle_info(
@@ -393,6 +400,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
   def handle_event("action.logout", _payload, socket) do
     {:noreply, redirect(socket, to: "/logout")}
+  end
+
+  def terminate(_reason, socket) do
+    Plugins.handle_disconnect_cleanup(socket)
+    :ok
   end
 
   def put_session_assigns(socket, session) do
