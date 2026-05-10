@@ -33,6 +33,46 @@ export default function ChatHeader({
   const currentChatId = chatData?.chat_id || chatData?.group_data?.chat_id || "";
   const currentGroupName = chatData?.group_data?.name || "";
 
+  const pluginKey = (plugin: any) => plugin?.id || plugin?.type || plugin?.plugin_id;
+
+  const normalizePlugin = (plugin: any) => {
+    if (!plugin) return null;
+
+    if (typeof plugin === "string") {
+      return { id: plugin, name: plugin, icon: "🔌" } as InstalledPlugin;
+    }
+
+    const type = plugin.id || plugin.type || plugin.plugin_id;
+    if (!type) return null;
+
+    return {
+      id: type,
+      name: plugin.name || type,
+      icon: plugin.icon || "🔌",
+    } as InstalledPlugin;
+  };
+
+  const mergePlugins = (primary: any[] = [], secondary: any[] = []) => {
+    const merged: InstalledPlugin[] = [];
+
+    [...primary, ...secondary].forEach((plugin) => {
+      const normalized = normalizePlugin(plugin);
+      const key = pluginKey(normalized);
+
+      if (!normalized || !key) {
+        return;
+      }
+
+      if (merged.some((existing) => pluginKey(existing) === key)) {
+        return;
+      }
+
+      merged.push(normalized);
+    });
+
+    return merged;
+  };
+
   const pomodoroTimer = useSyncExternalStore(
     (listener) => {
       if (!currentChatId) return () => { };
@@ -47,7 +87,7 @@ export default function ChatHeader({
 
     if (privateChat) {
       setChatData(privateChat);
-      setInstalledPlugins(privateChat.installed_plugins || []);
+      setInstalledPlugins(mergePlugins(privateChat.installed_plugins, privateChat.plugins));
       removeEvent("active_chat_context");
       addEvent("active_chat_context", privateChat);
       onTogglePluginTab(null);
@@ -59,7 +99,7 @@ export default function ChatHeader({
     if (groupChat) {
       setChatData(groupChat);
       setIsGroupMemberRemoved(Boolean(groupChat.removed_at));
-      setInstalledPlugins(groupChat.installed_plugins || []);
+      setInstalledPlugins(mergePlugins(groupChat.installed_plugins, groupChat.plugins));
       removeEvent("active_chat_context");
       addEvent("active_chat_context", groupChat);
       onTogglePluginTab(null);

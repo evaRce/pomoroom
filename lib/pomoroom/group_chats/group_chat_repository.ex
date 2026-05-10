@@ -45,8 +45,27 @@ defmodule Pomoroom.GroupChats.GroupChatRepository do
     )
   end
 
+  def add_plugin(chat_id, plugin) do
+    Mongo.update_one(
+      :mongo,
+      "group_chats",
+      %{"chat_id" => chat_id},
+      %{"$addToSet" => %{plugins: plugin}}
+    )
+  end
+
+  def remove_plugin(chat_id, plugin_type) do
+    Mongo.update_one(
+      :mongo,
+      "group_chats",
+      %{"chat_id" => chat_id},
+      %{"$pull" => %{plugins: %{"type" => plugin_type}}}
+    )
+  end
+
   defp get_changes_from_changeset(args) do
     GroupChatSchema.group_chat_changeset(args).changes
+    |> Map.put_new(:plugins, [])
   end
 
   defp normalize_legacy_members(chat) when is_map(chat) do
@@ -62,6 +81,8 @@ defmodule Pomoroom.GroupChats.GroupChatRepository do
       end)
       |> Enum.reject(&is_nil/1)
 
-    Map.put(chat, "members", normalized_members)
+    chat
+    |> Map.put("members", normalized_members)
+    |> Map.put_new("plugins", [])
   end
 end

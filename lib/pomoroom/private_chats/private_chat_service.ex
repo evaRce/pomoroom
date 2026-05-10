@@ -12,9 +12,11 @@ defmodule Pomoroom.PrivateChats.PrivateChatService do
 
     case private_chat_changeset.valid? do
       true ->
-        case PrivateChatRepository.create(private_chat_changeset.changes) do
+        private_chat_changes = Map.put(private_chat_changeset.changes, :plugins, [])
+
+        case PrivateChatRepository.create(private_chat_changes) do
           {:ok, _result} ->
-            {:ok, private_chat_changeset.changes}
+            {:ok, private_chat_changes}
 
           {:error, _reason} ->
             {:error, %{error: "El contacto ya está añadido"}}
@@ -34,9 +36,11 @@ defmodule Pomoroom.PrivateChats.PrivateChatService do
         PrivateChatRepository.mark_deleted(chat_id, from_user)
         {:ok, updated_chat} = get(chat_id)
         members_list = Map.get(chat, :members) || []
-        member_ids = Enum.map(members_list, fn member -> 
-          Map.get(member, :user_id) || Map.get(member, "user_id")
-        end)
+
+        member_ids =
+          Enum.map(members_list, fn member ->
+            Map.get(member, :user_id) || Map.get(member, "user_id")
+          end)
 
         if both_users_deleted?(updated_chat.deleted_by, member_ids) do
           Chats.delete_chat("private_chats", chat_id)
@@ -77,12 +81,13 @@ defmodule Pomoroom.PrivateChats.PrivateChatService do
 
   def get_member_joined_at(chat, member) when is_map(chat) and is_binary(member) do
     members = Map.get(chat, :members) || Map.get(chat, "members") || []
-    
-    member_data = Enum.find(members, fn m ->
-      user_id = Map.get(m, :user_id) || Map.get(m, "user_id")
-      user_id == member
-    end)
-    
+
+    member_data =
+      Enum.find(members, fn m ->
+        user_id = Map.get(m, :user_id) || Map.get(m, "user_id")
+        user_id == member
+      end)
+
     case member_data do
       nil -> nil
       data -> Map.get(data, :joined_at) || Map.get(data, "joined_at")

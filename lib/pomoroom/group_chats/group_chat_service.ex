@@ -19,9 +19,11 @@ defmodule Pomoroom.GroupChats.GroupChatService do
 
     case group_changeset.valid? do
       true ->
-        case GroupChatRepository.create(group_changeset.changes) do
+        group_chat_changes = Map.put(group_changeset.changes, :plugins, [])
+
+        case GroupChatRepository.create(group_chat_changes) do
           {:ok, _result} ->
-            {:ok, group_changeset.changes}
+            {:ok, group_chat_changes}
 
           {:error, %Mongo.WriteError{write_errors: [%{"code" => 11000, "errmsg" => _errmsg}]}} ->
             {:error, %{error: "El grupo `#{name}` ya está creado"}}
@@ -170,7 +172,7 @@ defmodule Pomoroom.GroupChats.GroupChatService do
                   nil
               end
             else
-                nil
+              nil
             end
           end)
           |> Enum.reject(&is_nil/1)
@@ -305,6 +307,7 @@ defmodule Pomoroom.GroupChats.GroupChatService do
     GroupChatRepository.update_members(group_chat.chat_id, updated_members)
 
     {:ok, updated_chat} = get_by("chat_id", group_chat.chat_id)
+
     remaining_members =
       (updated_chat.members || [])
       |> Enum.filter(fn current_member ->

@@ -7,6 +7,7 @@ defmodule Pomoroom.PrivateChats.PrivateChatSchema do
     field :members, {:array, :map}
     field :sorted_members, {:array, :string}
     field :deleted_by, {:array, :string}
+    field :plugins, {:array, :map}, default: []
     field :inserted_at, :utc_datetime
     field :updated_at, :utc_datetime
   end
@@ -18,6 +19,7 @@ defmodule Pomoroom.PrivateChats.PrivateChatSchema do
       :members,
       :sorted_members,
       :deleted_by,
+      :plugins,
       :inserted_at,
       :updated_at
     ])
@@ -30,6 +32,7 @@ defmodule Pomoroom.PrivateChats.PrivateChatSchema do
       :members,
       :sorted_members,
       :deleted_by,
+      :plugins,
       :inserted_at,
       :updated_at
     ])
@@ -38,18 +41,20 @@ defmodule Pomoroom.PrivateChats.PrivateChatSchema do
   def private_chat_changeset(chat_id, members) do
     now = DateTime.utc_now()
 
-    members_with_joined_at = Enum.map(members, fn member ->
-      %{"user_id" => member, "joined_at" => now}
-    end)
+    members_with_joined_at =
+      Enum.map(members, fn member ->
+        %{"user_id" => member, "joined_at" => now}
+      end)
 
     private_chat = %{
       chat_id: chat_id,
       members: members_with_joined_at,
       sorted_members: Enum.sort(members),
-      deleted_by: []
+      deleted_by: [],
+      plugins: []
     }
 
     changeset(private_chat)
-    |> validate_required([:chat_id, :members, :sorted_members, :deleted_by])
+    |> validate_required([:chat_id, :members, :sorted_members, :deleted_by, :plugins])
   end
 end
