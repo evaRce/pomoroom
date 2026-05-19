@@ -33,11 +33,21 @@ defmodule Pomoroom.Startup do
       [key: %{timer_id: 1}, name: "timer_id_index", unique: true]
     ]
 
+    kanban_boards_indexes = [
+      [key: %{kanban_id: 1}, name: "kanban_id_index", unique: true]
+    ]
+
+    kanban_tasks_indexes = [
+      [key: %{task_id: 1}, name: "task_id_index", unique: true],
+    ]
+
     Mongo.create_indexes(:mongo, "users", user_indexes)
     Mongo.create_indexes(:mongo, "messages", message_indexes)
     Mongo.create_indexes(:mongo, "private_chats", private_chats_indexes)
     Mongo.create_indexes(:mongo, "group_chats", group_chats_indexes)
     Mongo.create_indexes(:mongo, "friend_requests", friend_requests_indexes)
     Mongo.create_indexes(:mongo, "pomodoro_timers", pomodoro_timers_indexes)
+    Mongo.create_indexes(:mongo, "kanban_boards", kanban_boards_indexes)
+    Mongo.create_indexes(:mongo, "kanban_tasks", kanban_tasks_indexes)
   end
 end
