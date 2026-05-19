@@ -1,141 +1,132 @@
 defmodule Pomoroom.ChatPlugins.ChatPluginService do
-  alias Pomoroom.ChatPlugins.{ChatPluginRepository, ChatPluginSchema}
   alias Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerService
+  alias Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerSchema
   alias Pomoroom.GroupChats
   alias Pomoroom.GroupChats.GroupChatRepository
   alias Pomoroom.PrivateChats
   alias Pomoroom.PrivateChats.PrivateChatRepository
 
-  @plugins %{
+  @plugin_catalog %{
     "pomodoro" => %{
-      id: "pomodoro",
       name: "Temporizador Pomodoro",
       description: "Temporizador compartido para sesiones de trabajo y descanso dentro del chat.",
-      icon: "⏱️"
+      icon: "⏱️",
+      installable: true
     },
     "kanban" => %{
-      id: "kanban",
       name: "Tablero Kanban",
       description:
         "Tablero compartido para organizar tareas en columnas To Do, In Progress y Done.",
-      icon: "📋"
+      icon: "📋",
+      installable: false
     }
   }
 
-  def install_plugin(chat_id, chat_type, plugin_id, user_nickname) do
-    case get_plugin_data(plugin_id) do
-      {:error, reason} ->
-        {:error, reason}
-
-      {:ok, plugin_data} ->
-        case get_or_create_installation(chat_id, chat_type, plugin_id, user_nickname) do
-          {:ok, _installation} ->
-            persist_embedded_plugin(chat_id, chat_type, plugin_id)
-            {:ok, plugin_data}
-
-          {:error, reason} ->
-            {:error, reason}
-        end
+  def install_plugin(chat_id, chat_type, plugin_type) do
+    case plugin_type do
+      "pomodoro" -> install_pomodoro_plugin(chat_id, chat_type)
+      "kanban" -> {:error, :plugin_not_implemented}
+      _ -> {:error, :unsupported_plugin}
     end
   end
 
-  def uninstall_plugin(chat_id, chat_type, plugin_id) do
-    case get_plugin_data(plugin_id) do
-      {:error, reason} ->
-        {:error, reason}
+  def uninstall_plugin_by_id(chat_id, chat_type, plugin_id) do
+    case resolve_embedded_plugin_by_id(chat_id, chat_type, plugin_id) do
+      nil ->
+        {:error, :plugin_not_installed}
 
-      {:ok, plugin_data} ->
-        ChatPluginRepository.delete(chat_id, chat_type, plugin_id)
-        remove_embedded_plugin(chat_id, chat_type, plugin_id)
-        maybe_cleanup_plugin_data(chat_id, chat_type, plugin_id)
-        {:ok, plugin_data}
+      plugin ->
+        uninstall_embedded_plugin(chat_id, chat_type, plugin)
     end
   end
 
-  def plugin_installed?(chat_id, chat_type, plugin_id) do
-    legacy_installed? =
-      case ChatPluginRepository.get_by_chat_type_and_plugin(chat_id, chat_type, plugin_id) do
-        {:ok, _installation} -> true
-        {:error, :not_found} -> false
-      end
-
-    legacy_installed? or embedded_plugin_installed?(chat_id, chat_type, plugin_id)
-  end
-
-  def list_installed_plugins(chat_id, chat_type) do
-    legacy_plugins =
-      ChatPluginRepository.list_by_chat(chat_id, chat_type)
-      |> Enum.map(fn plugin_installation ->
-        Map.get(@plugins, plugin_installation.plugin_id)
-      end)
-      |> Enum.reject(&is_nil/1)
-
-    embedded_plugins =
-      embedded_plugin_ids(chat_id, chat_type)
-      |> Enum.map(&Map.get(@plugins, &1))
-      |> Enum.reject(&is_nil/1)
-
-    merge_plugins_by_id(legacy_plugins, embedded_plugins)
+  def plugin_installed?(chat_id, chat_type, plugin_type) do
+    embedded_plugin_installed?(chat_id, chat_type, plugin_type)
   end
 
   def list_available_plugins do
-    @plugins
-    |> Map.values()
-    |> Enum.sort_by(& &1.id)
+    @plugin_catalog
+    |> Enum.map(fn {plugin_type, plugin_data} -> Map.put(plugin_data, :type, plugin_type) end)
+    |> Enum.sort_by(& &1.type)
   end
 
-  def get_plugin_data(plugin_id) do
-    case Map.fetch(@plugins, plugin_id) do
-      {:ok, plugin_data} -> {:ok, plugin_data}
-      :error -> {:error, :unsupported_plugin}
-    end
+  def get_plugins_from_chat(chat) when is_map(chat) do
+    Map.get(chat, :plugins) || Map.get(chat, "plugins") || []
   end
 
-  defp get_or_create_installation(chat_id, chat_type, plugin_id, user_nickname) do
-    case ChatPluginRepository.get_by_chat_type_and_plugin(chat_id, chat_type, plugin_id) do
-      {:ok, existing} ->
-        {:ok, existing}
-
-      {:error, :not_found} ->
-        create_installation(chat_id, chat_type, plugin_id, user_nickname)
-    end
-  end
-
-  defp create_installation(chat_id, chat_type, plugin_id, user_nickname) do
-    changeset =
-      ChatPluginSchema.chat_plugin_changeset(chat_id, chat_type, plugin_id, user_nickname)
-
-    if changeset.valid? do
-      case ChatPluginRepository.create(changeset.changes) do
-        {:ok, _result} -> {:ok, changeset.changes}
-        {:error, _reason} -> {:error, :failed_to_install_plugin}
-      end
+  defp install_pomodoro_plugin(chat_id, chat_type) do
+    if embedded_plugin_installed?(chat_id, chat_type, "pomodoro") do
+      {:error, :plugin_already_installed}
     else
-      {:error, :invalid_plugin_installation}
+      timer_id = PomodoroTimerSchema.generate_timer_id()
+
+      case PomodoroTimerService.create_timer(timer_id) do
+        {:ok, _timer} ->
+          plugin_instance = %{id: timer_id, type: "pomodoro"}
+
+          case persist_embedded_plugin(chat_id, chat_type, plugin_instance) do
+            :ok ->
+              case PomodoroTimerService.start_timer(chat_id, chat_type, timer_id) do
+                {:ok, _process_id} ->
+                  {:ok, plugin_instance}
+
+                {:error, reason} ->
+                  PomodoroTimerService.delete_timer_instance(timer_id, chat_id, chat_type)
+                  remove_embedded_plugin(chat_id, chat_type, "pomodoro")
+                  {:error, reason}
+              end
+
+            {:error, _} = err ->
+              PomodoroTimerService.delete_timer_instance(timer_id, chat_id, chat_type)
+              err
+          end
+
+        {:error, reason} ->
+          {:error, reason}
+      end
     end
   end
 
-  defp maybe_cleanup_plugin_data(chat_id, chat_type, "pomodoro") do
-    PomodoroTimerService.delete_timer(chat_id, chat_type)
+  defp uninstall_embedded_plugin(chat_id, chat_type, plugin) when is_map(plugin) do
+    plugin_type = normalize_plugin_type(plugin)
+    plugin_id = Map.get(plugin, :id) || Map.get(plugin, "id")
+
+    case plugin_type do
+      "pomodoro" ->
+        case remove_embedded_plugin(chat_id, chat_type, plugin_type) do
+          :ok ->
+            PomodoroTimerService.delete_timer_instance(plugin_id, chat_id, chat_type)
+            {:ok, %{id: plugin_id, type: plugin_type}}
+
+          {:error, _} = err ->
+            err
+        end
+
+      "kanban" ->
+        {:error, :plugin_not_implemented}
+
+      _ ->
+        {:error, :unsupported_plugin}
+    end
   end
 
-  defp maybe_cleanup_plugin_data(_chat_id, _chat_type, _plugin_id), do: :ok
+  defp uninstall_embedded_plugin(_chat_id, _chat_type, _plugin), do: {:error, :unsupported_plugin}
 
-  defp persist_embedded_plugin(chat_id, chat_type, plugin_id) do
-    plugin = %{type: plugin_id, id: plugin_id}
+  defp persist_embedded_plugin(chat_id, chat_type, plugin) do
+    plugin_to_store = Map.take(plugin, [:id, :type])
 
-    update_embedded_plugins(chat_id, chat_type, {:add, plugin})
+    update_embedded_plugins(chat_id, chat_type, {:add, plugin_to_store})
   end
 
-  defp remove_embedded_plugin(chat_id, chat_type, plugin_id) do
-    update_embedded_plugins(chat_id, chat_type, {:remove, plugin_id})
+  defp remove_embedded_plugin(chat_id, chat_type, plugin_type) do
+    update_embedded_plugins(chat_id, chat_type, {:remove, plugin_type})
   end
 
   defp update_embedded_plugins(chat_id, "group", action) do
     result =
       case action do
         {:add, plugin} -> GroupChatRepository.add_plugin(chat_id, plugin)
-        {:remove, plugin_id} -> GroupChatRepository.remove_plugin(chat_id, plugin_id)
+        {:remove, plugin_type} -> GroupChatRepository.remove_plugin(chat_id, plugin_type)
       end
 
     case result do
@@ -148,7 +139,7 @@ defmodule Pomoroom.ChatPlugins.ChatPluginService do
     result =
       case action do
         {:add, plugin} -> PrivateChatRepository.add_plugin(chat_id, plugin)
-        {:remove, plugin_id} -> PrivateChatRepository.remove_plugin(chat_id, plugin_id)
+        {:remove, plugin_type} -> PrivateChatRepository.remove_plugin(chat_id, plugin_type)
       end
 
     case result do
@@ -157,15 +148,38 @@ defmodule Pomoroom.ChatPlugins.ChatPluginService do
     end
   end
 
-  defp embedded_plugin_installed?(chat_id, chat_type, plugin_id) do
-    embedded_plugin_ids(chat_id, chat_type)
-    |> Enum.any?(&(&1 == plugin_id))
+  defp embedded_plugin_installed?(chat_id, chat_type, plugin_type) do
+    plugin_type in embedded_plugin_ids(chat_id, chat_type)
   end
+
+  defp resolve_embedded_plugin_by_id(chat_id, "group", plugin_id) do
+    case GroupChats.get_by("chat_id", chat_id) do
+      {:ok, group_chat} ->
+        get_plugins_from_chat(group_chat)
+        |> Enum.find(fn plugin -> normalize_plugin_id(plugin) == plugin_id end)
+
+      {:error, _reason} ->
+        nil
+    end
+  end
+
+  defp resolve_embedded_plugin_by_id(chat_id, "private", plugin_id) do
+    case PrivateChats.get(chat_id) do
+      {:ok, private_chat} ->
+        get_plugins_from_chat(private_chat)
+        |> Enum.find(fn plugin -> normalize_plugin_id(plugin) == plugin_id end)
+
+      {:error, _reason} ->
+        nil
+    end
+  end
+
+  defp resolve_embedded_plugin_by_id(_chat_id, _chat_type, _plugin_id), do: nil
 
   defp embedded_plugin_ids(chat_id, "group") do
     case GroupChats.get_by("chat_id", chat_id) do
       {:ok, group_chat} ->
-        (Map.get(group_chat, :plugins) || Map.get(group_chat, "plugins") || [])
+        get_plugins_from_chat(group_chat)
         |> Enum.map(&normalize_plugin_type/1)
         |> Enum.reject(&is_nil/1)
 
@@ -177,7 +191,7 @@ defmodule Pomoroom.ChatPlugins.ChatPluginService do
   defp embedded_plugin_ids(chat_id, "private") do
     case PrivateChats.get(chat_id) do
       {:ok, private_chat} ->
-        (Map.get(private_chat, :plugins) || Map.get(private_chat, "plugins") || [])
+        get_plugins_from_chat(private_chat)
         |> Enum.map(&normalize_plugin_type/1)
         |> Enum.reject(&is_nil/1)
 
@@ -186,24 +200,15 @@ defmodule Pomoroom.ChatPlugins.ChatPluginService do
     end
   end
 
-  defp merge_plugins_by_id(primary_plugins, secondary_plugins) do
-    Enum.reduce(primary_plugins ++ secondary_plugins, [], fn plugin, acc ->
-      plugin_id = Map.get(plugin, :id) || Map.get(plugin, "id")
-
-      if Enum.any?(acc, fn existing ->
-           (Map.get(existing, :id) || Map.get(existing, "id")) == plugin_id
-         end) do
-        acc
-      else
-        acc ++ [plugin]
-      end
-    end)
-  end
-
   defp normalize_plugin_type(plugin) when is_map(plugin) do
-    Map.get(plugin, :type) || Map.get(plugin, "type") || Map.get(plugin, :id) ||
-      Map.get(plugin, "id")
+    Map.get(plugin, :type) || Map.get(plugin, "type")
   end
 
   defp normalize_plugin_type(_), do: nil
+  
+  defp normalize_plugin_id(plugin) when is_map(plugin) do
+    Map.get(plugin, :id) || Map.get(plugin, "id")
+  end
+
+  defp normalize_plugin_id(_), do: nil
 end

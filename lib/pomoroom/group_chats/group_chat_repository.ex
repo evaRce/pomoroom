@@ -16,7 +16,10 @@ defmodule Pomoroom.GroupChats.GroupChatRepository do
       nil ->
         {:error, "Chat no encontrado"}
 
-      chat ->
+      {:error, reason} ->
+        {:error, reason}
+
+      chat when is_map(chat) ->
         normalized_chat = normalize_legacy_members(chat)
         {:ok, get_changes_from_changeset(normalized_chat)}
     end
@@ -35,32 +38,23 @@ defmodule Pomoroom.GroupChats.GroupChatRepository do
   end
 
   def update_members(chat_id, members) do
+    query = %{"chat_id" => chat_id}
     now = NaiveDateTime.utc_now()
 
     Mongo.update_one(
       :mongo,
       "group_chats",
-      %{"chat_id" => chat_id},
+      query,
       %{"$set" => %{"members" => members, "updated_at" => now}}
     )
   end
 
   def add_plugin(chat_id, plugin) do
-    Mongo.update_one(
-      :mongo,
-      "group_chats",
-      %{"chat_id" => chat_id},
-      %{"$addToSet" => %{plugins: plugin}}
-    )
+    update_plugin(chat_id, %{"$addToSet" => %{plugins: plugin}})
   end
 
   def remove_plugin(chat_id, plugin_type) do
-    Mongo.update_one(
-      :mongo,
-      "group_chats",
-      %{"chat_id" => chat_id},
-      %{"$pull" => %{plugins: %{"type" => plugin_type}}}
-    )
+    update_plugin(chat_id, %{"$pull" => %{plugins: %{"type" => plugin_type}}})
   end
 
   defp get_changes_from_changeset(args) do
@@ -84,5 +78,20 @@ defmodule Pomoroom.GroupChats.GroupChatRepository do
     chat
     |> Map.put("members", normalized_members)
     |> Map.put_new("plugins", [])
+  end
+
+  defp update_plugin(chat_id, update) do
+    query = %{"chat_id" => chat_id}
+
+    case Mongo.update_one(:mongo, "group_chats", query, update) do
+      {:ok, %Mongo.UpdateResult{matched_count: 0}} ->
+        {:error, :chat_not_found}
+
+      {:ok, result} ->
+        {:ok, result}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 end

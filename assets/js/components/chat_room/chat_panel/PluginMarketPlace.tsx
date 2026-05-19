@@ -6,15 +6,17 @@ import { cn } from "../../../../lib/utils";
 import pluginMarketPlaceText from "./pluginMarketPlaceText";
 
 export interface AvailablePlugin {
-  id: string;
+  type: string;
   name: string;
   description: string;
   icon: string;
   iconComponent?: React.ReactNode;
+  installable?: boolean;
 }
 
 export interface InstalledPlugin {
   id: string;
+  type: string;
   name: string;
   icon: string;
 }
@@ -34,6 +36,7 @@ interface PluginMarketPlaceProps {
   installedPlugins: InstalledPlugin[];
   onInstallPlugin: (plugin: AvailablePlugin) => void;
   onUninstallPlugin: (pluginId: string) => void;
+  pendingPluginId?: string | null;
 }
 
 export default function PluginMarketPlace({
@@ -42,6 +45,7 @@ export default function PluginMarketPlace({
   installedPlugins,
   onInstallPlugin,
   onUninstallPlugin,
+  pendingPluginId = null,
 }: PluginMarketPlaceProps) {
   const [availablePlugins, setAvailablePlugins] = useState<AvailablePlugin[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -77,7 +81,7 @@ export default function PluginMarketPlace({
           setAvailablePlugins(
             plugins.map((plugin) => ({
               ...plugin,
-              iconComponent: iconComponentMap[plugin.id],
+              iconComponent: iconComponentMap[plugin.type],
             }))
           );
         }
@@ -99,7 +103,9 @@ export default function PluginMarketPlace({
     };
   }, [open]);
 
-  const isInstalled = (pluginId: string) => installedPlugins.some((plugin) => plugin.id === pluginId);
+  const isInstalled = (pluginType: string) => installedPlugins.some((plugin) => plugin.type === pluginType);
+  const isPending = (pluginType: string, installedPluginId?: string) =>
+    pendingPluginId === pluginType || (installedPluginId ? pendingPluginId === installedPluginId : false);
   const hasPlugins = useMemo(() => availablePlugins.length > 0, [availablePlugins.length]);
 
   return (
@@ -113,16 +119,21 @@ export default function PluginMarketPlace({
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
-          {isLoading && <p className="text-sm text-slate-500">{pluginMarketPlaceText.loading}</p>}
+          {isLoading && <p className="text-sm text-slate-500">{pluginMarketPlaceText.loading.listPlugins}</p>}
           {loadError && <p className="text-sm text-red-500">{loadError}</p>}
           {!isLoading && !loadError && !hasPlugins && (
             <p className="text-sm text-slate-500">{pluginMarketPlaceText.empty}</p>
           )}
           {availablePlugins.map((plugin) => {
-            const installed = isInstalled(plugin.id);
+            const installed = isInstalled(plugin.type);
+            const installedInstance = installedPlugins.find((p) => p.type === plugin.type);
+            const installedId = installedInstance?.id;
+            const pending = isPending(plugin.type, installedId);
+            const installable = plugin.installable !== false;
+            const canUninstallById = Boolean(installedId);
             return (
               <div
-                key={plugin.id}
+                key={plugin.type}
                 className={cn(
                   "relative flex flex-col p-4 rounded-xl border transition-all",
                   installed
@@ -152,18 +163,28 @@ export default function PluginMarketPlace({
                           variant="outline"
                           size="sm"
                           className="h-8 text-xs !font-extrabold text-red-400 bg-gray-50 border-red-300 hover:bg-red-50 hover:border-red-200"
-                          onClick={() => onUninstallPlugin(plugin.id)}
+                          onClick={() => {
+                            if (installedId) {
+                              onUninstallPlugin(installedId);
+                            }
+                          }}
+                          disabled={pending || !canUninstallById}
                         >
-                          {pluginMarketPlaceText.uninstall}
+                          {pending ? pluginMarketPlaceText.loading.uninstallation : pluginMarketPlaceText.uninstall}
                         </Button>
                       ) : (
-                          <Button
-                            size="sm"
-                            className="h-8 text-xs !font-extrabold text-white bg-green-600 hover:bg-green-700"
-                            onClick={() => onInstallPlugin(plugin)}
-                          >
-                            {pluginMarketPlaceText.install}
-                          </Button>
+                        <Button
+                          size="sm"
+                          className="h-8 text-xs !font-extrabold text-white bg-green-600 hover:bg-green-700"
+                          onClick={() => onInstallPlugin(plugin)}
+                          disabled={pending || !installable}
+                        >
+                          {pending
+                            ? pluginMarketPlaceText.loading.installation
+                            : installable
+                              ? pluginMarketPlaceText.install
+                              : pluginMarketPlaceText.comingSoon}
+                        </Button>
                       )}
                     </div>
                   </div>

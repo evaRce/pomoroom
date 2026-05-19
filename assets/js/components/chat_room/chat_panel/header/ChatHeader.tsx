@@ -21,6 +21,7 @@ export default function ChatHeader({
   onTogglePluginTab,
 }: ChatHeaderProps) {
   const { addEvent, getEventData, removeEvent } = useEventContext() as any;
+  const [pluginDisplayMap, setPluginDisplayMap] = useState<Record<string, { name: string; icon: string }>>({});
   const [chatData, setChatData] = useState<any>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [checkAdmin, setCheckAdmin] = useState<any>({});
@@ -29,41 +30,74 @@ export default function ChatHeader({
   const [isGroupMemberRemoved, setIsGroupMemberRemoved] = useState(false);
   const [isPluginMarketplaceOpen, setIsPluginMarketplaceOpen] = useState(false);
   const [installedPlugins, setInstalledPlugins] = useState<InstalledPlugin[]>([]);
+  const [pendingPluginId, setPendingPluginId] = useState<string | null>(null);
   const isGroupChat = Boolean(chatData?.group_data);
   const currentChatId = chatData?.chat_id || chatData?.group_data?.chat_id || "";
   const currentGroupName = chatData?.group_data?.name || "";
 
-  const pluginKey = (plugin: any) => plugin?.id || plugin?.type || plugin?.plugin_id;
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadPluginCatalog = async () => {
+      try {
+        const res = await fetch("/api/plugins", {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        });
+
+        if (!res.ok) return;
+
+        const payload = await res.json();
+        const plugins = Array.isArray(payload?.data) ? payload.data : [];
+
+        const map: Record<string, { name: string; icon: string }> = {};
+        plugins.forEach((p: any) => {
+          if (p?.type) {
+            map[p.type] = { name: p.name || p.type, icon: p.icon || "🔌" };
+          }
+        });
+
+        if (!cancelled) setPluginDisplayMap(map);
+      } catch (_e) {
+        // ignore errors; fallback to empty map
+      }
+    };
+
+    loadPluginCatalog();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const normalizePlugin = (plugin: any) => {
-    if (!plugin) return null;
+    const normalizedType = plugin?.type;
 
-    if (typeof plugin === "string") {
-      return { id: plugin, name: plugin, icon: "🔌" } as InstalledPlugin;
-    }
+    if (!normalizedType) return null;
 
-    const type = plugin.id || plugin.type || plugin.plugin_id;
-    if (!type) return null;
+    const displayData = pluginDisplayMap[normalizedType] || {};
+    const normalizedId = plugin?.id || "";
+
 
     return {
-      id: type,
-      name: plugin.name || type,
-      icon: plugin.icon || "🔌",
+      id: normalizedId,
+      type: normalizedType,
+      name: plugin.name || displayData.name || normalizedType,
+      icon: plugin.icon || displayData.icon || "🔌",
     } as InstalledPlugin;
   };
 
-  const mergePlugins = (primary: any[] = [], secondary: any[] = []) => {
+  const normalizeInstalledPlugins = (plugins: any[] = []) => {
     const merged: InstalledPlugin[] = [];
 
-    [...primary, ...secondary].forEach((plugin) => {
+    plugins.forEach((plugin) => {
       const normalized = normalizePlugin(plugin);
-      const key = pluginKey(normalized);
 
-      if (!normalized || !key) {
+      if (!normalized) {
         return;
       }
 
-      if (merged.some((existing) => pluginKey(existing) === key)) {
+      if (merged.some((existing) => existing.type === normalized.type)) {
         return;
       }
 
@@ -87,7 +121,7 @@ export default function ChatHeader({
 
     if (privateChat) {
       setChatData(privateChat);
-      setInstalledPlugins(mergePlugins(privateChat.installed_plugins, privateChat.plugins));
+      setInstalledPlugins(normalizeInstalledPlugins(privateChat.plugins));
       removeEvent("active_chat_context");
       addEvent("active_chat_context", privateChat);
       onTogglePluginTab(null);
@@ -99,7 +133,7 @@ export default function ChatHeader({
     if (groupChat) {
       setChatData(groupChat);
       setIsGroupMemberRemoved(Boolean(groupChat.removed_at));
-      setInstalledPlugins(mergePlugins(groupChat.installed_plugins, groupChat.plugins));
+      setInstalledPlugins(normalizeInstalledPlugins(groupChat.plugins));
       removeEvent("active_chat_context");
       addEvent("active_chat_context", groupChat);
       onTogglePluginTab(null);
@@ -118,18 +152,41 @@ export default function ChatHeader({
       return;
     }
 
-    const installedPlugin = pluginInstalledEvent.plugin;
+    const installedPlugin = normalizePlugin(pluginInstalledEvent.plugin);
+
+    if (!installedPlugin) {
+      removeEvent("chat_plugin_installed");
+      return;
+    }
 
     setInstalledPlugins((prevPlugins) => {
-      if (prevPlugins.some((plugin) => plugin.id === installedPlugin.id)) {
+      if (prevPlugins.some((plugin) => plugin.type === installedPlugin.type)) {
         return prevPlugins;
       }
 
       return [...prevPlugins, installedPlugin];
     });
 
+    setPendingPluginId(null);
+
     removeEvent("chat_plugin_installed");
   }, [getEventData("chat_plugin_installed"), currentChatId]);
+
+  useEffect(() => {
+    const pluginInstallFailedEvent = getEventData("chat_plugin_install_failed");
+
+    if (!pluginInstallFailedEvent) {
+      return;
+    }
+
+    if (pluginInstallFailedEvent.chat_id !== currentChatId) {
+      removeEvent("chat_plugin_install_failed");
+      return;
+    }
+
+    setPendingPluginId(null);
+    removeEvent("chat_plugin_install_failed");
+  }, [getEventData("chat_plugin_install_failed"), currentChatId]);
 
   useEffect(() => {
     const pluginUninstalledEvent = getEventData("chat_plugin_uninstalled");
@@ -143,18 +200,41 @@ export default function ChatHeader({
       return;
     }
 
-    const uninstalledPlugin = pluginUninstalledEvent.plugin;
+    const uninstalledPlugin = normalizePlugin(pluginUninstalledEvent.plugin);
+
+    if (!uninstalledPlugin) {
+      removeEvent("chat_plugin_uninstalled");
+      return;
+    }
 
     setInstalledPlugins((prevPlugins) =>
-      prevPlugins.filter((plugin) => plugin.id !== uninstalledPlugin.id)
+      prevPlugins.filter((plugin) => plugin.type !== uninstalledPlugin.type)
     );
 
-    if (activePluginId === uninstalledPlugin.id) {
+    if (activePluginId === uninstalledPlugin.type) {
       onTogglePluginTab(null);
     }
 
+    setPendingPluginId(null);
+
     removeEvent("chat_plugin_uninstalled");
   }, [getEventData("chat_plugin_uninstalled"), currentChatId, activePluginId]);
+
+  useEffect(() => {
+    const pluginUninstallFailedEvent = getEventData("chat_plugin_uninstall_failed");
+
+    if (!pluginUninstallFailedEvent) {
+      return;
+    }
+
+    if (pluginUninstallFailedEvent.chat_id !== currentChatId) {
+      removeEvent("chat_plugin_uninstall_failed");
+      return;
+    }
+
+    setPendingPluginId(null);
+    removeEvent("chat_plugin_uninstall_failed");
+  }, [getEventData("chat_plugin_uninstall_failed"), currentChatId]);
 
   useEffect(() => {
     const groupMemberRemovedEvent = getEventData("group_member_removed");
@@ -317,10 +397,11 @@ export default function ChatHeader({
       return;
     }
 
+    setPendingPluginId(plugin.type);
     addEvent("install_chat_plugin", {
       chat_id: currentChatId,
       chat_type: isGroupChat ? "group" : "private",
-      plugin_id: plugin.id,
+      plugin_type: plugin.type,
     });
   };
 
@@ -329,6 +410,7 @@ export default function ChatHeader({
       return;
     }
 
+    setPendingPluginId(pluginId);
     addEvent("uninstall_chat_plugin", {
       chat_id: currentChatId,
       chat_type: isGroupChat ? "group" : "private",
@@ -383,17 +465,17 @@ export default function ChatHeader({
                 {installedPlugins.map((plugin) => (
                   <button
                     type="button"
-                    key={plugin.id}
-                    onClick={() => togglePluginTab(plugin.id)}
+                    key={plugin.type}
+                    onClick={() => togglePluginTab(plugin.type)}
                     title={plugin.name}
-                    className={`inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-md border px-3 text-xs font-medium transition-all ${activePluginId === plugin.id
+                    className={`inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-md border px-3 text-xs font-medium transition-all ${activePluginId === plugin.type
                       ? "border-sky-200 bg-sky-100 text-sky-800"
                       : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
                       }`}
                   >
                     <span className="shrink-0">{plugin.icon}</span>
                     {plugin.name}
-                    {plugin.id === "pomodoro" && pomodoroTimer?.isRunning && (
+                    {plugin.type === "pomodoro" && pomodoroTimer?.isRunning && (
                       <span
                         className={`ml-1 inline-block h-2 w-2 shrink-0 rounded-full ${pomodoroTimer.mode === "work"
                             ? "bg-sky-500"
@@ -460,6 +542,7 @@ export default function ChatHeader({
         installedPlugins={installedPlugins}
         onInstallPlugin={handleInstallPlugin}
         onUninstallPlugin={handleUninstallPlugin}
+        pendingPluginId={pendingPluginId}
       />
     </header>
   );

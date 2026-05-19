@@ -2,8 +2,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
   import Phoenix.Component, only: [assign: 3]
   import Phoenix.LiveView, only: [push_event: 3]
 
+  alias Pomoroom.ChatPlugins.ChatPluginService
   alias Pomoroom.ChatRoom.ChatServer
-  alias Pomoroom.ChatPlugins
   alias Pomoroom.FriendRequests
   alias Pomoroom.GroupChats
   alias Pomoroom.PrivateChats
@@ -171,16 +171,13 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
         }
       end)
 
-    installed_plugins = ChatPlugins.list_installed_plugins(group_chat.chat_id, "group")
-
     payload = %{
       event_name: "open_group_chat",
       event_data: %{
         chat_id: group_chat.chat_id,
         is_admin: is_admin,
         group_data: group_chat,
-        installed_plugins: installed_plugins,
-        plugins: chat_plugins_payload(group_chat),
+        plugins: ChatPluginService.get_plugins_from_chat(group_chat),
         messages: messages_with_images_user,
         has_more: length(messages_with_images_user) == @initial_messages_limit,
         removed_at: removed_at
@@ -271,16 +268,13 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
           |> assign(:chat_id, private_chat.chat_id)
           |> assign(:current_group_joined_at, joined_at)
 
-        installed_plugins = ChatPlugins.list_installed_plugins(private_chat.chat_id, "private")
-
         payload = %{
           event_name: "open_private_chat",
           event_data: %{
             chat_id: private_chat.chat_id,
             from_user_data: user,
             to_user_data: to_user_data,
-            installed_plugins: installed_plugins,
-            plugins: chat_plugins_payload(private_chat),
+            plugins: ChatPluginService.get_plugins_from_chat(private_chat),
             messages: messages_with_images_user,
             has_more: length(messages_with_images_user) == @initial_messages_limit
           }
@@ -345,8 +339,4 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
   defp to_naive_datetime(%DateTime{} = datetime), do: DateTime.to_naive(datetime)
   defp to_naive_datetime(%NaiveDateTime{} = datetime), do: datetime
   defp to_naive_datetime(value), do: value
-
-  defp chat_plugins_payload(chat) when is_map(chat) do
-    Map.get(chat, :plugins) || Map.get(chat, "plugins") || []
-  end
 end

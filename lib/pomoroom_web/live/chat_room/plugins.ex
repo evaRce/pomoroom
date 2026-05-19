@@ -8,10 +8,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
   alias Pomoroom.Users
   alias PomoroomWeb.Presence
 
-  def handle_install_chat_plugin(chat_id, chat_type, plugin_id, user, socket) do
+  def handle_install_chat_plugin(chat_id, chat_type, plugin_type, user, socket) do
     case authorize_chat_access(chat_id, user.nickname) do
       :ok ->
-        case ChatPlugins.install_plugin(chat_id, chat_type, plugin_id, user.nickname) do
+        case ChatPlugins.install_plugin(chat_id, chat_type, plugin_type) do
           {:ok, plugin} ->
             payload = %{
               event_name: "chat_plugin_installed",
@@ -24,7 +24,20 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
 
             {:noreply, push_event(socket, "react", payload)}
 
-          {:error, _reason} ->
+          {:error, reason} ->
+            payload = %{
+              event_name: "chat_plugin_install_failed",
+              event_data: %{
+                chat_id: chat_id,
+                chat_type: chat_type,
+                plugin_type: plugin_type,
+                reason: reason_payload(reason)
+              }
+            }
+
+            {:noreply, push_event(socket, "react", payload)}
+
+          _ ->
             {:noreply, socket}
         end
 
@@ -33,10 +46,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
     end
   end
 
-  def handle_uninstall_chat_plugin(chat_id, chat_type, plugin_id, user, socket) do
+  def handle_uninstall_chat_plugin_by_id(chat_id, chat_type, plugin_id, user, socket) do
     case authorize_chat_access(chat_id, user.nickname) do
       :ok ->
-        case ChatPlugins.uninstall_plugin(chat_id, chat_type, plugin_id) do
+        case ChatPlugins.uninstall_plugin_by_id(chat_id, chat_type, plugin_id) do
           {:ok, plugin} ->
             payload = %{
               event_name: "chat_plugin_uninstalled",
@@ -49,7 +62,20 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
 
             {:noreply, push_event(socket, "react", payload)}
 
-          {:error, _reason} ->
+          {:error, reason} ->
+            payload = %{
+              event_name: "chat_plugin_uninstall_failed",
+              event_data: %{
+                chat_id: chat_id,
+                chat_type: chat_type,
+                plugin_id: plugin_id,
+                reason: reason_payload(reason)
+              }
+            }
+
+            {:noreply, push_event(socket, "react", payload)}
+
+          _ ->
             {:noreply, socket}
         end
 
@@ -102,10 +128,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
 
   def handle_presence_diff(socket) do
     user_nickname = socket.assigns.user_info.nickname
-
-    Users.get_all_my_chats_id(user_nickname)
-    |> Enum.uniq()
-    |> Enum.each(&maybe_cleanup_pomodoro_timer/1)
+    terminate_timer_process_for_user(user_nickname)
 
     {:noreply, socket}
   end
@@ -119,17 +142,21 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
       _ -> :ok
     end
 
-    Users.get_all_my_chats_id(user_nickname)
-    |> Enum.uniq()
-    |> Enum.each(&maybe_cleanup_pomodoro_timer/1)
+    terminate_timer_process_for_user(user_nickname)
 
     :ok
   end
 
-  defp authorize_and_validate_plugin(chat_id, chat_type, plugin_id, user_nickname) do
+  defp terminate_timer_process_for_user(user_nickname) do
+    Users.get_all_my_chats_id(user_nickname)
+    |> Enum.uniq()
+    |> Enum.each(&maybe_terminate_timer_process/1)
+  end
+
+  defp authorize_and_validate_plugin(chat_id, chat_type, plugin_type, user_nickname) do
     case authorize_chat_access(chat_id, user_nickname) do
       :ok ->
-        case ChatPlugins.plugin_installed?(chat_id, chat_type, plugin_id) do
+        case ChatPlugins.plugin_installed?(chat_id, chat_type, plugin_type) do
           true -> :ok
           false -> {:error, :plugin_not_installed}
         end
@@ -145,14 +172,14 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
       event_data: %{
         chat_id: chat_id,
         chat_type: chat_type,
-        reason: reason
+        reason: reason_payload(reason)
       }
     }
 
     {:noreply, push_event(socket, "react", payload)}
   end
 
-  defp maybe_cleanup_pomodoro_timer(chat_id) do
+  defp maybe_terminate_timer_process(chat_id) do
     case chat_context(chat_id) do
       {:ok, chat_type, members} ->
         case ChatPlugins.plugin_installed?(chat_id, chat_type, "pomodoro") do
@@ -160,7 +187,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
             if Enum.any?(members, &user_online?/1) do
               :ok
             else
-              PomodoroTimerService.delete_timer(chat_id, chat_type)
+              PomodoroTimerService.terminate_timer_process(chat_id, chat_type)
             end
 
           false ->
@@ -211,6 +238,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
   end
 
   defp user_online?(_), do: false
+
+  defp reason_payload(%_{} = reason), do: inspect(reason)
+  defp reason_payload(reason), do: reason
 
   defp authorize_chat_access(chat_id, user_nickname) do
     case GroupChats.get_by("chat_id", chat_id) do

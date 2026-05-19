@@ -1,29 +1,31 @@
 defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.Runtime do
-  alias Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerRepository
   alias Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer
 
-  def ensure_pomodoro_plugin_started(timer_id, chat_id, chat_type) do
-    case Registry.lookup(Registry.PomodoroPluginTimer, timer_id) do
+  def ensure_timer_process_started(process_id, chat_id, chat_type, timer_id) do
+    case Registry.lookup(Registry.PomodoroPluginTimer, process_id) do
       [] ->
         case DynamicSupervisor.start_child(
                Pomoroom.ChatPlugins.PomodoroTimerSupervisor,
                {PomodoroTimerServer,
-                %{timer_id: timer_id, chat_id: chat_id, chat_type: chat_type}}
+                %{
+                  process_id: process_id,
+                  chat_id: chat_id,
+                  chat_type: chat_type,
+                  timer_id: timer_id
+                }}
              ) do
-          {:ok, _pid} -> {:ok, timer_id}
-          {:error, {:already_started, _pid}} -> {:ok, timer_id}
+          {:ok, _pid} -> {:ok, process_id}
+          {:error, {:already_started, _pid}} -> {:ok, process_id}
           {:error, reason} -> {:error, reason}
         end
 
       _ ->
-        {:ok, timer_id}
+        {:ok, process_id}
     end
   end
 
-  def delete_timer(timer_id, chat_id, chat_type) do
-    PomodoroTimerRepository.delete_by_chat(chat_id, chat_type)
-
-    case Registry.lookup(Registry.PomodoroPluginTimer, timer_id) do
+  def terminate_timer_process(process_id) do
+    case Registry.lookup(Registry.PomodoroPluginTimer, process_id) do
       [{pid, _value}] ->
         DynamicSupervisor.terminate_child(Pomoroom.ChatPlugins.PomodoroTimerSupervisor, pid)
 

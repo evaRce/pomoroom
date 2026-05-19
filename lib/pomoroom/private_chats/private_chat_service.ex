@@ -6,7 +6,7 @@ defmodule Pomoroom.PrivateChats.PrivateChatService do
 
   def create_private_chat(to_user, from_user) do
     private_chat_changeset =
-      Chats.get_public_id_chat()
+      Chats.generate_chat_id()
       |> PrivateChatSchema.private_chat_changeset([to_user, from_user])
       |> Chats.timestamps()
 

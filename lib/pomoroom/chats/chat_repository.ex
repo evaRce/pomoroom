@@ -25,13 +25,19 @@ defmodule Pomoroom.Chats.ChatRepository do
       ]
     }
 
-    case Mongo.find(:mongo, collection, query) |> Enum.to_list() do
-      [] ->
-        {:ok, []}
+    case Mongo.find(:mongo, collection, query) do
+      {:error, _reason} = error ->
+        error
 
-      chat_list ->
-        chat_ids = Enum.map(chat_list, fn chat -> Map.get(chat, "chat_id") end)
-        {:ok, chat_ids}
+      cursor ->
+        case Enum.to_list(cursor) do
+          [] ->
+            {:ok, []}
+
+          chat_list ->
+            chat_ids = Enum.map(chat_list, fn chat -> Map.get(chat, "chat_id") end)
+            {:ok, chat_ids}
+        end
     end
   end
 end

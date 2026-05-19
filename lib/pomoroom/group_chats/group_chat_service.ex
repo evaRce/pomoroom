@@ -5,7 +5,7 @@ defmodule Pomoroom.GroupChats.GroupChatService do
   alias Pomoroom.Users
 
   def create_group_chat(from_user, name) do
-    chat_id = Chats.get_public_id_chat()
+    chat_id = Chats.generate_chat_id()
 
     group_changeset =
       chat_id

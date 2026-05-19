@@ -29,12 +29,8 @@ defmodule Pomoroom.Startup do
       [key: %{from_user: 1, to_user: 1}, name: "request_index", unique: true]
     ]
 
-    chat_plugins_indexes = [
-      [key: %{chat_id: 1, chat_type: 1, plugin_id: 1}, name: "chat_plugin_unique_index", unique: true],
-    ]
-
     pomodoro_timers_indexes = [
-      [key: %{timer_id: 1}, name: "pomodoro_timer_id_unique_index", unique: true]
+      [key: %{timer_id: 1}, name: "timer_id_index", unique: true]
     ]
 
     Mongo.create_indexes(:mongo, "users", user_indexes)
@@ -42,7 +38,6 @@ defmodule Pomoroom.Startup do
     Mongo.create_indexes(:mongo, "private_chats", private_chats_indexes)
     Mongo.create_indexes(:mongo, "group_chats", group_chats_indexes)
     Mongo.create_indexes(:mongo, "friend_requests", friend_requests_indexes)
-    Mongo.create_indexes(:mongo, "chat_plugins", chat_plugins_indexes)
     Mongo.create_indexes(:mongo, "pomodoro_timers", pomodoro_timers_indexes)
   end
 end

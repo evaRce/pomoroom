@@ -90,25 +90,30 @@ defmodule Pomoroom.PrivateChats.PrivateChatRepository do
   end
 
   def add_plugin(chat_id, plugin) do
-    Mongo.update_one(
-      :mongo,
-      "private_chats",
-      %{"chat_id" => chat_id},
-      %{"$addToSet" => %{plugins: plugin}}
-    )
+    update_plugin(chat_id, %{"$addToSet" => %{plugins: plugin}})
   end
 
   def remove_plugin(chat_id, plugin_type) do
-    Mongo.update_one(
-      :mongo,
-      "private_chats",
-      %{"chat_id" => chat_id},
-      %{"$pull" => %{plugins: %{"type" => plugin_type}}}
-    )
+    update_plugin(chat_id, %{"$pull" => %{plugins: %{"type" => plugin_type}}})
   end
 
   defp get_changes_from_changeset(args) do
     PrivateChatSchema.private_chat_changeset(args).changes
     |> Map.put_new(:plugins, [])
+  end
+
+  defp update_plugin(chat_id, update) do
+    query = %{"chat_id" => chat_id}
+    
+    case Mongo.update_one(:mongo, "private_chats", query, update) do
+      {:ok, %Mongo.UpdateResult{matched_count: 0}} ->
+        {:error, :chat_not_found}
+
+      {:ok, result} ->
+        {:ok, result}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 end

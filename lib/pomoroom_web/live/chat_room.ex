@@ -1,11 +1,14 @@
 defmodule PomoroomWeb.ChatLive.ChatRoom do
-  alias PomoroomWeb.ChatLive.ChatRoom.Calls
-  alias PomoroomWeb.ChatLive.ChatRoom.Chats
-  alias PomoroomWeb.ChatLive.ChatRoom.Contacts
-  alias PomoroomWeb.ChatLive.ChatRoom.FriendRequests
-  alias PomoroomWeb.ChatLive.ChatRoom.Groups
-  alias PomoroomWeb.ChatLive.ChatRoom.Plugins
-  alias PomoroomWeb.ChatLive.ChatRoom.Runtime
+  alias PomoroomWeb.ChatLive.ChatRoom.{
+    Calls,
+    Chats,
+    Contacts,
+    FriendRequests,
+    Groups,
+    Plugins,
+    Runtime
+  }
+
   alias Phoenix.Socket.Broadcast
   alias Phoenix.PubSub
   alias Pomoroom.ChatRoom.ChatServer
@@ -233,10 +236,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
   def handle_event(
         "action.install_chat_plugin",
-        %{"chat_id" => chat_id, "chat_type" => chat_type, "plugin_id" => plugin_id},
+        %{"chat_id" => chat_id, "chat_type" => chat_type, "plugin_type" => plugin_type},
         %{assigns: %{user_info: user}} = socket
       ) do
-    Plugins.handle_install_chat_plugin(chat_id, chat_type, plugin_id, user, socket)
+    Plugins.handle_install_chat_plugin(chat_id, chat_type, plugin_type, user, socket)
   end
 
   def handle_event(
@@ -244,7 +247,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         %{"chat_id" => chat_id, "chat_type" => chat_type, "plugin_id" => plugin_id},
         %{assigns: %{user_info: user}} = socket
       ) do
-    Plugins.handle_uninstall_chat_plugin(chat_id, chat_type, plugin_id, user, socket)
+    Plugins.handle_uninstall_chat_plugin_by_id(chat_id, chat_type, plugin_id, user, socket)
   end
 
   def handle_event(

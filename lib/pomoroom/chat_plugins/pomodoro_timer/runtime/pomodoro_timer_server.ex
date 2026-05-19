@@ -10,27 +10,30 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
     cycles_before_long_break: 4
   }
 
-  def start_link(%{timer_id: timer_id} = args) do
-    GenServer.start_link(__MODULE__, args, name: via_tuple(timer_id))
+  def start_link(%{process_id: process_id} = args) do
+    GenServer.start_link(__MODULE__, args, name: via_tuple(process_id))
   end
 
-  def get_config(timer_id) do
-    GenServer.call(via_tuple(timer_id), :get_config)
+  def get_config(process_id) do
+    GenServer.call(via_tuple(process_id), :get_config)
   end
 
-  def update_config(timer_id, config) do
-    GenServer.call(via_tuple(timer_id), {:update_config, config})
+  def update_config(process_id, config) do
+    GenServer.call(via_tuple(process_id), {:update_config, config})
   end
 
-  def via_tuple(timer_id) do
-    {:via, Registry, {Registry.PomodoroPluginTimer, timer_id}}
+  def via_tuple(process_id) do
+    {:via, Registry, {Registry.PomodoroPluginTimer, process_id}}
   end
 
   @impl true
-  def init(%{timer_id: timer_id, chat_id: chat_id, chat_type: chat_type} = _args) do
+  def init(
+        %{process_id: process_id, chat_id: chat_id, chat_type: chat_type, timer_id: timer_id} =
+          _args
+      ) do
     state = %{
-      process_id: timer_id,
-      timer_id: Ecto.UUID.generate(),
+      process_id: process_id,
+      timer_id: timer_id,
       chat_id: chat_id,
       chat_type: chat_type,
       config: @default_config
@@ -48,7 +51,7 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
   def handle_call({:update_config, raw_config}, _from, state) do
     config = normalize_config(raw_config)
 
-    case persist_if_custom(config, state) do
+    case persist_config(config, state) do
       :ok ->
         next_state = %{state | config: config}
         {:reply, {:ok, format_payload(next_state)}, next_state}
@@ -59,34 +62,27 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
   end
 
   defp maybe_load_persisted_config(state) do
-    case Repository.get_by_chat(state.chat_id, state.chat_type) do
+    case Repository.get_by_timer_id(state.timer_id) do
       {:ok, timer_data} ->
-        %{state | config: extract_config(timer_data), timer_id: timer_data.timer_id}
+        %{state | config: extract_config(timer_data)}
 
       {:error, :not_found} ->
         state
     end
   end
 
-  defp persist_if_custom(config, state) do
-    if config == @default_config do
-      Repository.delete_by_chat(state.chat_id, state.chat_type)
-      :ok
-    else
-      changes = %{
-        timer_id: state.timer_id,
-        chat_id: state.chat_id,
-        chat_type: state.chat_type,
-        work_duration: config.work_duration,
-        short_break_duration: config.short_break_duration,
-        long_break_duration: config.long_break_duration,
-        cycles_before_long_break: config.cycles_before_long_break
-      }
+  defp persist_config(config, state) do
+    changes = %{
+      timer_id: state.timer_id,
+      work_duration: config.work_duration,
+      short_break_duration: config.short_break_duration,
+      long_break_duration: config.long_break_duration,
+      cycles_before_long_break: config.cycles_before_long_break
+    }
 
-      case Repository.upsert(changes) do
-        {:ok, _result} -> :ok
-        {:error, _reason} -> {:error, :failed_to_persist_config}
-      end
+    case Repository.upsert(changes) do
+      {:ok, _result} -> :ok
+      {:error, _reason} -> {:error, :failed_to_persist_config}
     end
   end
 
