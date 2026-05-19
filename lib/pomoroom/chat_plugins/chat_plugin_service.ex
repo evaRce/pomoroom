@@ -205,7 +205,7 @@ defmodule Pomoroom.ChatPlugins.ChatPluginService do
   end
 
   defp normalize_plugin_type(_), do: nil
-  
+
   defp normalize_plugin_id(plugin) when is_map(plugin) do
     Map.get(plugin, :id) || Map.get(plugin, "id")
   end

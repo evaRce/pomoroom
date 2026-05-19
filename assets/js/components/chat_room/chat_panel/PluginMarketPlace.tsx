@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { LayoutGrid, Puzzle, Timer } from "lucide-react";
+import { Puzzle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, } from "../../../../components-shadcn/ui/dialog";
 import { Button } from "../../../../components-shadcn/ui/button"
 import { cn } from "../../../../lib/utils";
@@ -10,7 +10,6 @@ export interface AvailablePlugin {
   name: string;
   description: string;
   icon: string;
-  iconComponent?: React.ReactNode;
   installable?: boolean;
 }
 
@@ -22,12 +21,7 @@ export interface InstalledPlugin {
 }
 
 type AvailablePluginApiResponse = {
-  data: Omit<AvailablePlugin, "iconComponent">[];
-};
-
-const iconComponentMap: Record<string, React.ReactNode> = {
-  pomodoro: <Timer className="h-6 w-6 text-sky-500" />,
-  kanban: <LayoutGrid className="h-6 w-6 text-green-500" />,
+  data: AvailablePlugin[];
 };
 
 interface PluginMarketPlaceProps {
@@ -78,12 +72,7 @@ export default function PluginMarketPlace({
         const plugins = Array.isArray(payload?.data) ? payload.data : [];
 
         if (!cancelled) {
-          setAvailablePlugins(
-            plugins.map((plugin) => ({
-              ...plugin,
-              iconComponent: iconComponentMap[plugin.type],
-            }))
-          );
+          setAvailablePlugins(plugins);
         }
       } catch (_error) {
         if (!cancelled) {
@@ -143,8 +132,12 @@ export default function PluginMarketPlace({
               >
                 <div className="flex items-start gap-4">
                   {/* Icon */}
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-200 self-center">
-                    {plugin.iconComponent || <Puzzle className="h-6 w-6 text-slate-500" />}
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-green-50 self-center">
+                    {plugin.icon ? (
+                      <span className="text-3xl leading-none">{plugin.icon}</span>
+                    ) : (
+                      <Puzzle className="h-6 w-6 text-slate-500" />
+                    )}
                   </div>
 
                   {/* Content */}

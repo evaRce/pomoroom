@@ -107,6 +107,11 @@ export default function ChatHeader({
     return merged;
   };
 
+  const getPluginsFromChat = (chat: any): any[] => {
+    const plugins = chat?.plugins;
+    return Array.isArray(plugins) ? plugins : [];
+  };
+
   const pomodoroTimer = useSyncExternalStore(
     (listener) => {
       if (!currentChatId) return () => { };
@@ -121,7 +126,7 @@ export default function ChatHeader({
 
     if (privateChat) {
       setChatData(privateChat);
-      setInstalledPlugins(normalizeInstalledPlugins(privateChat.plugins));
+      setInstalledPlugins(normalizeInstalledPlugins(getPluginsFromChat(privateChat)));
       removeEvent("active_chat_context");
       addEvent("active_chat_context", privateChat);
       onTogglePluginTab(null);
@@ -133,12 +138,20 @@ export default function ChatHeader({
     if (groupChat) {
       setChatData(groupChat);
       setIsGroupMemberRemoved(Boolean(groupChat.removed_at));
-      setInstalledPlugins(normalizeInstalledPlugins(groupChat.plugins));
+      setInstalledPlugins(normalizeInstalledPlugins(getPluginsFromChat(groupChat)));
       removeEvent("active_chat_context");
       addEvent("active_chat_context", groupChat);
       onTogglePluginTab(null);
     }
   }, [getEventData("open_group_chat")]);
+
+  useEffect(() => {
+    if (!chatData) {
+      return;
+    }
+
+    setInstalledPlugins(normalizeInstalledPlugins(getPluginsFromChat(chatData)));
+  }, [chatData, pluginDisplayMap]);
 
   useEffect(() => {
     const pluginInstalledEvent = getEventData("chat_plugin_installed");
@@ -478,10 +491,10 @@ export default function ChatHeader({
                     {plugin.type === "pomodoro" && pomodoroTimer?.isRunning && (
                       <span
                         className={`ml-1 inline-block h-2 w-2 shrink-0 rounded-full ${pomodoroTimer.mode === "work"
-                            ? "bg-sky-500"
-                            : pomodoroTimer.mode === "shortBreak"
-                              ? "bg-green-500"
-                              : "bg-yellow-500"
+                          ? "bg-sky-500"
+                          : pomodoroTimer.mode === "shortBreak"
+                            ? "bg-green-500"
+                            : "bg-yellow-500"
                           }`}
                       />
                     )}
