@@ -9,31 +9,24 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanBoardSchema do
     embeds_many :columns, Column, on_replace: :delete
   end
 
-  def changeset(args) do
-    %Pomoroom.ChatPlugins.Kanban.KanbanBoardSchema{}
-    |> cast(args, [:kanban_id])
-    |> cast_embed(:columns, with: &Column.changeset/1)
+  def changeset(board, attrs) do
+    board
+    |> cast(attrs, [:kanban_id])
+    |> cast_embed(:columns, with: &Column.changeset/2)
+    |> validate_required([:kanban_id])
   end
 
-  def kanban_board_changeset(args) do
-    changeset(args)
-    |> validate_required([
-      :kanban_id,
-      :columns
-    ])
+  def kanban_board_changeset(attrs) do
+    changeset(%__MODULE__{}, attrs)
   end
 
   def kanban_board_changeset(kanban_id, columns) do
-    board = %{
+    attrs = %{
       kanban_id: kanban_id,
       columns: columns
     }
 
-    changeset(board)
-    |> validate_required([
-      :kanban_id,
-      :columns
-    ])
+    changeset(%__MODULE__{}, attrs)
   end
 
   def generate_kanban_id() do

@@ -1,17 +1,25 @@
-defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
+defmodule Pomoroom.ChatPlugins.Kanbans.KanbanService do
+  @default_columns [
+    %{column_id: "todo", title: "Por hacer"},
+    %{column_id: "inProgress", title: "En progreso"},
+    %{column_id: "done", title: "Hecho"}
+  ]
+
   alias Pomoroom.ChatPlugins.Kanban.{
     ColumnSchema,
+    Runtime.Runtime,
     KanbanRepository,
-    KanbanBoardSchema,
     KanbanTaskSchema
   }
 
-  def create_kanban_board() do
-    kanban_id = KanbanBoardSchema.generate_kanban_id()
+  alias Pomoroom.ChatPlugins.ChatPluginService
+  alias Pomoroom.GroupChats
+  alias Pomoroom.PrivateChats
 
+  def create_kanban_board(kanban_id) do
     board = %{
       kanban_id: kanban_id,
-      columns: []
+      columns: default_columns()
     }
 
     case KanbanRepository.create_board(board) do
@@ -20,10 +28,89 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
     end
   end
 
+  def get_board_for_chat(chat_id, chat_type) do
+    case resolve_kanban_id(chat_id, chat_type) do
+      nil ->
+        {:error, :plugin_not_installed}
+
+      kanban_id ->
+        get_board(kanban_id)
+    end
+  end
+
+  def default_columns do
+    Enum.map(@default_columns, fn column -> Map.put(column, :task_ids, []) end)
+  end
+
+  def ensure_started(chat_id, chat_type) do
+    case resolve_kanban_id(chat_id, chat_type) do
+      nil ->
+        {:error, :plugin_not_installed}
+
+      kanban_id ->
+        start_kanban_process(chat_id, chat_type, kanban_id)
+    end
+  end
+
+  def start_kanban_process(chat_id, chat_type, kanban_id) do
+    Runtime.ensure_kanban_process_started(
+      chat_id,
+      chat_type,
+      kanban_id
+    )
+  end
+
+  def terminate_kanban_process(chat_id, chat_type) do
+    Runtime.terminate_kanban_process(process_id(chat_id, chat_type))
+  end
+
+  def delete_kanban_for_chat(chat_id, chat_type) do
+    case resolve_kanban_id(chat_id, chat_type) do
+      nil ->
+        terminate_kanban_process(chat_id, chat_type)
+        {:ok, :no_board}
+
+      kanban_id ->
+        delete_kanban_instance(kanban_id, chat_id, chat_type)
+    end
+  end
+
+  def delete_kanban_instance(kanban_id, chat_id, chat_type) do
+    case KanbanRepository.get_board_by_kanban_id(kanban_id) do
+      {:ok, board} ->
+        case delete_all_tasks_from_board(board) do
+          :ok ->
+            case KanbanRepository.delete_board(kanban_id) do
+              {:ok, _} ->
+                terminate_kanban_process(chat_id, chat_type)
+                {:ok, sanitize_for_client(materialize_board(board))}
+
+              {:error, reason} ->
+                {:error, reason}
+            end
+
+          {:error, reason} ->
+            {:error, reason}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
   def get_board(kanban_id) do
     case valid_identifier?(kanban_id) do
-      true -> KanbanRepository.get_board_by_kanban_id(kanban_id)
-      false -> {:error, :invalid_kanban_id}
+      true ->
+        case KanbanRepository.get_board_by_kanban_id(kanban_id) do
+          {:ok, board} ->
+            {:ok, sanitize_for_client(materialize_board(board))}
+
+          {:error, reason} ->
+            {:error, reason}
+        end
+
+      false ->
+        {:error, :invalid_kanban_id}
     end
   end
 
@@ -41,7 +128,7 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
             updated_board = Map.put(board, :columns, board_columns(board) ++ [column])
 
             case KanbanRepository.update_board(updated_board) do
-              {:ok, _result} -> {:ok, updated_board}
+              {:ok, _result} -> {:ok, sanitize_for_client(materialize_board(updated_board))}
               {:error, reason} -> {:error, reason}
             end
 
@@ -67,14 +154,16 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
 
               column ->
                 remaining_columns =
-                  Enum.reject(columns, fn item -> column_id_from_column(item) == column_id end)
+                  Enum.reject(columns, fn col ->
+                    column_id_from_column(col) == column_id
+                  end)
 
                 updated_board = Map.put(board, :columns, remaining_columns)
 
                 case KanbanRepository.update_board(updated_board) do
                   {:ok, _result} ->
                     case delete_tasks(task_ids_from_column(column)) do
-                      :ok -> {:ok, updated_board}
+                      :ok -> {:ok, sanitize_for_client(materialize_board(updated_board))}
                       {:error, reason} -> {:error, reason}
                     end
 
@@ -126,10 +215,10 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
 
                     case KanbanRepository.update_board(updated_board) do
                       {:ok, _board_result} ->
-                        {:ok, task}
+                        {:ok, sanitize_for_client(materialize_board(updated_board))}
 
                       {:error, reason} ->
-                        _ = KanbanRepository.delete_task(task_id)
+                        KanbanRepository.delete_task(task_id)
                         {:error, reason}
                     end
 
@@ -216,15 +305,120 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
     end
   end
 
-  def delete_board(kanban_id) do
-    KanbanRepository.delete_board(kanban_id)
-  end
-
   def get_task(task_id) do
     case valid_identifier?(task_id) do
-      true -> KanbanRepository.get_task_by_task_id(task_id)
-      false -> {:error, :invalid_task_id}
+      true ->
+        case KanbanRepository.get_task_by_task_id(task_id) do
+          {:ok, task} -> {:ok, sanitize_for_client(task)}
+          {:error, reason} -> {:error, reason}
+        end
+
+      false ->
+        {:error, :invalid_task_id}
     end
+  end
+
+  def delete_task(task_id) do
+    case KanbanRepository.get_task_by_task_id(task_id) do
+      {:ok, task} ->
+        case KanbanRepository.get_board_by_kanban_id(task.kanban_id) do
+          {:ok, board} ->
+            updated_board = remove_task_from_board(board, task)
+
+            case KanbanRepository.update_board(updated_board) do
+              {:ok, _board_result} ->
+                case KanbanRepository.delete_task(task_id) do
+                  {:ok, _result} ->
+                    case sync_board_tasks(updated_board) do
+                      :ok -> {:ok, materialize_board(updated_board)}
+                      {:error, reason} -> {:error, reason}
+                    end
+
+                  {:error, reason} ->
+                    {:error, reason}
+                end
+
+              {:error, reason} ->
+                {:error, reason}
+            end
+
+          {:error, reason} ->
+            {:error, reason}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  def rename_column(kanban_id, column_id, title) do
+    case valid_identifier?(kanban_id) and valid_identifier?(column_id) and
+           valid_identifier?(title) do
+      true ->
+        case KanbanRepository.get_board_by_kanban_id(kanban_id) do
+          {:ok, board} ->
+            updated_board = rename_column_in_board(board, column_id, title)
+
+            case KanbanRepository.update_board(updated_board) do
+              {:ok, _result} -> {:ok, materialize_board(updated_board)}
+              {:error, reason} -> {:error, reason}
+            end
+
+          {:error, reason} ->
+            {:error, reason}
+        end
+
+      false ->
+        {:error, :invalid_params}
+    end
+  end
+
+  def rename_task(task_id, title) do
+    case valid_identifier?(task_id) and valid_identifier?(title) do
+      true ->
+        case KanbanRepository.get_task_by_task_id(task_id) do
+          {:ok, task} ->
+            case KanbanRepository.get_board_by_kanban_id(task.kanban_id) do
+              {:ok, board} ->
+                updated_task = Map.put(task, :title, title)
+
+                case KanbanRepository.update_task(updated_task) do
+                  {:ok, _result} -> {:ok, sanitize_for_client(materialize_board(board))}
+                  {:error, reason} -> {:error, reason}
+                end
+
+              {:error, reason} ->
+                {:error, reason}
+            end
+
+          {:error, reason} ->
+            {:error, reason}
+        end
+
+      false ->
+        {:error, :invalid_params}
+    end
+  end
+
+  defp delete_all_tasks_from_board(board) do
+    board
+    |> task_ids_from_board()
+    |> delete_tasks()
+  end
+
+  defp materialize_column(column, tasks_map) do
+    task_ids = task_ids_from_column(column)
+
+    tasks =
+      Enum.map(task_ids, fn task_id ->
+        Map.get(tasks_map, task_id)
+      end)
+      |> Enum.reject(fn x -> x == nil end)
+
+    column
+    |> Map.put(:tasks, tasks)
+    |> Map.delete(:task_ids)
+    |> Map.delete("task_ids")
   end
 
   defp move_task_between_columns(board, task, from_column_id, to_column_id, new_position) do
@@ -266,8 +460,11 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
                           )
 
                         case KanbanRepository.update_task(updated_task) do
-                          {:ok, _task_result} -> {:ok, updated_task}
-                          {:error, reason} -> {:error, reason}
+                          {:ok, _task_result} ->
+                            {:ok, sanitize_for_client(materialize_board(updated_board))}
+
+                          {:error, reason} ->
+                            {:error, reason}
                         end
 
                       {:error, reason} ->
@@ -318,8 +515,11 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
                       )
 
                     case KanbanRepository.update_task(updated_task) do
-                      {:ok, _task_result} -> {:ok, updated_task}
-                      {:error, reason} -> {:error, reason}
+                      {:ok, _task_result} ->
+                        {:ok, sanitize_for_client(materialize_board(updated_board))}
+
+                      {:error, reason} ->
+                        {:error, reason}
                     end
 
                   {:error, reason} ->
@@ -337,23 +537,30 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
   end
 
   defp update_column_tasks_order(column_id, task_ids) do
+    {:ok, tasks} = KanbanRepository.get_tasks_by_ids(task_ids)
+    tasks_map = map_tasks_by_id(tasks)
+
     Enum.reduce_while(Enum.with_index(task_ids), :ok, fn {current_task_id, position}, :ok ->
-      case KanbanRepository.get_task_by_task_id(current_task_id) do
-        {:ok, task} ->
+      case Map.get(tasks_map, current_task_id) do
+        nil ->
+          {:halt, {:error, :task_not_found}}
+
+        task ->
           updated_task =
             task
             |> Map.put(:column_id, column_id)
             |> Map.put(:order_in_column, position)
 
           case KanbanRepository.update_task(updated_task) do
-            {:ok, _result} -> {:cont, :ok}
+            {:ok, _} -> {:cont, :ok}
             {:error, reason} -> {:halt, {:error, reason}}
           end
-
-        {:error, reason} ->
-          {:halt, {:error, reason}}
       end
     end)
+  end
+
+  defp process_id(chat_id, chat_type) do
+    "kanban:#{chat_type}:#{chat_id}"
   end
 
   defp delete_tasks(task_ids) do
@@ -402,9 +609,158 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
     Map.get(column, :task_ids) || Map.get(column, "task_ids") || []
   end
 
+  defp task_ids_from_board(board) do
+    board_columns(board)
+    |> Enum.flat_map(&task_ids_from_column/1)
+  end
+
   defp column_id_from_column(column) do
     Map.get(column, :column_id) || Map.get(column, "column_id")
   end
+
+  defp rename_column_in_board(board, column_id, title) do
+    updated_columns =
+      Enum.map(board_columns(board), fn column ->
+        case column_id_from_column(column) == column_id do
+          true -> Map.put(column, :title, title)
+          false -> column
+        end
+      end)
+
+    Map.put(board, :columns, updated_columns)
+  end
+
+  defp remove_task_from_board(board, task) do
+    updated_columns =
+      Enum.map(board_columns(board), fn column ->
+        case column_id_from_column(column) == task.column_id do
+          true ->
+            updated_ids =
+              task_ids_from_column(column)
+              |> Enum.reject(fn current_task_id -> current_task_id == task.task_id end)
+
+            Map.put(column, :task_ids, updated_ids)
+
+          false ->
+            column
+        end
+      end)
+
+    Map.put(board, :columns, updated_columns)
+  end
+
+  defp sync_board_tasks(board) do
+    task_ids = task_ids_from_board(board)
+    {:ok, tasks} = KanbanRepository.get_tasks_by_ids(task_ids)
+    tasks_map = map_tasks_by_id(tasks)
+
+    Enum.reduce_while(board_columns(board), :ok, fn column, :ok ->
+      column_id = column_id_from_column(column)
+
+      Enum.reduce_while(Enum.with_index(task_ids_from_column(column)), :ok, fn {task_id, position},
+                                                                               :ok ->
+        case Map.get(tasks_map, task_id) do
+          nil ->
+            {:halt, {:error, :task_not_found}}
+
+          task ->
+            updated_task =
+              task
+              |> Map.put(:column_id, column_id)
+              |> Map.put(:order_in_column, position)
+
+            case KanbanRepository.update_task(updated_task) do
+              {:ok, _} -> {:cont, :ok}
+              {:error, reason} -> {:halt, {:error, reason}}
+            end
+        end
+      end)
+    end)
+  end
+
+  defp materialize_board(board) when is_map(board) do
+    task_ids = task_ids_from_board(board)
+
+    tasks_map =
+      case task_ids do
+        [] ->
+          %{}
+
+        _ ->
+          {:ok, tasks} = KanbanRepository.get_tasks_by_ids(task_ids)
+          map_tasks_by_id(tasks)
+      end
+
+    columns =
+      board_columns(board)
+      |> Enum.map(fn column ->
+        materialize_column(column, tasks_map)
+      end)
+
+    Map.put(board, :columns, columns)
+  end
+
+  defp sanitize_for_client(value) when is_map(value) do
+    value
+    |> Map.delete(:_id)
+    |> Map.delete("_id")
+    |> Enum.reduce(%{}, fn {key, current_value}, acc ->
+      Map.put(acc, key, sanitize_for_client(current_value))
+    end)
+  end
+
+  defp sanitize_for_client(value) when is_list(value) do
+    Enum.map(value, &sanitize_for_client/1)
+  end
+
+  defp sanitize_for_client(value), do: value
+
+  defp map_tasks_by_id(tasks) do
+    Map.new(tasks, fn task ->
+      task_id = Map.get(task, :task_id) || Map.get(task, "task_id")
+      {task_id, sanitize_for_client(task)}
+    end)
+  end
+
+  defp resolve_kanban_id(chat_id, "group") do
+    case GroupChats.get_by("chat_id", chat_id) do
+      {:ok, group_chat} ->
+        plugin_instance_id(ChatPluginService.get_plugins_from_chat(group_chat))
+
+      {:error, _reason} ->
+        nil
+    end
+  end
+
+  defp resolve_kanban_id(chat_id, "private") do
+    case PrivateChats.get(chat_id) do
+      {:ok, private_chat} ->
+        plugin_instance_id(ChatPluginService.get_plugins_from_chat(private_chat))
+
+      {:error, _reason} ->
+        nil
+    end
+  end
+
+  defp resolve_kanban_id(_chat_id, _chat_type), do: nil
+
+  defp plugin_instance_id(plugins) when is_list(plugins) do
+    kanban_plugin =
+      Enum.find(plugins, fn plugin ->
+        plugin_type = Map.get(plugin, :type) || Map.get(plugin, "type")
+        plugin_type == "kanban"
+      end)
+
+    case kanban_plugin do
+      nil ->
+        nil
+
+      plugin ->
+        Map.get(plugin, :id) || Map.get(plugin, "id")
+    end
+  end
+
+  defp plugin_instance_id(_), do: nil
 
   defp valid_identifier?(value) do
     is_binary(value) and value != ""

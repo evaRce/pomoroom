@@ -1,6 +1,7 @@
 defmodule Pomoroom.ChatPlugins.ChatPluginService do
-  alias Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerService
-  alias Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerSchema
+  alias Pomoroom.ChatPlugins.Kanban.KanbanBoardSchema
+  alias Pomoroom.ChatPlugins.Kanbans.KanbanService
+  alias Pomoroom.ChatPlugins.PomodoroTimer.{PomodoroTimerService, PomodoroTimerSchema}
   alias Pomoroom.GroupChats
   alias Pomoroom.GroupChats.GroupChatRepository
   alias Pomoroom.PrivateChats
@@ -18,14 +19,14 @@ defmodule Pomoroom.ChatPlugins.ChatPluginService do
       description:
         "Tablero compartido para organizar tareas en columnas To Do, In Progress y Done.",
       icon: "📋",
-      installable: false
+      installable: true
     }
   }
 
   def install_plugin(chat_id, chat_type, plugin_type) do
     case plugin_type do
       "pomodoro" -> install_pomodoro_plugin(chat_id, chat_type)
-      "kanban" -> {:error, :plugin_not_implemented}
+      "kanban" -> install_kanban_plugin(chat_id, chat_type)
       _ -> {:error, :unsupported_plugin}
     end
   end
@@ -37,6 +38,27 @@ defmodule Pomoroom.ChatPlugins.ChatPluginService do
 
       plugin ->
         uninstall_embedded_plugin(chat_id, chat_type, plugin)
+    end
+  end
+
+  def start_plugins_for_chat(chat_id, chat_type) do
+    case resolve_chat(chat_id, chat_type) do
+      {:ok, chat} ->
+        get_plugins_from_chat(chat)
+        |> Enum.reduce(:ok, fn plugin, acc ->
+          case acc do
+            :ok ->
+              case start_plugin_instance(chat_id, chat_type, plugin) do
+                {:error, _} = error -> error
+                _ -> :ok
+              end
+
+            {:error, _} = error -> error
+          end
+        end)
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -87,15 +109,49 @@ defmodule Pomoroom.ChatPlugins.ChatPluginService do
     end
   end
 
+  defp install_kanban_plugin(chat_id, chat_type) do
+    if embedded_plugin_installed?(chat_id, chat_type, "kanban") do
+      {:error, :plugin_already_installed}
+    else
+      kanban_id = KanbanBoardSchema.generate_kanban_id()
+
+      case KanbanService.create_kanban_board(kanban_id) do
+        {:ok, _board} ->
+          plugin_instance = %{id: kanban_id, type: "kanban"}
+
+          case persist_embedded_plugin(chat_id, chat_type, plugin_instance) do
+            :ok ->
+              case KanbanService.start_kanban_process(chat_id, chat_type, kanban_id) do
+                {:ok, _process_id} ->
+                  {:ok, plugin_instance}
+
+                {:error, reason} ->
+                  remove_embedded_plugin(chat_id, chat_type, "kanban")
+                  KanbanService.delete_kanban_instance(kanban_id, chat_id, chat_type)
+                  {:error, reason}
+              end
+
+            {:error, _} = err ->
+              KanbanService.delete_kanban_instance(kanban_id, chat_id, chat_type)
+              err
+          end
+
+        {:error, reason} ->
+          {:error, reason}
+      end
+    end
+  end
+
   defp uninstall_embedded_plugin(chat_id, chat_type, plugin) when is_map(plugin) do
     plugin_type = normalize_plugin_type(plugin)
     plugin_id = Map.get(plugin, :id) || Map.get(plugin, "id")
 
     case plugin_type do
       "pomodoro" ->
+        PomodoroTimerService.delete_timer_instance(plugin_id, chat_id, chat_type)
+
         case remove_embedded_plugin(chat_id, chat_type, plugin_type) do
           :ok ->
-            PomodoroTimerService.delete_timer_instance(plugin_id, chat_id, chat_type)
             {:ok, %{id: plugin_id, type: plugin_type}}
 
           {:error, _} = err ->
@@ -103,7 +159,19 @@ defmodule Pomoroom.ChatPlugins.ChatPluginService do
         end
 
       "kanban" ->
-        {:error, :plugin_not_implemented}
+        case KanbanService.delete_kanban_instance(plugin_id, chat_id, chat_type) do
+          {:ok, _board} ->
+            case remove_embedded_plugin(chat_id, chat_type, plugin_type) do
+              :ok ->
+                {:ok, %{id: plugin_id, type: plugin_type}}
+
+              {:error, _} = err ->
+                err
+            end
+
+          {:error, _} = err ->
+            err
+        end
 
       _ ->
         {:error, :unsupported_plugin}
@@ -199,6 +267,28 @@ defmodule Pomoroom.ChatPlugins.ChatPluginService do
         []
     end
   end
+
+  defp resolve_chat(chat_id, "group") do
+    GroupChats.get_by("chat_id", chat_id)
+  end
+
+  defp resolve_chat(chat_id, "private") do
+    PrivateChats.get(chat_id)
+  end
+
+  defp resolve_chat(_chat_id, _chat_type), do: {:error, :chat_not_found}
+
+  defp start_plugin_instance(chat_id, chat_type, plugin) when is_map(plugin) do
+    plugin_type = normalize_plugin_type(plugin)
+
+    case plugin_type do
+      "kanban" -> KanbanService.ensure_started(chat_id, chat_type)
+      "pomodoro" -> PomodoroTimerService.ensure_started(chat_id, chat_type)
+      _ -> :ok
+    end
+  end
+
+  defp start_plugin_instance(_chat_id, _chat_type, _plugin), do: :ok
 
   defp normalize_plugin_type(plugin) when is_map(plugin) do
     Map.get(plugin, :type) || Map.get(plugin, "type")

@@ -195,7 +195,12 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
           />
         )
       case "kanban":
-        return <KanbanBoard />
+        return (
+          <KanbanBoard
+            chatId={currentChatId}
+            chatType={isPrivateChat ? "private" : "group"}
+          />
+        )
       default:
         return null
     }

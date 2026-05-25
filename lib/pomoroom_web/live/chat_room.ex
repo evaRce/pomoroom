@@ -267,6 +267,118 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
   end
 
   def handle_event(
+        "action.get_kanban_board",
+        %{"chat_id" => chat_id, "chat_type" => chat_type},
+        %{assigns: %{user_info: user}} = socket
+      ) do
+    Plugins.handle_get_kanban_board(chat_id, chat_type, user, socket)
+  end
+
+  def handle_event(
+        "action.add_kanban_column",
+        %{"chat_id" => chat_id, "chat_type" => chat_type, "title" => title},
+        %{assigns: %{user_info: user}} = socket
+      ) do
+    Plugins.handle_add_kanban_column(chat_id, chat_type, title, user, socket)
+  end
+
+  def handle_event(
+        "action.rename_kanban_column",
+        %{
+          "chat_id" => chat_id,
+          "chat_type" => chat_type,
+          "column_id" => column_id,
+          "title" => title
+        },
+        %{assigns: %{user_info: user}} = socket
+      ) do
+    Plugins.handle_rename_kanban_column(chat_id, chat_type, column_id, title, user, socket)
+  end
+
+  def handle_event(
+        "action.remove_kanban_column",
+        %{"chat_id" => chat_id, "chat_type" => chat_type, "column_id" => column_id},
+        %{assigns: %{user_info: user}} = socket
+      ) do
+    Plugins.handle_remove_kanban_column(chat_id, chat_type, column_id, user, socket)
+  end
+
+  def handle_event(
+        "action.add_kanban_task",
+        %{
+          "chat_id" => chat_id,
+          "chat_type" => chat_type,
+          "column_id" => column_id,
+          "title" => title
+        },
+        %{assigns: %{user_info: user}} = socket
+      ) do
+    Plugins.handle_add_kanban_task(chat_id, chat_type, column_id, title, user, socket)
+  end
+
+  def handle_event(
+        "action.move_kanban_task",
+        %{
+          "chat_id" => chat_id,
+          "chat_type" => chat_type,
+          "task_id" => task_id,
+          "from_column_id" => from_column_id,
+          "to_column_id" => to_column_id,
+          "new_position" => new_position
+        },
+        %{assigns: %{user_info: user}} = socket
+      ) do
+    Plugins.handle_move_kanban_task(
+      chat_id,
+      chat_type,
+      task_id,
+      from_column_id,
+      to_column_id,
+      new_position,
+      user,
+      socket
+    )
+  end
+
+  def handle_event(
+        "action.reorder_kanban_task",
+        %{
+          "chat_id" => chat_id,
+          "chat_type" => chat_type,
+          "task_id" => task_id,
+          "column_id" => column_id,
+          "new_position" => new_position
+        },
+        %{assigns: %{user_info: user}} = socket
+      ) do
+    Plugins.handle_reorder_kanban_task(
+      chat_id,
+      chat_type,
+      task_id,
+      column_id,
+      new_position,
+      user,
+      socket
+    )
+  end
+
+  def handle_event(
+        "action.rename_kanban_task",
+        %{"chat_id" => chat_id, "chat_type" => chat_type, "task_id" => task_id, "title" => title},
+        %{assigns: %{user_info: user}} = socket
+      ) do
+    Plugins.handle_rename_kanban_task(chat_id, chat_type, task_id, title, user, socket)
+  end
+
+  def handle_event(
+        "action.delete_kanban_task",
+        %{"chat_id" => chat_id, "chat_type" => chat_type, "task_id" => task_id},
+        %{assigns: %{user_info: user}} = socket
+      ) do
+    Plugins.handle_delete_kanban_task(chat_id, chat_type, task_id, user, socket)
+  end
+
+  def handle_event(
         "action.load_older_messages",
         %{
           "chat_id" => chat_id,

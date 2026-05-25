@@ -1,44 +1,37 @@
 defmodule Pomoroom.ChatPlugins.Kanban.KanbanRepository do
-  alias Pomoroom.ChatPlugins.Kanban.{KanbanBoardSchema, KanbanTaskSchema}
+  alias Pomoroom.ChatPlugins.Kanban.KanbanTaskSchema
 
   @board_collection "kanban_boards"
   @task_collection "kanban_tasks"
 
   def create_board(kanban_board) do
-    Mongo.insert_one(:mongo, @board_collection, board_changes(kanban_board))
+    board = board_changes(kanban_board)
+
+    case Mongo.insert_one(:mongo, @board_collection, board) do
+      {:ok, _result} ->
+        {:ok, board}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   def get_board_by_kanban_id(kanban_id) do
     case Mongo.find_one(:mongo, @board_collection, %{"kanban_id" => kanban_id}) do
-      nil ->
-        {:error, :not_found}
-
-      board when is_map(board) ->
-        {:ok, board_changes(board)}
-
-      {:error, reason} ->
-        {:error, reason}
+      nil -> {:error, :not_found}
+      board -> {:ok, board_changes(board)}
     end
   end
 
-  def update_board(kanban_board) do
-    board = board_changes(kanban_board)
+  def update_board(board) do
+    changes = board_changes(board)
 
-    case Mongo.update_one(
-           :mongo,
-           @board_collection,
-           %{"kanban_id" => board.kanban_id},
-           %{"$set" => Map.delete(board, :kanban_id)}
-         ) do
-      {:ok, %Mongo.UpdateResult{matched_count: 0}} ->
-        {:error, :not_found}
-
-      {:ok, result} ->
-        {:ok, result}
-
-      {:error, reason} ->
-        {:error, reason}
-    end
+    Mongo.update_one(
+      :mongo,
+      @board_collection,
+      %{"kanban_id" => changes.kanban_id},
+      %{"$set" => Map.delete(changes, :kanban_id)}
+    )
   end
 
   def delete_board(kanban_id) do
@@ -69,6 +62,19 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanRepository do
       {:error, reason} ->
         {:error, reason}
     end
+  end
+
+  def get_tasks_by_ids(task_ids) do
+    query = %{
+      task_id: %{"$in" => task_ids}
+    }
+
+    tasks =
+      Mongo.find(:mongo, "kanban_tasks", query)
+      |> Enum.to_list()
+      |> Enum.map(&task_changes/1)
+
+    {:ok, tasks}
   end
 
   def update_task(task) do
@@ -104,8 +110,33 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanRepository do
     end
   end
 
+  def delete_all_boards() do
+    Mongo.delete_many(:mongo, @board_collection, %{})
+  end
+
+  def delete_all_tasks() do
+    Mongo.delete_many(:mongo, @task_collection, %{})
+  end
+
   defp board_changes(args) do
-    KanbanBoardSchema.kanban_board_changeset(args).changes
+    kanban_id = Map.get(args, :kanban_id) || Map.get(args, "kanban_id")
+
+    columns =
+      Map.get(args, :columns) ||
+        Map.get(args, "columns") ||
+        []
+
+    %{
+      kanban_id: kanban_id,
+      columns:
+        Enum.map(columns, fn column ->
+          %{
+            column_id: Map.get(column, :column_id) || Map.get(column, "column_id"),
+            title: Map.get(column, :title) || Map.get(column, "title"),
+            task_ids: Map.get(column, :task_ids) || Map.get(column, "task_ids") || []
+          }
+        end)
+    }
   end
 
   defp task_changes(args) do

@@ -45,6 +45,15 @@ export function useOutgoingLiveViewActions({
   const uninstallChatPlugin = useEvent("uninstall_chat_plugin");
   const getPomodoroPluginConfig = useEvent("get_pomodoro_plugin_config");
   const updatePomodoroPluginConfig = useEvent("update_pomodoro_plugin_config");
+  const getKanbanBoard = useEvent("get_kanban_board");
+  const addKanbanColumn = useEvent("add_kanban_column");
+  const removeKanbanColumn = useEvent("remove_kanban_column");
+  const addKanbanTask = useEvent("add_kanban_task");
+  const moveKanbanTask = useEvent("move_kanban_task");
+  const reorderKanbanTask = useEvent("reorder_kanban_task");
+  const renameKanbanColumn = useEvent("rename_kanban_column");
+  const renameKanbanTask = useEvent("rename_kanban_task");
+  const deleteKanbanTask = useEvent("delete_kanban_task");
   const refreshConversations = useEvent("refresh_conversations");
   const groupDeleted = useEvent("group_deleted");
   const logout = useEvent("logout");
@@ -172,6 +181,42 @@ export function useOutgoingLiveViewActions({
       pushEventToLiveView("action.update_pomodoro_plugin_config", updatePomodoroPluginConfig);
       removeEvent("update_pomodoro_plugin_config");
     }
+    if (getKanbanBoard) {
+      pushEventToLiveView("action.get_kanban_board", getKanbanBoard);
+      removeEvent("get_kanban_board");
+    }
+    if (addKanbanColumn) {
+      pushEventToLiveView("action.add_kanban_column", addKanbanColumn);
+      removeEvent("add_kanban_column");
+    }
+    if (removeKanbanColumn) {
+      pushEventToLiveView("action.remove_kanban_column", removeKanbanColumn);
+      removeEvent("remove_kanban_column");
+    }
+    if (addKanbanTask) {
+      pushEventToLiveView("action.add_kanban_task", addKanbanTask);
+      removeEvent("add_kanban_task");
+    }
+    if (moveKanbanTask) {
+      pushEventToLiveView("action.move_kanban_task", moveKanbanTask);
+      removeEvent("move_kanban_task");
+    }
+    if (reorderKanbanTask) {
+      pushEventToLiveView("action.reorder_kanban_task", reorderKanbanTask);
+      removeEvent("reorder_kanban_task");
+    }
+    if (renameKanbanColumn) {
+      pushEventToLiveView("action.rename_kanban_column", renameKanbanColumn);
+      removeEvent("rename_kanban_column");
+    }
+    if (renameKanbanTask) {
+      pushEventToLiveView("action.rename_kanban_task", renameKanbanTask);
+      removeEvent("rename_kanban_task");
+    }
+    if (deleteKanbanTask) {
+      pushEventToLiveView("action.delete_kanban_task", deleteKanbanTask);
+      removeEvent("delete_kanban_task");
+    }
     if (refreshConversations) {
       pushEventToLiveView("action.get_list_contact", {});
       removeEvent("refresh_conversations");
@@ -220,6 +265,15 @@ export function useOutgoingLiveViewActions({
     uninstallChatPlugin,
     getPomodoroPluginConfig,
     updatePomodoroPluginConfig,
+    getKanbanBoard,
+    addKanbanColumn,
+    removeKanbanColumn,
+    addKanbanTask,
+    moveKanbanTask,
+    reorderKanbanTask,
+    renameKanbanColumn,
+    renameKanbanTask,
+    deleteKanbanTask,
     refreshConversations,
     groupDeleted,
     logout,

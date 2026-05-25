@@ -29,7 +29,10 @@ defmodule Pomoroom.Application do
       {Registry, keys: :unique, name: Registry.Chat},
       {DynamicSupervisor,
        strategy: :one_for_one, name: Pomoroom.ChatPlugins.PomodoroTimerSupervisor},
-      {Registry, keys: :unique, name: Registry.PomodoroPluginTimer}
+      {Registry, keys: :unique, name: Registry.PomodoroPluginTimer},
+      {DynamicSupervisor,
+       strategy: :one_for_one, name: Pomoroom.ChatPlugins.KanbanSupervisor},
+      {Registry, keys: :unique, name: Registry.KanbanPluginBoard}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

@@ -184,6 +184,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
       }
     }
 
+    ChatPluginService.start_plugins_for_chat(group_chat.chat_id, "group")
+
     {:noreply, push_event(socket, "react", payload)}
   end
 
@@ -279,6 +281,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
             has_more: length(messages_with_images_user) == @initial_messages_limit
           }
         }
+
+        ChatPluginService.start_plugins_for_chat(private_chat.chat_id, "private")
 
         {:noreply, push_event(socket, "react", payload)}
 

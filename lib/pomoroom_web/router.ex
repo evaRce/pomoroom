@@ -34,6 +34,7 @@ defmodule PomoroomWeb.Router do
   scope "/api", PomoroomWeb do
     pipe_through :api
     get "/plugins", PluginController, :index
+    get "/kanban/default-columns", PluginController, :kanban_default_columns
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

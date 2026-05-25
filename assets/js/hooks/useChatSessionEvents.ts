@@ -62,6 +62,18 @@ export function useChatSessionEvents({
   }, [eventName, eventData.chat_id, eventData.plugin]);
 
   useEffect(() => {
+    if (eventName === "show_kanban_board" && eventData.board) {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.board, eventData.chat_id, eventData.chat_type]);
+
+  useEffect(() => {
+    if (eventName === "kanban_board_error" && eventData.reason) {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.reason, eventData.chat_id, eventData.chat_type]);
+
+  useEffect(() => {
     if (eventName === "pomodoro_plugin_config_loaded") {
       addEvent(eventName, eventData);
     }

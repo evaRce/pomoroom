@@ -9,37 +9,14 @@ defmodule Pomoroom.ChatPlugins.Kanban.ColumnSchema do
     field :task_ids, {:array, :string}, default: []
   end
 
-  def changeset(args) do
-    %Pomoroom.ChatPlugins.Kanban.ColumnSchema{}
-    |> cast(args, [
-      :column_id,
-      :title,
-      :task_ids
-    ])
+  def changeset(column, attrs) do
+    column
+    |> cast(attrs, [:column_id, :title, :task_ids])
+    |> validate_required([:column_id, :title, :task_ids])
   end
 
-  def column_changeset(args) do
-    changeset(args)
-    |> validate_required([
-      :column_id,
-      :title,
-      :task_ids
-    ])
-  end
-
-  def column_changeset(column_id, title, task_ids) do
-    column = %{
-      column_id: column_id,
-      title: title,
-      task_ids: task_ids
-    }
-
-    changeset(column)
-    |> validate_required([
-      :column_id,
-      :title,
-      :task_ids
-    ])
+  def column_changeset(attrs) do
+    changeset(%__MODULE__{}, attrs)
   end
 
   def generate_column_id() do

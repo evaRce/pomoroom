@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Plus,
   GripVertical,
@@ -16,6 +16,7 @@ import {
 import type { CollisionDetection, DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Button } from "../../../../components-shadcn/ui/button";
+import { useEventContext } from "../EventContext";
 import { KanbanColumn, KanbanTaskLimitWarningModal } from "./KanbanBoardComponents.tsx";
 import { KANBAN_TEXT } from "./kanbanText";
 import type { Column, ColumnId, Task } from "./KanbanBoardComponents.tsx";
@@ -29,23 +30,30 @@ interface TaskLocation {
   task: Task;
 }
 
-const initialColumns: Column[] = [
-  {
-    id: "todo",
-    title: KANBAN_TEXT.column.initialTitle.todo,
-    tasks: [],
-  },
-  {
-    id: "inProgress",
-    title: KANBAN_TEXT.column.initialTitle.inProgress,
-    tasks: [],
-  },
-  {
-    id: "done",
-    title: KANBAN_TEXT.column.initialTitle.done,
-    tasks: [],
-  },
-];
+interface KanbanBoardProps {
+  chatId: string;
+  chatType: "group" | "private";
+}
+
+function mapServerColumn(column: any): Column {
+  return {
+    id: column.column_id || column.columnId || "",
+    title: column.title || "",
+    tasks: Array.isArray(column.tasks)
+      ? column.tasks.map((task: any) => ({
+        id: task.task_id || task.id || "",
+        title: task.title || "",
+      }))
+      : [],
+  };
+}
+
+function buildColumnRecord<T>(columns: Column[], value: T): Record<ColumnId, T> {
+  return columns.reduce<Record<ColumnId, T>>((acc, column) => {
+    acc[column.id] = value;
+    return acc;
+  }, {} as Record<ColumnId, T>);
+}
 
 function findTaskLocation(columns: Column[], taskId: string): TaskLocation | null {
   for (const column of columns) {
@@ -62,20 +70,11 @@ function findTaskLocation(columns: Column[], taskId: string): TaskLocation | nul
   return null;
 }
 
-export function KanbanBoard() {
-  const [columns, setColumns] = useState<Column[]>(initialColumns);
-  const [newTaskInputs, setNewTaskInputs] = useState<Record<ColumnId, string>>(
-    initialColumns.reduce<Record<ColumnId, string>>((acc, column) => {
-      acc[column.id] = "";
-      return acc;
-    }, {})
-  );
-  const [showAddInput, setShowAddInput] = useState<Record<ColumnId, boolean>>(
-    initialColumns.reduce<Record<ColumnId, boolean>>((acc, column) => {
-      acc[column.id] = false;
-      return acc;
-    }, {})
-  );
+export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
+  const { addEvent, getEventData, removeEvent } = useEventContext() as any;
+  const [columns, setColumns] = useState<Column[]>([]);
+  const [newTaskInputs, setNewTaskInputs] = useState<Record<ColumnId, string>>({});
+  const [showAddInput, setShowAddInput] = useState<Record<ColumnId, boolean>>({});
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState("");
   const [newColumnInputRef, setNewColumnInputRef] = useState<HTMLInputElement | null>(null);
@@ -83,6 +82,100 @@ export function KanbanBoard() {
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [highlightedColumnId, setHighlightedColumnId] = useState<ColumnId | null>(null);
   const [showTaskLimitModal, setShowTaskLimitModal] = useState(false);
+  const boardLoadedRef = useRef(false);
+
+  const applyBoard = (board: any) => {
+    const nextColumns = Array.isArray(board?.columns)
+      ? board.columns.map(mapServerColumn)
+      : [];
+
+    boardLoadedRef.current = true;
+    setColumns(nextColumns);
+    setNewTaskInputs(buildColumnRecord(nextColumns, ""));
+    setShowAddInput(buildColumnRecord(nextColumns, false));
+  };
+
+  useEffect(() => {
+    boardLoadedRef.current = false;
+    setColumns([]);
+    setNewTaskInputs({});
+    setShowAddInput({});
+    setActiveTaskId(null);
+    setHighlightedColumnId(null);
+  }, [chatId, chatType]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadDefaultColumns = async () => {
+      try {
+        const response = await fetch("/api/kanban/default-columns", {
+          headers: {
+            Accept: "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to load default Kanban columns: ${response.status}`);
+        }
+
+        const payload = await response.json();
+        const nextColumns = Array.isArray(payload?.data)
+          ? payload.data.map(mapServerColumn)
+          : [];
+
+        if (cancelled || boardLoadedRef.current) {
+          return;
+        }
+
+        setColumns(nextColumns);
+        setNewTaskInputs(buildColumnRecord(nextColumns, ""));
+        setShowAddInput(buildColumnRecord(nextColumns, false));
+      } catch (error) {
+        console.error("Unable to load default Kanban columns", error);
+      }
+    };
+
+    loadDefaultColumns();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!chatId) {
+      return;
+    }
+
+    addEvent("get_kanban_board", {
+      chat_id: chatId,
+      chat_type: chatType,
+    });
+  }, [addEvent, chatId, chatType]);
+
+  useEffect(() => {
+    const payload = getEventData("show_kanban_board");
+
+    if (!payload) {
+      return;
+    }
+
+    applyBoard(payload.board);
+
+    removeEvent("show_kanban_board");
+  }, [getEventData("show_kanban_board"), removeEvent]);
+
+  useEffect(() => {
+    const payload = getEventData("kanban_board_error");
+
+    if (!payload) {
+      return;
+    }
+
+    console.error("Kanban error", payload);
+    removeEvent("kanban_board_error");
+  }, [getEventData("kanban_board_error"), removeEvent]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -112,43 +205,32 @@ export function KanbanBoard() {
       return;
     }
 
-    const newTask: Task = {
-      id: `task-${Date.now()}`,
-      title: taskTitle,
-    };
-
-    setColumns((prev) =>
-      prev.map((col) =>
-        col.id === columnId ? { ...col, tasks: [...col.tasks, newTask] } : col
-      )
-    );
     setNewTaskInputs((prev) => ({ ...prev, [columnId]: "" }));
     setShowAddInput((prev) => ({ ...prev, [columnId]: false }));
+
+    addEvent("add_kanban_task", {
+      chat_id: chatId,
+      chat_type: chatType,
+      column_id: columnId,
+      title: taskTitle,
+    });
   };
 
   const handleDeleteTask = (columnId: ColumnId, taskId: string) => {
-    setColumns((prev) =>
-      prev.map((col) =>
-        col.id === columnId
-          ? { ...col, tasks: col.tasks.filter((task) => task.id !== taskId) }
-          : col
-      )
-    );
+    addEvent("delete_kanban_task", {
+      chat_id: chatId,
+      chat_type: chatType,
+      task_id: taskId,
+    });
   };
 
   const handleRenameTask = (columnId: ColumnId, taskId: string, nextTitle: string) => {
-    setColumns((prev) =>
-      prev.map((column) => {
-        if (column.id !== columnId) return column;
-
-        return {
-          ...column,
-          tasks: column.tasks.map((task) =>
-            task.id === taskId ? { ...task, title: nextTitle } : task
-          ),
-        };
-      })
-    );
+    addEvent("rename_kanban_task", {
+      chat_id: chatId,
+      chat_type: chatType,
+      task_id: taskId,
+      title: nextTitle,
+    });
   };
 
   const handleAddColumn = () => {
@@ -169,18 +251,15 @@ export function KanbanBoard() {
   const handleConfirmAddColumn = () => {
     const trimmed = newColumnTitle.trim();
     if (!trimmed) return;
-    const newColumnId = newColumnInputId || `column-${Date.now()}`;
-    const newColumn: Column = {
-      id: newColumnId,
-      title: trimmed,
-      tasks: [],
-    };
-    setColumns((prev) => [...prev, newColumn]);
-    setNewTaskInputs((prev) => ({ ...prev, [newColumnId]: "" }));
-    setShowAddInput((prev) => ({ ...prev, [newColumnId]: false }));
     setIsAddingColumn(false);
     setNewColumnTitle("");
     setNewColumnInputId(null);
+
+    addEvent("add_kanban_column", {
+      chat_id: chatId,
+      chat_type: chatType,
+      title: trimmed,
+    });
   };
 
   const handleCancelAddColumn = () => {
@@ -199,22 +278,19 @@ export function KanbanBoard() {
     const trimmed = nextTitle.trim();
     if (!trimmed || trimmed === currentColumn.title) return;
 
-    setColumns((prev) =>
-      prev.map((column) =>
-        column.id === columnId ? { ...column, title: trimmed } : column
-      )
-    );
+    addEvent("rename_kanban_column", {
+      chat_id: chatId,
+      chat_type: chatType,
+      column_id: columnId,
+      title: trimmed,
+    });
   };
 
   const handleDeleteColumn = (columnId: ColumnId) => {
-    setColumns((prev) => prev.filter((column) => column.id !== columnId));
-    setNewTaskInputs((prev) => {
-      const { [columnId]: _, ...rest } = prev;
-      return rest;
-    });
-    setShowAddInput((prev) => {
-      const { [columnId]: _, ...rest } = prev;
-      return rest;
+    addEvent("remove_kanban_column", {
+      chat_id: chatId,
+      chat_type: chatType,
+      column_id: columnId,
     });
   };
 
@@ -258,61 +334,17 @@ export function KanbanBoard() {
         if (from.columnId === to.columnId) {
           if (from.taskIndex === to.taskIndex) return prev;
 
-          return prev.map((column) => {
-            if (column.id !== from.columnId) return column;
-
-            return {
-              ...column,
-              tasks: arrayMove(column.tasks, from.taskIndex, to.taskIndex),
-            };
-          });
+          return prev;
         }
 
-        return prev.map((column) => {
-          if (column.id === from.columnId) {
-            return {
-              ...column,
-              tasks: column.tasks.filter((task) => task.id !== from.task.id),
-            };
-          }
-
-          if (column.id === to.columnId) {
-            const alreadyInTarget = column.tasks.some((task) => task.id === from.task.id);
-            if (alreadyInTarget) return column;
-
-            const nextTasks = [...column.tasks];
-            nextTasks.splice(to.taskIndex, 0, from.task);
-            return { ...column, tasks: nextTasks };
-          }
-
-          return column;
-        });
+        return prev;
       }
 
       if (overType === "column") {
         const targetColumnId = over.data.current?.columnId as ColumnId | undefined;
         if (!targetColumnId || targetColumnId === from.columnId) return prev;
 
-        return prev.map((column) => {
-          if (column.id === from.columnId) {
-            return {
-              ...column,
-              tasks: column.tasks.filter((task) => task.id !== from.task.id),
-            };
-          }
-
-          if (column.id === targetColumnId) {
-            const alreadyInTarget = column.tasks.some((task) => task.id === from.task.id);
-            if (alreadyInTarget) return column;
-
-            return {
-              ...column,
-              tasks: [...column.tasks, from.task],
-            };
-          }
-
-          return column;
-        });
+        return prev;
       }
 
       return prev;
@@ -341,54 +373,43 @@ export function KanbanBoard() {
         if (!to) return prev;
 
         if (from.columnId === to.columnId) {
-          return prev.map((column) => {
-            if (column.id !== from.columnId) return column;
-            return {
-              ...column,
-              tasks: arrayMove(column.tasks, from.taskIndex, to.taskIndex),
-            };
+          addEvent("reorder_kanban_task", {
+            chat_id: chatId,
+            chat_type: chatType,
+            task_id: from.task.id,
+            column_id: from.columnId,
+            new_position: to.taskIndex,
           });
+
+          return prev;
         }
 
-        return prev.map((column) => {
-          if (column.id === from.columnId) {
-            return {
-              ...column,
-              tasks: column.tasks.filter((task) => task.id !== from.task.id),
-            };
-          }
-
-          if (column.id === to.columnId) {
-            const nextTasks = [...column.tasks];
-            nextTasks.splice(to.taskIndex, 0, from.task);
-            return { ...column, tasks: nextTasks };
-          }
-
-          return column;
+        addEvent("move_kanban_task", {
+          chat_id: chatId,
+          chat_type: chatType,
+          task_id: from.task.id,
+          from_column_id: from.columnId,
+          to_column_id: to.columnId,
+          new_position: to.taskIndex,
         });
+
+        return prev;
       }
 
       if (overType === "column") {
         const targetColumnId = over.data.current?.columnId as ColumnId | undefined;
         if (!targetColumnId || targetColumnId === from.columnId) return prev;
 
-        return prev.map((column) => {
-          if (column.id === from.columnId) {
-            return {
-              ...column,
-              tasks: column.tasks.filter((task) => task.id !== from.task.id),
-            };
-          }
-
-          if (column.id === targetColumnId) {
-            return {
-              ...column,
-              tasks: [...column.tasks, from.task],
-            };
-          }
-
-          return column;
+        addEvent("move_kanban_task", {
+          chat_id: chatId,
+          chat_type: chatType,
+          task_id: from.task.id,
+          from_column_id: from.columnId,
+          to_column_id: targetColumnId,
+          new_position: columns.find((column) => column.id === targetColumnId)?.tasks.length ?? 0,
         });
+
+        return prev;
       }
 
       return prev;

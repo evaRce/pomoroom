@@ -18,11 +18,6 @@ export const KANBAN_TEXT = {
   },
 
   column: {
-    initialTitle: {
-      todo: "Por hacer",
-      inProgress: "En progreso",
-      done: "Hecho",
-    },
     delete: {
       title: "Eliminar columna",
       confirmMessage: (colTitle: string) => `¿Deseas eliminar la columna "${colTitle}" y todas sus tareas?`,
