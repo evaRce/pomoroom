@@ -94,6 +94,7 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
   const [newColumnInputRef, setNewColumnInputRef] = useState<HTMLInputElement | null>(null);
   const [newColumnInputId, setNewColumnInputId] = useState<string | null>(null);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [highlightedColumnId, setHighlightedColumnId] = useState<ColumnId | null>(null);
   const [dragPreview, setDragPreview] = useState<{ columnId: ColumnId; taskIndex: number } | null>(null);
   const [showTaskLimitModal, setShowTaskLimitModal] = useState(false);
@@ -116,6 +117,7 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
     setNewTaskInputs({});
     setShowAddInput({});
     setActiveTaskId(null);
+    setDraggedTaskId(null);
     setHighlightedColumnId(null);
     setDragPreview(null);
   }, [chatId, chatType]);
@@ -178,6 +180,7 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
     }
 
     applyBoard(payload.board);
+    setDraggedTaskId(null);
     setDragPreview(null);
 
     removeEvent("show_kanban_board");
@@ -192,6 +195,7 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
 
     console.error("Kanban error", payload);
 
+    setDraggedTaskId(null);
     setDragPreview(null);
 
     removeEvent("kanban_board_error");
@@ -317,6 +321,7 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
   const handleDragStart = (event: DragStartEvent) => {
     const activeId = String(event.active.id);
     setActiveTaskId(activeId);
+    setDraggedTaskId(activeId);
     setDragPreview(null);
 
     const from = findTaskLocation(columns, activeId);
@@ -389,22 +394,61 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
     setActiveTaskId(null);
     setHighlightedColumnId(null);
 
-    if (!over) return;
-
     const activeId = String(active.id);
-    const overId = String(over.id);
-    if (activeId === overId) return;
-
-    setDragPreview(null);
-
     const from = findTaskLocation(columns, activeId);
-    if (!from) return;
+    const dropTarget = dragPreview;
+
+    if (!from) {
+      setDraggedTaskId(null);
+      setDragPreview(null);
+      return;
+    }
+
+    if (dropTarget) {
+      if (dropTarget.columnId === from.columnId) {
+        addEvent("reorder_kanban_task", {
+          chat_id: chatId,
+          chat_type: chatType,
+          task_id: from.task.id,
+          column_id: from.columnId,
+          new_position: dropTarget.taskIndex,
+        });
+      } else {
+        addEvent("move_kanban_task", {
+          chat_id: chatId,
+          chat_type: chatType,
+          task_id: from.task.id,
+          from_column_id: from.columnId,
+          to_column_id: dropTarget.columnId,
+          new_position: dropTarget.taskIndex,
+        });
+      }
+
+      return;
+    }
+
+    if (!over) {
+      setDraggedTaskId(null);
+      setDragPreview(null);
+      return;
+    }
+
+    const overId = String(over.id);
+    if (activeId === overId) {
+      setDraggedTaskId(null);
+      setDragPreview(null);
+      return;
+    }
 
     const overType = over.data.current?.type;
 
     if (overType === "task") {
       const to = findTaskLocation(columns, overId);
-      if (!to) return;
+      if (!to) {
+        setDraggedTaskId(null);
+        setDragPreview(null);
+        return;
+      }
 
       if (from.columnId === to.columnId) {
         addEvent("reorder_kanban_task", {
@@ -432,7 +476,11 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
 
     if (overType === "column") {
       const targetColumnId = over.data.current?.columnId as ColumnId | undefined;
-      if (!targetColumnId || targetColumnId === from.columnId) return;
+      if (!targetColumnId || targetColumnId === from.columnId) {
+        setDraggedTaskId(null);
+        setDragPreview(null);
+        return;
+      }
 
       addEvent("move_kanban_task", {
         chat_id: chatId,
@@ -445,11 +493,16 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
 
       return;
     }
+
+    setDraggedTaskId(null);
+    setDragPreview(null);
   };
 
   const handleDragCancel = () => {
     setActiveTaskId(null);
+    setDraggedTaskId(null);
     setHighlightedColumnId(null);
+    setDragPreview(null);
   };
 
   const activeTask = useMemo(() => {
@@ -492,7 +545,7 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
                 column={column}
                 isHighlighted={highlightedColumnId === column.id}
                 dragPreviewIndex={dragPreview?.columnId === column.id ? dragPreview.taskIndex : null}
-                activeTaskId={activeTaskId}
+                activeTaskId={draggedTaskId}
                 showAddInput={showAddInput[column.id]}
                 newTaskValue={newTaskInputs[column.id]}
                 onShowAdd={() => handleShowAddTaskInput(column.id)}
@@ -516,10 +569,10 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
                   <input
                     ref={setNewColumnInputRef}
                     value={newColumnTitle}
-                    onChange={e => setNewColumnTitle(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === "Enter") handleConfirmAddColumn()
-                      if (e.key === "Escape") handleCancelAddColumn()
+                    onChange={(e) => setNewColumnTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleConfirmAddColumn();
+                      if (e.key === "Escape") handleCancelAddColumn();
                     }}
                     className="h-9 text-sm bg-card border border-gray-300 rounded-md px-3 focus:ring-sky-500 focus:ring-2 outline-none"
                     placeholder={KANBAN_TEXT.column.add.inputPlaceholder}
@@ -543,22 +596,23 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
                     </Button>
                   </div>
                 </div>
+              ) : columns.length >= MAX_COLUMNS ? (
+                <span
+                  className="block w-full text-center text-base text-amber-700 bg-amber-100 rounded px-2 py-1"
+                  title={KANBAN_TEXT.column.limitReachedMessage(MAX_COLUMNS)}
+                >
+                  {KANBAN_TEXT.column.limitReachedMessage(MAX_COLUMNS)}
+                </span>
               ) : (
-                columns.length >= MAX_COLUMNS ? (
-                  <span className="block w-full text-center text-base text-amber-700 bg-amber-100 rounded px-2 py-1" title={KANBAN_TEXT.column.limitReachedMessage(MAX_COLUMNS)}>
-                    {KANBAN_TEXT.column.limitReachedMessage(MAX_COLUMNS)}
-                  </span>
-                ) : (
-                  <Button
-                    type="button"
-                    className="w-full h-9 bg-sky-300 text-slate-800 hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
-                    onClick={handleAddColumn}
-                    disabled={columns.length >= MAX_COLUMNS}
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    {KANBAN_TEXT.column.add.button}
-                  </Button>
-                )
+                <Button
+                  type="button"
+                  className="w-full h-9 bg-sky-300 text-slate-800 hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+                  onClick={handleAddColumn}
+                  disabled={columns.length >= MAX_COLUMNS}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  {KANBAN_TEXT.column.add.button}
+                </Button>
               )}
             </div>
           </div>
