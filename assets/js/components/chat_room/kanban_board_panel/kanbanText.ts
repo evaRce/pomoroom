@@ -20,8 +20,14 @@ export const KANBAN_TEXT = {
   column: {
     delete: {
       title: "Eliminar columna",
-      confirmMessage: (colTitle: string) => `¿Deseas eliminar la columna "${colTitle}" y todas sus tareas?`,
-      irreversibleWarning: "Esta acción es irreversible y no se podrá recuperar la columna ni sus tareas.",
+      confirmMessage: (colTitle: string, hasTasks: boolean) => 
+        hasTasks
+          ? `¿Deseas eliminar la columna "${colTitle}" y todas sus tareas?`
+          : `¿Deseas eliminar la columna "${colTitle}"?`,
+      irreversibleWarning: (hasTasks: boolean) =>
+        hasTasks
+          ? "Esta acción es irreversible y no se podrá recuperar la columna ni sus tareas"
+          : "Esta acción es irreversible y no se podrá recuperar la columna",
       okButton: "Eliminar",
     },
     rename: {

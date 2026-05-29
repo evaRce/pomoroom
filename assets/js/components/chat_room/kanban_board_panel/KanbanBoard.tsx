@@ -14,7 +14,6 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import type { CollisionDetection, DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
 import { Button } from "../../../../components-shadcn/ui/button";
 import { useEventContext } from "../EventContext";
 import { KanbanColumn, KanbanTaskLimitWarningModal } from "./KanbanBoardComponents.tsx";
@@ -70,6 +69,21 @@ function findTaskLocation(columns: Column[], taskId: string): TaskLocation | nul
   return null;
 }
 
+function getInsertionIndex(
+  activeRect: { top: number; height: number } | null | undefined,
+  overRect: { top: number; height: number },
+  targetIndex: number
+) {
+  if (!activeRect) {
+    return targetIndex;
+  }
+
+  const activeCenterY = activeRect.top + activeRect.height / 2;
+  const overCenterY = overRect.top + overRect.height / 2;
+
+  return activeCenterY > overCenterY ? targetIndex + 1 : targetIndex;
+}
+
 export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
   const { addEvent, getEventData, removeEvent } = useEventContext() as any;
   const [columns, setColumns] = useState<Column[]>([]);
@@ -81,6 +95,7 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
   const [newColumnInputId, setNewColumnInputId] = useState<string | null>(null);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [highlightedColumnId, setHighlightedColumnId] = useState<ColumnId | null>(null);
+  const [dragPreview, setDragPreview] = useState<{ columnId: ColumnId; taskIndex: number } | null>(null);
   const [showTaskLimitModal, setShowTaskLimitModal] = useState(false);
   const boardLoadedRef = useRef(false);
 
@@ -102,6 +117,7 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
     setShowAddInput({});
     setActiveTaskId(null);
     setHighlightedColumnId(null);
+    setDragPreview(null);
   }, [chatId, chatType]);
 
   useEffect(() => {
@@ -162,6 +178,7 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
     }
 
     applyBoard(payload.board);
+    setDragPreview(null);
 
     removeEvent("show_kanban_board");
   }, [getEventData("show_kanban_board"), removeEvent]);
@@ -174,6 +191,9 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
     }
 
     console.error("Kanban error", payload);
+
+    setDragPreview(null);
+
     removeEvent("kanban_board_error");
   }, [getEventData("kanban_board_error"), removeEvent]);
 
@@ -297,6 +317,7 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
   const handleDragStart = (event: DragStartEvent) => {
     const activeId = String(event.active.id);
     setActiveTaskId(activeId);
+    setDragPreview(null);
 
     const from = findTaskLocation(columns, activeId);
     setHighlightedColumnId(from?.columnId ?? null);
@@ -323,32 +344,44 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
       setHighlightedColumnId(null);
     }
 
-    setColumns((prev) => {
-      const from = findTaskLocation(prev, activeId);
-      if (!from) return prev;
+    const from = findTaskLocation(columns, activeId);
+    if (!from) {
+      setDragPreview(null);
+      return;
+    }
 
-      if (overType === "task") {
-        const to = findTaskLocation(prev, overId);
-        if (!to) return prev;
-
-        if (from.columnId === to.columnId) {
-          if (from.taskIndex === to.taskIndex) return prev;
-
-          return prev;
-        }
-
-        return prev;
+    if (overType === "task") {
+      const to = findTaskLocation(columns, overId);
+      if (!to) {
+        setDragPreview(null);
+        return;
       }
 
-      if (overType === "column") {
-        const targetColumnId = over.data.current?.columnId as ColumnId | undefined;
-        if (!targetColumnId || targetColumnId === from.columnId) return prev;
+      const activeRect = active.rect.current.translated;
+      const insertionIndex = getInsertionIndex(activeRect, over.rect, to.taskIndex);
 
-        return prev;
+      setDragPreview({
+        columnId: to.columnId,
+        taskIndex: insertionIndex,
+      });
+      return;
+    }
+
+    if (overType === "column") {
+      const targetColumnId = over.data.current?.columnId as ColumnId | undefined;
+      if (!targetColumnId) {
+        setDragPreview(null);
+        return;
       }
 
-      return prev;
-    });
+      setDragPreview({
+        columnId: targetColumnId,
+        taskIndex: columns.find((column) => column.id === targetColumnId)?.tasks.length ?? 0,
+      });
+      return;
+    }
+
+    setDragPreview(null);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -362,58 +395,56 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
     const overId = String(over.id);
     if (activeId === overId) return;
 
-    setColumns((prev) => {
-      const from = findTaskLocation(prev, activeId);
-      if (!from) return prev;
+    setDragPreview(null);
 
-      const overType = over.data.current?.type;
+    const from = findTaskLocation(columns, activeId);
+    if (!from) return;
 
-      if (overType === "task") {
-        const to = findTaskLocation(prev, overId);
-        if (!to) return prev;
+    const overType = over.data.current?.type;
 
-        if (from.columnId === to.columnId) {
-          addEvent("reorder_kanban_task", {
-            chat_id: chatId,
-            chat_type: chatType,
-            task_id: from.task.id,
-            column_id: from.columnId,
-            new_position: to.taskIndex,
-          });
+    if (overType === "task") {
+      const to = findTaskLocation(columns, overId);
+      if (!to) return;
 
-          return prev;
-        }
-
-        addEvent("move_kanban_task", {
+      if (from.columnId === to.columnId) {
+        addEvent("reorder_kanban_task", {
           chat_id: chatId,
           chat_type: chatType,
           task_id: from.task.id,
-          from_column_id: from.columnId,
-          to_column_id: to.columnId,
+          column_id: from.columnId,
           new_position: to.taskIndex,
         });
 
-        return prev;
+        return;
       }
 
-      if (overType === "column") {
-        const targetColumnId = over.data.current?.columnId as ColumnId | undefined;
-        if (!targetColumnId || targetColumnId === from.columnId) return prev;
+      addEvent("move_kanban_task", {
+        chat_id: chatId,
+        chat_type: chatType,
+        task_id: from.task.id,
+        from_column_id: from.columnId,
+        to_column_id: to.columnId,
+        new_position: to.taskIndex,
+      });
 
-        addEvent("move_kanban_task", {
-          chat_id: chatId,
-          chat_type: chatType,
-          task_id: from.task.id,
-          from_column_id: from.columnId,
-          to_column_id: targetColumnId,
-          new_position: columns.find((column) => column.id === targetColumnId)?.tasks.length ?? 0,
-        });
+      return;
+    }
 
-        return prev;
-      }
+    if (overType === "column") {
+      const targetColumnId = over.data.current?.columnId as ColumnId | undefined;
+      if (!targetColumnId || targetColumnId === from.columnId) return;
 
-      return prev;
-    });
+      addEvent("move_kanban_task", {
+        chat_id: chatId,
+        chat_type: chatType,
+        task_id: from.task.id,
+        from_column_id: from.columnId,
+        to_column_id: targetColumnId,
+        new_position: columns.find((column) => column.id === targetColumnId)?.tasks.length ?? 0,
+      });
+
+      return;
+    }
   };
 
   const handleDragCancel = () => {
@@ -460,6 +491,8 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
                 key={column.id}
                 column={column}
                 isHighlighted={highlightedColumnId === column.id}
+                dragPreviewIndex={dragPreview?.columnId === column.id ? dragPreview.taskIndex : null}
+                activeTaskId={activeTaskId}
                 showAddInput={showAddInput[column.id]}
                 newTaskValue={newTaskInputs[column.id]}
                 onShowAdd={() => handleShowAddTaskInput(column.id)}

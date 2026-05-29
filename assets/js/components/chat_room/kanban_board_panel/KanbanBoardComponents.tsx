@@ -52,6 +52,8 @@ export interface TaskCardProps {
 export interface KanbanColumnProps {
     column: Column;
     isHighlighted: boolean;
+    dragPreviewIndex?: number | null;
+    activeTaskId?: string | null;
     showAddInput: boolean;
     newTaskValue: string;
     onShowAdd: () => void;
@@ -216,7 +218,7 @@ function TaskCard({
                 className={cn(
                     "group flex items-start gap-2 p-3 rounded-lg bg-white border border-border hover:border-sky-400 transition-all duration-200 ease-out",
                     isEditing ? "cursor-default" : "cursor-grab active:cursor-grabbing",
-                    isDragging ? "opacity-40 shadow-lg" : "opacity-100"
+                    isDragging ? "hidden" : "opacity-100"
                 )}
             >
                 <div className="flex h-5 w-5 items-center justify-center shrink-0 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -299,6 +301,8 @@ function TaskCard({
 export function KanbanColumn({
     column,
     isHighlighted,
+    dragPreviewIndex,
+    activeTaskId,
     showAddInput,
     newTaskValue,
     onShowAdd,
@@ -318,6 +322,52 @@ export function KanbanColumn({
         },
     });
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const hasTasks = column.tasks.length > 0;
+    const hasPreview = typeof dragPreviewIndex === "number";
+    const activeTaskIndex = activeTaskId
+        ? column.tasks.findIndex((task) => task.id === activeTaskId)
+        : -1;
+    const visibleTasks = activeTaskId
+        ? column.tasks.filter((task) => task.id !== activeTaskId)
+        : column.tasks;
+
+    const visiblePreviewIndex =
+        hasPreview && activeTaskIndex !== -1 && typeof dragPreviewIndex === "number"
+            ? dragPreviewIndex > activeTaskIndex
+                ? dragPreviewIndex - 1
+                : dragPreviewIndex
+            : dragPreviewIndex;
+
+    const renderPreview = () => (
+        <div
+            key={`preview-${column.id}-${dragPreviewIndex}`}
+            className="rounded-lg border border-dashed border-sky-400 bg-sky-100/60 px-3 py-4 opacity-80"
+        >
+            <div className="h-4 w-2/3 rounded bg-sky-200/80" />
+        </div>
+    );
+
+    const taskRows = [] as Array<React.ReactNode>;
+
+    visibleTasks.forEach((task, index) => {
+        if (hasPreview && visiblePreviewIndex === index) {
+            taskRows.push(renderPreview());
+        }
+
+        taskRows.push(
+            <TaskCard
+                key={task.id}
+                task={task}
+                columnId={column.id}
+                onDelete={onDeleteTask}
+                onRename={onRenameTask}
+            />
+        );
+    });
+
+    if (hasPreview && visiblePreviewIndex === visibleTasks.length) {
+        taskRows.push(renderPreview());
+    }
 
     return (
         <>
@@ -378,16 +428,8 @@ export function KanbanColumn({
                 </div>
 
                 <div className="flex-1 flex flex-col gap-2 p-3 overflow-y-auto min-h-24">
-                    <SortableContext items={column.tasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
-                        {column.tasks.map((task) => (
-                            <TaskCard
-                                key={task.id}
-                                task={task}
-                                columnId={column.id}
-                                onDelete={onDeleteTask}
-                                onRename={onRenameTask}
-                            />
-                        ))}
+                    <SortableContext items={visibleTasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
+                        {taskRows}
                     </SortableContext>
 
                     {showAddInput && (
@@ -419,7 +461,7 @@ export function KanbanColumn({
                         </div>
                     )}
 
-                    {column.tasks.length === 0 && !showAddInput && (
+                    {column.tasks.length === 0 && !showAddInput && !hasPreview && (
                         <div className="flex flex-col items-center justify-center py-8 text-slate-500">
                             <p className="text-xs">{KANBAN_TEXT.task.emptyListMessage}</p>
                         </div>
@@ -433,8 +475,8 @@ export function KanbanColumn({
                 title={KANBAN_TEXT.column.delete.title}
                 content={
                     <>
-                        <p className="mt-2 text-base mb-0">{KANBAN_TEXT.column.delete.confirmMessage(column.title)}</p>
-                        <p className="mt-2 text-sm text-rose-500 my-0">{KANBAN_TEXT.column.delete.irreversibleWarning}</p>
+                        <p className="mt-2 text-base mb-0">{KANBAN_TEXT.column.delete.confirmMessage(column.title, hasTasks)}</p>
+                        <p className="mt-2 text-sm text-rose-500 my-0">{KANBAN_TEXT.column.delete.irreversibleWarning(hasTasks)}</p>
                     </>
                 }
                 confirmLabel={KANBAN_TEXT.column.delete.okButton}
