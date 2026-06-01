@@ -131,6 +131,14 @@ defmodule Pomoroom.ChatRoom.ChatServer do
     {:noreply, state}
   end
 
+  def handle_info({:chat_plugin_installed, _payload}, state) do
+    {:noreply, state}
+  end
+
+  def handle_info({:chat_plugin_uninstalled, _payload}, state) do
+    {:noreply, state}
+  end
+
   def via_tuple(chat_id) do
     {:via, Registry, {Registry.Chat, chat_id}}
   end

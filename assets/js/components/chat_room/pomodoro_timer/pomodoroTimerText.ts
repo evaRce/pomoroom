@@ -13,6 +13,8 @@ const pomodoroTimerText = {
   saveSettings: "Guardar configuración",
   settingsSaved: "Configuración guardada",
   syncError: "Error al guardar la configuración. Por favor, inténtalo de nuevo.",
+  versionConflictError:
+    "La configuración cambió en otra sesión. Recarga la configuración y vuelve a intentar.",
   cycle: "Ciclo",
   cyclesCompleted: (count: number) => `${count} ${count === 1 ? "ciclo completado" : "ciclos completados"} hoy`,
   errors: {

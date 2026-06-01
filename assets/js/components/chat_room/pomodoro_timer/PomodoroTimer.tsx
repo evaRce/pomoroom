@@ -21,17 +21,9 @@ import {
   TimerSettings,
 } from "./PomodoroSettingsPopover";
 import {
-  getTimer,
-  createTimer,
-  updateTimer,
-  hasTimer,
-  deleteTimer,
   hasRequestedConfig,
   markConfigRequested,
-  startTimerEngine,
   subscribeTimer,
-  createInitialTimerState,
-  getSnapshotForMode,
   type TimerState,
 } from "./pomodoroTimerStore";
 
@@ -43,12 +35,14 @@ interface PomodoroTimerProps {
 export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   const { addEvent, removeEvent } = useEventContext() as any;
   const [settings, setSettings] = useState<TimerSettings | null>(null);
+  const [timerSnapshot, setTimerSnapshot] = useState<TimerState | null>(null);
   const [mode, setMode] = useState<TimerMode>("work");
   const [timeLeft, setTimeLeft] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [cyclesCompleted, setCyclesCompleted] = useState(0);
   const [hasPendingWorkHalfCycle, setHasPendingWorkHalfCycle] = useState(false);
   const [timerId, setTimerId] = useState("");
+  const [configVersion, setConfigVersion] = useState(0);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [saveMessage, setSaveMessage] = useState<{
     type: "success" | "error";
@@ -56,16 +50,17 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   } | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [nowMs, setNowMs] = useState(Date.now());
 
   // Refs
   const hasSyncedInitialTimerRef = useRef(false);
-  const lastCompletionVersionRef = useRef(0);
+  const lastCompletionStampRef = useRef<string>("");
   const soundEndWork = useRef(new Audio("/sounds/bell-notification.wav"));
   const soundEndBreak = useRef(new Audio("/sounds/happy-bells-notification.wav"));
 
   // Events
   const configLoadedEvent = useEvent("pomodoro_plugin_config_loaded");
-  const configUpdatedEvent = useEvent("pomodoro_plugin_config_updated");
+  const configUpdatedEvent = useEvent("update_config");
   const configErrorEvent = useEvent("pomodoro_plugin_config_error");
 
   // ============================================================================
@@ -90,6 +85,79 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     });
   }, []);
 
+  const applyIncomingTimerState = useCallback((eventPayload: any) => {
+    if (!eventPayload) return;
+
+    const payloadState = eventPayload.state || {};
+    const payloadConfig = eventPayload.config || {};
+    const serverNow = eventPayload.server_now ?? payloadState.server_now ?? Date.now();
+    const serverClockOffsetMs = Date.now() - serverNow;
+    const adjustedNowMs = Date.now() - serverClockOffsetMs;
+    const payloadSettings = payloadState.settings || {};
+    const nextSettings: TimerSettings = {
+      workDuration: payloadSettings.workDuration ?? payloadConfig.work_duration ?? 0,
+      shortBreakDuration: payloadSettings.shortBreakDuration ?? payloadConfig.short_break_duration ?? 0,
+      longBreakDuration: payloadSettings.longBreakDuration ?? payloadConfig.long_break_duration ?? 0,
+      cyclesBeforeLongBreak:
+        payloadSettings.cyclesBeforeLongBreak ?? payloadConfig.cycles_before_long_break ?? 0,
+    };
+    const nextMode = payloadState.mode || "work";
+    const nextModeSnapshots = payloadState.modeSnapshots || {
+      work: nextSettings.workDuration * 60,
+      shortBreak: nextSettings.shortBreakDuration * 60,
+      longBreak: nextSettings.longBreakDuration * 60,
+    };
+    const nextDurationMs =
+      payloadState.durationMs ??
+      payloadState.duration_ms ??
+      nextModeSnapshots[nextMode as keyof typeof nextModeSnapshots] * 1000;
+    const nextStartedAt = payloadState.startedAt ?? payloadState.started_at ?? null;
+    const nextPausedAt = payloadState.pausedAt ?? payloadState.paused_at ?? null;
+    const resolvedTimeLeft = (() => {
+      if (Boolean(payloadState.isRunning ?? payloadState.is_running) && nextStartedAt) {
+        return Math.max(Math.ceil((nextDurationMs - (adjustedNowMs - nextStartedAt)) / 1000), 0);
+      }
+
+      if (nextStartedAt && nextPausedAt) {
+        return Math.max(Math.ceil((nextDurationMs - (nextPausedAt - nextStartedAt)) / 1000), 0);
+      }
+
+      return Math.max(Math.ceil(nextDurationMs / 1000), 0);
+    })();
+
+    setSettings(nextSettings);
+    setTimerSnapshot({
+      timeLeft: resolvedTimeLeft,
+      isRunning: Boolean(payloadState.isRunning ?? payloadState.is_running),
+      mode: nextMode,
+      cyclesCompleted: payloadState.cyclesCompleted ?? payloadState.cycles_completed ?? 0,
+      hasPendingWorkHalfCycle: Boolean(
+        payloadState.hasPendingWorkHalfCycle ?? payloadState.has_pending_work_half_cycle
+      ),
+      configVersion: eventPayload.config_version ?? 0,
+      settings: nextSettings,
+      modeSnapshots: nextModeSnapshots,
+      lastCompletedMode: payloadState.lastCompletedMode ?? payloadState.last_completed_mode ?? null,
+      lastUpdated: payloadState.lastUpdated ?? payloadState.last_updated ?? Date.now(),
+      startedAt: nextStartedAt,
+      pausedAt: nextPausedAt,
+      durationMs: nextDurationMs,
+      serverClockOffsetMs,
+    });
+
+    setMode(nextMode);
+    setIsRunning(Boolean(payloadState.isRunning ?? payloadState.is_running));
+    setCyclesCompleted(payloadState.cyclesCompleted ?? payloadState.cycles_completed ?? 0);
+    setHasPendingWorkHalfCycle(
+      Boolean(payloadState.hasPendingWorkHalfCycle ?? payloadState.has_pending_work_half_cycle)
+    );
+    setConfigVersion(eventPayload.config_version ?? 0);
+    setTimerId(eventPayload.timer_id || "");
+    setNowMs(Date.now());
+    lastCompletionStampRef.current = `${payloadState.lastCompletedMode || payloadState.last_completed_mode || "none"}:${payloadState.lastUpdated ?? payloadState.last_updated ?? Date.now()}`;
+    hasSyncedInitialTimerRef.current = true;
+  }, []);
+
   const getDuration = useCallback((m: TimerMode) => {
     if (!settings) return 0;
     switch (m) {
@@ -98,6 +166,23 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
       case "longBreak": return settings.longBreakDuration * 60;
     }
   }, [settings]);
+
+  const calculateRemainingSeconds = useCallback((timer: TimerState | null, currentNowMs: number) => {
+    if (!timer) return 0;
+
+    const durationMs = timer.durationMs || getDuration(timer.mode) * 1000;
+    const adjustedNowMs = currentNowMs - (timer.serverClockOffsetMs || 0);
+
+    if (timer.isRunning && timer.startedAt) {
+      return Math.max(Math.ceil((durationMs - (adjustedNowMs - timer.startedAt)) / 1000), 0);
+    }
+
+    if (timer.startedAt && timer.pausedAt) {
+      return Math.max(Math.ceil((durationMs - (timer.pausedAt - timer.startedAt)) / 1000), 0);
+    }
+
+    return Math.max(Math.ceil(durationMs / 1000), 0);
+  }, [getDuration]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -180,54 +265,40 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   }, [soundEnabled]);
 
   const handleStart = () => {
-    setIsRunning(true);
-    if (chatId && settings) {
-      updateTimer(chatId, { isRunning: true });
-    }
+    if (!chatId || !settings) return;
+
+    addEvent("start_pomodoro_timer", {
+      chat_id: chatId,
+      chat_type: chatType,
+    });
   };
 
   const handlePause = () => {
-    setIsRunning(false);
-    if (chatId && settings) {
-      updateTimer(chatId, {
-        isRunning: false,
-        mode,
-        timeLeft,
-      });
-    }
+    if (!chatId || !settings) return;
+
+    addEvent("pause_pomodoro_timer", {
+      chat_id: chatId,
+      chat_type: chatType,
+    });
   };
 
   const handleReset = () => {
-    setIsRunning(false);
-    const resetTimeLeft = getDuration(mode);
-    setHasPendingWorkHalfCycle(false);
-    setTimeLeft(resetTimeLeft);
-    if (chatId && settings) {
-      updateTimer(chatId, {
-        isRunning: false,
-        hasPendingWorkHalfCycle: false,
-        mode,
-        timeLeft: resetTimeLeft,
-      });
-    }
+    if (!chatId || !settings) return;
+
+    addEvent("reset_pomodoro_timer", {
+      chat_id: chatId,
+      chat_type: chatType,
+    });
   };
 
   const handleModeChange = (newMode: TimerMode) => {
-    if (isRunning) return;
+    if (isRunning || !chatId || !settings) return;
 
-    setIsRunning(false);
-    const nextTimeLeft = chatId ? getSnapshotForMode(chatId, newMode) : getDuration(newMode);
-    setHasPendingWorkHalfCycle(false);
-    setMode(newMode);
-    setTimeLeft(nextTimeLeft);
-    if (chatId && settings) {
-      updateTimer(chatId, {
-        mode: newMode,
-        isRunning: false,
-        hasPendingWorkHalfCycle: false,
-        timeLeft: nextTimeLeft,
-      });
-    }
+    addEvent("set_pomodoro_timer_mode", {
+      chat_id: chatId,
+      chat_type: chatType,
+      mode: newMode,
+    });
   };
 
   const handleChange = (field: keyof TimerSettings, value: string) => {
@@ -258,22 +329,20 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
       timer_id: timerId,
       chat_id: chatId,
       chat_type: chatType,
+      expected_config_version: configVersion,
       config: toPayloadConfig(settings),
     });
-
-    if (chatId && settings) {
-      updateTimer(chatId, createInitialTimerState(settings));
-      }
   };
 
   const syncTimerState = useCallback((timer: TimerState | undefined) => {
     if (!timer) return;
 
+    setTimerSnapshot(timer);
     setMode(timer.mode);
-    setTimeLeft(timer.timeLeft);
     setIsRunning(timer.isRunning);
     setCyclesCompleted(timer.cyclesCompleted);
     setHasPendingWorkHalfCycle(timer.hasPendingWorkHalfCycle);
+    setConfigVersion(timer.configVersion);
 
     if (timer.settings) {
       setSettings(timer.settings);
@@ -281,47 +350,50 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
 
     if (!hasSyncedInitialTimerRef.current) {
       hasSyncedInitialTimerRef.current = true;
-      lastCompletionVersionRef.current = timer.completionVersion;
+      lastCompletionStampRef.current = `${timer.lastCompletedMode || "none"}:${timer.lastUpdated}`;
       return;
     }
 
-    if (timer.completionVersion > lastCompletionVersionRef.current) {
-      lastCompletionVersionRef.current = timer.completionVersion;
+    const completionStamp = `${timer.lastCompletedMode || "none"}:${timer.lastUpdated}`;
+
+    if (timer.lastCompletedMode && completionStamp !== lastCompletionStampRef.current) {
+      lastCompletionStampRef.current = completionStamp;
       handleTimerComplete(timer.lastCompletedMode);
     }
   }, [handleTimerComplete]);
+
+  useEffect(() => {
+    if (!timerSnapshot?.isRunning) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setNowMs(Date.now());
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [timerSnapshot?.isRunning, timerSnapshot?.startedAt, timerSnapshot?.pausedAt, timerSnapshot?.durationMs]);
+
+  useEffect(() => {
+    if (!timerSnapshot) return;
+
+    setTimeLeft(calculateRemainingSeconds(timerSnapshot, nowMs));
+  }, [timerSnapshot, nowMs, calculateRemainingSeconds]);
 
   // ============================================================================
   // EFFECTS - STORE SYNC
   // ============================================================================
 
   useEffect(() => {
-    startTimerEngine();
-  }, []);
-
-  useEffect(() => {
     if (!chatId) return;
 
     hasSyncedInitialTimerRef.current = false;
+  lastCompletionStampRef.current = "";
 
     const unsubscribe = subscribeTimer(chatId, syncTimerState);
-    const storedTimer = getTimer(chatId);
-
-    if (storedTimer) {
-      syncTimerState(storedTimer);
-    }
 
     return unsubscribe;
   }, [chatId, syncTimerState]);
-
-  // Restore timer state from store when chatId changes
-  useEffect(() => {
-    if (!chatId || !settings) return;
-
-    if (!hasTimer(chatId)) {
-      createTimer(chatId, createInitialTimerState(settings));
-    }
-  }, [chatId, settings]);
 
   // ============================================================================
   // EFFECTS - CONFIG LOADING
@@ -350,6 +422,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     }
 
     setTimerId(configLoadedEvent.timer_id || "");
+    setConfigVersion(configLoadedEvent.config_version ?? 0);
     const newSettings: TimerSettings = {
       workDuration: configLoadedEvent.config.work_duration,
       shortBreakDuration: configLoadedEvent.config.short_break_duration,
@@ -358,14 +431,9 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     };
     setSettings(newSettings);
     applyIncomingConfig(configLoadedEvent.config);
-
-    // Update store if timer already exists
-    if (chatId && hasTimer(chatId)) {
-      updateTimer(chatId, { settings: newSettings });
-    }
-
+    applyIncomingTimerState(configLoadedEvent);
     removeEvent("pomodoro_plugin_config_loaded");
-  }, [configLoadedEvent, chatId, chatType, applyIncomingConfig, removeEvent]);
+  }, [configLoadedEvent, chatId, chatType, applyIncomingConfig, applyIncomingTimerState, removeEvent]);
 
   // Handle config updated (after save)
   useEffect(() => {
@@ -376,6 +444,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     }
 
     setTimerId(configUpdatedEvent.timer_id || timerId);
+    setConfigVersion(configUpdatedEvent.config_version ?? configVersion);
     const newSettings: TimerSettings = {
       workDuration: configUpdatedEvent.config.work_duration,
       shortBreakDuration: configUpdatedEvent.config.short_break_duration,
@@ -384,24 +453,14 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     };
     setSettings(newSettings);
     applyIncomingConfig(configUpdatedEvent.config);
-
-    // Update store if timer exists
-    if (chatId && hasTimer(chatId)) {
-      try {
-        deleteTimer(chatId);
-      } catch (e) {
-        // ignore
-      }
-      createTimer(chatId, createInitialTimerState(newSettings));
-    }
-
+    applyIncomingTimerState(configUpdatedEvent);
     setSaveState("saved");
     setSaveMessage({
       type: "success",
       text: pomodoroTimerText.settingsSaved,
     });
-    removeEvent("pomodoro_plugin_config_updated");
-  }, [configUpdatedEvent, chatId, chatType, timerId, applyIncomingConfig, removeEvent]);
+    removeEvent("update_config");
+  }, [configUpdatedEvent, chatId, chatType, timerId, applyIncomingConfig, applyIncomingTimerState, removeEvent]);
 
   // Handle config error
   useEffect(() => {
@@ -414,7 +473,10 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     setSaveState("error");
     setSaveMessage({
       type: "error",
-      text: pomodoroTimerText.syncError,
+      text:
+        configErrorEvent.reason === "version_conflict"
+          ? pomodoroTimerText.versionConflictError
+          : pomodoroTimerText.syncError,
     });
     removeEvent("pomodoro_plugin_config_error");
   }, [configErrorEvent, chatId, chatType, removeEvent]);
@@ -432,10 +494,10 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
 
     if (saveState === "error") {
       message.error({
-        content: pomodoroTimerText.syncError,
+        content: saveMessage?.text || pomodoroTimerText.syncError,
       });
     }
-  }, [saveState]);
+  }, [saveMessage, saveState]);
 
   useEffect(() => {
     if (saveMessage) {
@@ -452,7 +514,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   // ============================================================================
 
   const hasErrors = Object.keys(errors).length > 0;
-  const totalDuration = getDuration(mode);
+  const totalDuration = (timerSnapshot?.durationMs || getDuration(mode) * 1000) / 1000;
   const progress = totalDuration > 0 ? ((totalDuration - timeLeft) / totalDuration) * 100 : 0;
   const modeInfo = getModeInfo();
   const ModeIcon = modeInfo.icon;
@@ -550,7 +612,11 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
             strokeLinecap="round"
             strokeDasharray={2 * Math.PI * 90}
             strokeDashoffset={2 * Math.PI * 90 * (1 - progress / 100)}
-            className="transition-all duration-1000 ease-linear"
+              className={cn(
+                timerSnapshot?.isRunning
+                  ? "transition-[stroke-dashoffset] duration-1000 ease-linear"
+                  : "transition-none"
+              )}
           />
         </svg>
 

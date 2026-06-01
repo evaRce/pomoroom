@@ -2,6 +2,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
   import Phoenix.Component, only: [assign: 3]
   import Phoenix.LiveView, only: [push_event: 3]
 
+  alias Phoenix.PubSub
+
   alias Pomoroom.ChatPlugins.ChatPluginService
   alias Pomoroom.ChatRoom.ChatServer
   alias Pomoroom.FriendRequests
@@ -34,6 +36,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
     case PrivateChats.ensure_exists(to_user, from_user) do
       {:ok, private_chat} ->
         Runtime.ensure_chat_server_exists(private_chat.chat_id)
+        PubSub.subscribe(Pomoroom.PubSub, pomodoro_topic(private_chat.chat_id))
 
         case FriendRequests.get(to_user, from_user) do
           {:ok, request} ->
@@ -72,6 +75,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
 
       {:ok, group_chat} ->
         Runtime.ensure_chat_server_exists(group_chat.chat_id)
+        PubSub.subscribe(Pomoroom.PubSub, pomodoro_topic(group_chat.chat_id))
 
         case GroupChats.member_state(group_name, user.nickname) do
           {:active, joined_at} ->
@@ -343,4 +347,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
   defp to_naive_datetime(%DateTime{} = datetime), do: DateTime.to_naive(datetime)
   defp to_naive_datetime(%NaiveDateTime{} = datetime), do: datetime
   defp to_naive_datetime(value), do: value
+
+  defp pomodoro_topic(chat_id) do
+    "chat:#{chat_id}:pomodoro"
+  end
 end

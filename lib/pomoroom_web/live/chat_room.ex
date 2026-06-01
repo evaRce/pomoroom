@@ -42,6 +42,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
             Runtime.ensure_chat_server_exists(chat_id)
             ChatServer.join_chat(chat_id)
             PubSub.subscribe(Pomoroom.PubSub, "chat:#{chat_id}")
+            PubSub.subscribe(Pomoroom.PubSub, "chat:#{chat_id}:pomodoro")
           end)
 
           subscribed_chat_ids = MapSet.new(all_chats_id)
@@ -99,6 +100,38 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
   def handle_info({:group_admin_updated, payload}, socket) do
     Groups.handle_group_admin_updated(payload, socket)
+  end
+
+  def handle_info({:chat_plugin_installed, payload}, socket) do
+    handle_chat_plugin_broadcast(payload, socket, "chat_plugin_installed")
+  end
+
+  def handle_info({:chat_plugin_uninstalled, payload}, socket) do
+    handle_chat_plugin_broadcast(payload, socket, "chat_plugin_uninstalled")
+  end
+
+  def handle_info({:pomodoro_timer_state_changed, payload}, socket) do
+    handle_pomodoro_broadcast(payload, socket, "pomodoro_timer_state_changed")
+  end
+
+  def handle_info({:start_timer, payload}, socket) do
+    handle_pomodoro_broadcast(payload, socket, "start_timer")
+  end
+
+  def handle_info({:pause_timer, payload}, socket) do
+    handle_pomodoro_broadcast(payload, socket, "pause_timer")
+  end
+
+  def handle_info({:reset_timer, payload}, socket) do
+    handle_pomodoro_broadcast(payload, socket, "reset_timer")
+  end
+
+  def handle_info({:set_mode, payload}, socket) do
+    handle_pomodoro_broadcast(payload, socket, "set_mode")
+  end
+
+  def handle_info({:update_config, payload}, socket) do
+    handle_pomodoro_broadcast(payload, socket, "update_config")
   end
 
   # Las request_offers solo le llegan al que INICIO la llamada
@@ -260,10 +293,54 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
   def handle_event(
         "action.update_pomodoro_plugin_config",
-        %{"chat_id" => chat_id, "chat_type" => chat_type, "config" => config},
+        %{
+          "chat_id" => chat_id,
+          "chat_type" => chat_type,
+          "config" => config,
+          "expected_config_version" => expected_config_version
+        },
         %{assigns: %{user_info: user}} = socket
       ) do
-    Plugins.handle_update_pomodoro_plugin_config(chat_id, chat_type, config, user, socket)
+    Plugins.handle_update_pomodoro_plugin_config(
+      chat_id,
+      chat_type,
+      config,
+      expected_config_version,
+      user,
+      socket
+    )
+  end
+
+  def handle_event(
+        "action.start_pomodoro_timer",
+        %{"chat_id" => chat_id, "chat_type" => chat_type},
+        %{assigns: %{user_info: user}} = socket
+      ) do
+    Plugins.handle_start_pomodoro_timer(chat_id, chat_type, user, socket)
+  end
+
+  def handle_event(
+        "action.pause_pomodoro_timer",
+        %{"chat_id" => chat_id, "chat_type" => chat_type},
+        %{assigns: %{user_info: user}} = socket
+      ) do
+    Plugins.handle_pause_pomodoro_timer(chat_id, chat_type, user, socket)
+  end
+
+  def handle_event(
+        "action.reset_pomodoro_timer",
+        %{"chat_id" => chat_id, "chat_type" => chat_type},
+        %{assigns: %{user_info: user}} = socket
+      ) do
+    Plugins.handle_reset_pomodoro_timer(chat_id, chat_type, user, socket)
+  end
+
+  def handle_event(
+        "action.set_pomodoro_timer_mode",
+        %{"chat_id" => chat_id, "chat_type" => chat_type, "mode" => mode},
+        %{assigns: %{user_info: user}} = socket
+      ) do
+    Plugins.handle_set_pomodoro_timer_mode(chat_id, chat_type, mode, user, socket)
   end
 
   def handle_event(
@@ -521,6 +598,37 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     Plugins.handle_disconnect_cleanup(socket)
     :ok
   end
+
+  defp handle_pomodoro_broadcast(
+         payload,
+         %{assigns: %{chat_id: current_chat_id}} = socket,
+         event_name
+       ) do
+    normalized_payload = unwrap_event_data(payload)
+
+    broadcast_chat_id =
+      Map.get(normalized_payload, :chat_id) || Map.get(normalized_payload, "chat_id")
+
+    if current_chat_id == broadcast_chat_id do
+      {:noreply,
+       push_event(socket, "react", %{event_name: event_name, event_data: normalized_payload})}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  defp handle_pomodoro_broadcast(_payload, socket, _event_name) do
+    {:noreply, socket}
+  end
+
+  defp handle_chat_plugin_broadcast(payload, socket, event_name) do
+    {:noreply,
+     push_event(socket, "react", %{event_name: event_name, event_data: unwrap_event_data(payload)})}
+  end
+
+  defp unwrap_event_data(%{event_data: event_data}) when is_map(event_data), do: event_data
+  defp unwrap_event_data(%{"event_data" => event_data}) when is_map(event_data), do: event_data
+  defp unwrap_event_data(payload), do: payload
 
   def put_session_assigns(socket, session) do
     socket

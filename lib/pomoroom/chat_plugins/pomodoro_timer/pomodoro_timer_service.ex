@@ -18,7 +18,8 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerService do
       work_duration: @default_config.work_duration,
       short_break_duration: @default_config.short_break_duration,
       long_break_duration: @default_config.long_break_duration,
-      cycles_before_long_break: @default_config.cycles_before_long_break
+      cycles_before_long_break: @default_config.cycles_before_long_break,
+      config_version: 0
     }
 
     case PomodoroTimerRepository.create(changes) do
@@ -56,13 +57,40 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerService do
     )
   end
 
-  def update_config(chat_id, chat_type, config) do
+  def update_config(chat_id, chat_type, config, expected_config_version) do
     case ensure_started(chat_id, chat_type) do
       {:ok, process_id} ->
-        PomodoroTimerServer.update_config(process_id, config)
+        PomodoroTimerServer.update_config(process_id, config, expected_config_version)
 
-      {:error, reason} ->
-        {:error, reason}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  def start(chat_id, chat_type) do
+    case ensure_started(chat_id, chat_type) do
+      {:ok, process_id} -> PomodoroTimerServer.start_timer(process_id)
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  def pause(chat_id, chat_type) do
+    case ensure_started(chat_id, chat_type) do
+      {:ok, process_id} -> PomodoroTimerServer.pause_timer(process_id)
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  def reset(chat_id, chat_type) do
+    case ensure_started(chat_id, chat_type) do
+      {:ok, process_id} -> PomodoroTimerServer.reset_timer(process_id)
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  def set_mode(chat_id, chat_type, mode) do
+    case ensure_started(chat_id, chat_type) do
+      {:ok, process_id} -> PomodoroTimerServer.set_mode(process_id, mode)
+      {:error, reason} -> {:error, reason}
     end
   end
 

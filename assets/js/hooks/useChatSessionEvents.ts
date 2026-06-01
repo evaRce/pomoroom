@@ -62,6 +62,36 @@ export function useChatSessionEvents({
   }, [eventName, eventData.chat_id, eventData.plugin]);
 
   useEffect(() => {
+    if (eventName === "start_timer") {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.chat_id, eventData.timer_id, eventData.state]);
+
+  useEffect(() => {
+    if (eventName === "pause_timer") {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.chat_id, eventData.timer_id, eventData.state]);
+
+  useEffect(() => {
+    if (eventName === "reset_timer") {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.chat_id, eventData.timer_id, eventData.state]);
+
+  useEffect(() => {
+    if (eventName === "set_mode") {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.chat_id, eventData.timer_id, eventData.state]);
+
+  useEffect(() => {
+    if (eventName === "update_config") {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.chat_id, eventData.timer_id, eventData.config]);
+
+  useEffect(() => {
     if (eventName === "show_kanban_board" && eventData.board) {
       addEvent(eventName, eventData);
     }
@@ -80,10 +110,10 @@ export function useChatSessionEvents({
   }, [eventName, eventData.chat_id, eventData.timer_id, eventData.config]);
 
   useEffect(() => {
-    if (eventName === "pomodoro_plugin_config_updated") {
+    if (eventName === "pomodoro_timer_state_changed") {
       addEvent(eventName, eventData);
     }
-  }, [eventName, eventData.chat_id, eventData.timer_id, eventData.config]);
+  }, [eventName, eventData.chat_id, eventData.timer_id, eventData.state]);
 
   useEffect(() => {
     if (eventName === "pomodoro_plugin_config_error") {

@@ -1,6 +1,7 @@
 defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
   import Phoenix.LiveView, only: [push_event: 3]
 
+  alias Phoenix.PubSub
   alias Pomoroom.ChatPlugins
   alias Pomoroom.ChatPlugins.Kanbans.KanbanService
   alias Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerService
@@ -23,7 +24,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
               }
             }
 
-            {:noreply, push_event(socket, "react", payload)}
+            PubSub.broadcast(Pomoroom.PubSub, "chat:#{chat_id}", {:chat_plugin_installed, payload})
+            {:noreply, socket}
 
           {:error, reason} ->
             payload = %{
@@ -58,7 +60,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
               }
             }
 
-            {:noreply, push_event(socket, "react", payload)}
+            PubSub.broadcast(Pomoroom.PubSub, "chat:#{chat_id}", {:chat_plugin_uninstalled, payload})
+            {:noreply, socket}
 
           {:error, reason} ->
             payload = %{
@@ -100,20 +103,79 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
     end
   end
 
-  def handle_update_pomodoro_plugin_config(chat_id, chat_type, config, user, socket) do
+  def handle_update_pomodoro_plugin_config(
+        chat_id,
+        chat_type,
+        config,
+        expected_config_version,
+        user,
+        socket
+      ) do
     case authorize_and_validate_plugin(chat_id, chat_type, "pomodoro", user.nickname) do
       :ok ->
-        case PomodoroTimerService.update_config(chat_id, chat_type, config) do
-          {:ok, timer_data} ->
-            payload = %{
-              event_name: "pomodoro_plugin_config_updated",
-              event_data: timer_data
-            }
-
-            {:noreply, push_event(socket, "react", payload)}
+        case PomodoroTimerService.update_config(
+               chat_id,
+               chat_type,
+               config,
+               expected_config_version
+             ) do
+          {:ok, _timer_data} ->
+            {:noreply, socket}
 
           {:error, reason} ->
             push_pomodoro_error(socket, chat_id, chat_type, reason)
+        end
+
+      {:error, reason} ->
+        push_pomodoro_error(socket, chat_id, chat_type, reason)
+    end
+  end
+
+  def handle_start_pomodoro_timer(chat_id, chat_type, user, socket) do
+    case authorize_and_validate_plugin(chat_id, chat_type, "pomodoro", user.nickname) do
+      :ok ->
+        case PomodoroTimerService.start(chat_id, chat_type) do
+          {:ok, _timer_data} -> {:noreply, socket}
+          {:error, reason} -> push_pomodoro_error(socket, chat_id, chat_type, reason)
+        end
+
+      {:error, reason} ->
+        push_pomodoro_error(socket, chat_id, chat_type, reason)
+    end
+  end
+
+  def handle_pause_pomodoro_timer(chat_id, chat_type, user, socket) do
+    case authorize_and_validate_plugin(chat_id, chat_type, "pomodoro", user.nickname) do
+      :ok ->
+        case PomodoroTimerService.pause(chat_id, chat_type) do
+          {:ok, _timer_data} -> {:noreply, socket}
+          {:error, reason} -> push_pomodoro_error(socket, chat_id, chat_type, reason)
+        end
+
+      {:error, reason} ->
+        push_pomodoro_error(socket, chat_id, chat_type, reason)
+    end
+  end
+
+  def handle_reset_pomodoro_timer(chat_id, chat_type, user, socket) do
+    case authorize_and_validate_plugin(chat_id, chat_type, "pomodoro", user.nickname) do
+      :ok ->
+        case PomodoroTimerService.reset(chat_id, chat_type) do
+          {:ok, _timer_data} -> {:noreply, socket}
+          {:error, reason} -> push_pomodoro_error(socket, chat_id, chat_type, reason)
+        end
+
+      {:error, reason} ->
+        push_pomodoro_error(socket, chat_id, chat_type, reason)
+    end
+  end
+
+  def handle_set_pomodoro_timer_mode(chat_id, chat_type, mode, user, socket) do
+    case authorize_and_validate_plugin(chat_id, chat_type, "pomodoro", user.nickname) do
+      :ok ->
+        case PomodoroTimerService.set_mode(chat_id, chat_type, mode) do
+          {:ok, _timer_data} -> {:noreply, socket}
+          {:error, reason} -> push_pomodoro_error(socket, chat_id, chat_type, reason)
         end
 
       {:error, reason} ->
@@ -283,24 +345,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
     {:noreply, push_event(socket, "react", payload)}
   end
 
-  defp maybe_terminate_timer_process(chat_id) do
-    case chat_context(chat_id) do
-      {:ok, chat_type, members} ->
-        case ChatPlugins.plugin_installed?(chat_id, chat_type, "pomodoro") do
-          true ->
-            if Enum.any?(members, &user_online?/1) do
-              :ok
-            else
-              PomodoroTimerService.terminate_timer_process(chat_id, chat_type)
-            end
-
-          false ->
-            :ok
-        end
-
-      {:error, _reason} ->
-        :ok
-    end
+  defp maybe_terminate_timer_process(_chat_id) do
+    :ok
   end
 
   defp maybe_terminate_kanban_process(chat_id) do
@@ -407,16 +453,6 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
         end
     end
   end
-
-  defp user_online?(user_key) when is_binary(user_key) do
-    case Presence.get_by_key("online_users", user_key) do
-      nil -> false
-      [] -> false
-      _ -> true
-    end
-  end
-
-  defp user_online?(_), do: false
 
   defp reason_payload(%_{} = reason), do: inspect(reason)
   defp reason_payload(reason), do: reason

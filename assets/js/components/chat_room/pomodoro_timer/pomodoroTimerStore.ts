@@ -6,11 +6,15 @@ export type TimerState = {
   mode: TimerMode;
   cyclesCompleted: number;
   hasPendingWorkHalfCycle: boolean;
+  configVersion: number;
   settings: TimerSettings | null;
   modeSnapshots: Record<TimerMode, number>;
-  completionVersion: number;
   lastCompletedMode: TimerMode | null;
   lastUpdated: number;
+  startedAt: number | null;
+  pausedAt: number | null;
+  durationMs: number;
+  serverClockOffsetMs: number;
 };
 
 type TimerListener = (timer: TimerState | undefined) => void;
@@ -62,7 +66,6 @@ function advanceCompletedTimer(timer: TimerState, now: number): TimerState {
       ...timer,
       timeLeft: 0,
       isRunning: false,
-      completionVersion: timer.completionVersion + 1,
       lastCompletedMode: timer.mode,
       lastUpdated: now,
     };
@@ -85,7 +88,6 @@ function advanceCompletedTimer(timer: TimerState, now: number): TimerState {
         ...timer.modeSnapshots,
         work: workDuration,
       },
-      completionVersion: timer.completionVersion + 1,
       lastCompletedMode: "work",
       lastUpdated: now,
     };
@@ -104,7 +106,6 @@ function advanceCompletedTimer(timer: TimerState, now: number): TimerState {
       ...timer.modeSnapshots,
       [timer.mode]: completedModeDuration,
     },
-    completionVersion: timer.completionVersion + 1,
     lastCompletedMode: timer.mode,
     lastUpdated: now,
   };
@@ -168,7 +169,7 @@ export function updateTimer(
     modeSnapshots: patch.modeSnapshots
       ? patch.modeSnapshots
       : current.modeSnapshots,
-    lastUpdated: Date.now(),
+    lastUpdated: patch.lastUpdated ?? current.lastUpdated,
   };
 
   if (patch.mode && typeof patch.timeLeft === "number") {
@@ -203,6 +204,10 @@ export function clearAllTimers(): void {
   for (const chatId of chatIds) {
     notifyTimer(chatId);
   }
+}
+
+export function clearRequestedConfigs(): void {
+  requested.clear();
 }
 
 export function hasRequestedConfig(chatId: string) {
@@ -259,11 +264,15 @@ export function createInitialTimerState(settings: TimerSettings): TimerState {
     mode: "work",
     cyclesCompleted: 0,
     hasPendingWorkHalfCycle: false,
+    configVersion: 0,
     settings,
     modeSnapshots,
-    completionVersion: 0,
     lastCompletedMode: null,
     lastUpdated: Date.now(),
+    startedAt: null,
+    pausedAt: null,
+    durationMs: modeSnapshots.work * 1000,
+    serverClockOffsetMs: 0,
   };
 }
 

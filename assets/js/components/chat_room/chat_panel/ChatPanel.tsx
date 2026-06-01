@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useEventContext } from "../EventContext";
 import MessageItem from "./body/MessageItem";
 import ChatHeader from "./header/ChatHeader";
 import ChatFooter from "./footer/ChatFooter";
 import { PomodoroTimer } from "../pomodoro_timer/PomodoroTimer";
 import { KanbanBoard } from "../kanban_board_panel/KanbanBoard";
+import { createTimer, hasTimer, updateTimer, type TimerState } from "../pomodoro_timer/pomodoroTimerStore";
 
 interface ChatPanelProps {
   isVisibleDetail: boolean;
@@ -25,6 +26,126 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [hasMoreOlder, setHasMoreOlder] = useState(true);
   const [activePluginId, setActivePluginId] = useState<string | null>(null)
+  const lastAppliedPomodoroSignatureByChatRef = useRef<Record<string, string>>({});
+
+  const normalizePomodoroTimerPayload = (payload: any): TimerState | null => {
+    if (!payload) {
+      return null;
+    }
+
+    const payloadConfig = payload.config || {};
+    const payloadState = payload.state || {};
+    const serverNow = payload.server_now ?? payloadState.server_now ?? Date.now();
+    const serverClockOffsetMs = Date.now() - serverNow;
+    const adjustedNowMs = Date.now() - serverClockOffsetMs;
+    const payloadSettings = payloadState.settings || {};
+    const settings = {
+      workDuration: payloadSettings.workDuration ?? payloadConfig.work_duration ?? 0,
+      shortBreakDuration: payloadSettings.shortBreakDuration ?? payloadConfig.short_break_duration ?? 0,
+      longBreakDuration: payloadSettings.longBreakDuration ?? payloadConfig.long_break_duration ?? 0,
+      cyclesBeforeLongBreak:
+        payloadSettings.cyclesBeforeLongBreak ?? payloadConfig.cycles_before_long_break ?? 0,
+    };
+    const mode = payloadState.mode || "work";
+    const modeSnapshots = payloadState.modeSnapshots || {
+      work: settings.workDuration * 60,
+      shortBreak: settings.shortBreakDuration * 60,
+      longBreak: settings.longBreakDuration * 60,
+    };
+    const durationMs =
+      payloadState.durationMs ??
+      payloadState.duration_ms ??
+      modeSnapshots[mode as keyof typeof modeSnapshots] * 1000;
+    const startedAt = payloadState.startedAt ?? payloadState.started_at ?? null;
+    const pausedAt = payloadState.pausedAt ?? payloadState.paused_at ?? null;
+    const resolvedTimeLeft = (() => {
+      if (Boolean(payloadState.isRunning ?? payloadState.is_running) && startedAt) {
+        return Math.max(Math.ceil((durationMs - (adjustedNowMs - startedAt)) / 1000), 0);
+      }
+
+      if (startedAt && pausedAt) {
+        return Math.max(Math.ceil((durationMs - (pausedAt - startedAt)) / 1000), 0);
+      }
+
+      return Math.max(Math.ceil(durationMs / 1000), 0);
+    })();
+    const lastUpdated = payloadState.lastUpdated ?? payloadState.last_updated ?? serverNow;
+
+    return {
+      timeLeft: resolvedTimeLeft,
+      isRunning: Boolean(payloadState.isRunning ?? payloadState.is_running),
+      mode,
+      cyclesCompleted: payloadState.cyclesCompleted ?? payloadState.cycles_completed ?? 0,
+      hasPendingWorkHalfCycle: Boolean(
+        payloadState.hasPendingWorkHalfCycle ?? payloadState.has_pending_work_half_cycle
+      ),
+      configVersion: payload.config_version ?? 0,
+      settings,
+      modeSnapshots,
+      lastCompletedMode: payloadState.lastCompletedMode ?? payloadState.last_completed_mode ?? null,
+      lastUpdated,
+      startedAt,
+      pausedAt,
+      durationMs,
+      serverClockOffsetMs,
+    };
+  };
+
+  const getPomodoroSignature = useCallback((eventName: string, payload: any) => {
+    const state = payload?.state || {};
+
+    return [
+      eventName,
+      payload?.chat_id || "",
+      payload?.timer_id || "",
+      payload?.config_version ?? 0,
+      state.mode || state.last_completed_mode || "",
+      state.started_at ?? state.startedAt ?? "",
+      state.paused_at ?? state.pausedAt ?? "",
+      state.last_updated ?? state.lastUpdated ?? "",
+      state.time_left ?? state.timeLeft ?? "",
+      payload?.config?.work_duration ?? "",
+      payload?.config?.short_break_duration ?? "",
+      payload?.config?.long_break_duration ?? "",
+      payload?.config?.cycles_before_long_break ?? "",
+    ].join(":");
+  }, []);
+
+  const applyPomodoroEvent = useCallback((eventName: string, payload: any) => {
+    const targetChatId = payload?.chat_id;
+
+    if (!targetChatId) {
+      return;
+    }
+
+    const nextTimer = normalizePomodoroTimerPayload(payload);
+    if (!nextTimer) {
+      return;
+    }
+
+    const signature = getPomodoroSignature(eventName, payload);
+    const lastSignature = lastAppliedPomodoroSignatureByChatRef.current[targetChatId];
+
+    if (lastSignature === signature) {
+      return;
+    }
+
+    if (hasTimer(targetChatId)) {
+      updateTimer(targetChatId, nextTimer);
+    } else {
+      createTimer(targetChatId, nextTimer);
+    }
+
+    lastAppliedPomodoroSignatureByChatRef.current[targetChatId] = signature;
+  }, [getPomodoroSignature]);
+
+  const syncPomodoroStore = useCallback((eventName: string, payload: any) => {
+    if (!payload?.chat_id) {
+      return;
+    }
+
+    applyPomodoroEvent(eventName, payload);
+  }, [applyPomodoroEvent]);
 
   const getMessageUniqueKey = (message: any) => {
     const data = message?.data || {};
@@ -75,6 +196,10 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   }, [getEventData("show_list_messages")]);
 
   useEffect(() => {
+    removeEvent("pomodoro_timer_state_changed");
+  }, [currentChatId, isPrivateChat, removeEvent]);
+
+  useEffect(() => {
     const olderMessagesPayload = getEventData("show_older_messages");
 
     if (olderMessagesPayload) {
@@ -98,6 +223,34 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
       removeEvent("show_older_messages");
     }
   }, [getEventData("show_older_messages")]);
+
+  useEffect(() => {
+    syncPomodoroStore("pomodoro_plugin_config_loaded", getEventData("pomodoro_plugin_config_loaded"));
+  }, [getEventData("pomodoro_plugin_config_loaded"), syncPomodoroStore]);
+
+  useEffect(() => {
+    syncPomodoroStore("pomodoro_timer_state_changed", getEventData("pomodoro_timer_state_changed"));
+  }, [getEventData("pomodoro_timer_state_changed"), syncPomodoroStore]);
+
+  useEffect(() => {
+    syncPomodoroStore("start_timer", getEventData("start_timer"));
+  }, [getEventData("start_timer"), syncPomodoroStore]);
+
+  useEffect(() => {
+    syncPomodoroStore("pause_timer", getEventData("pause_timer"));
+  }, [getEventData("pause_timer"), syncPomodoroStore]);
+
+  useEffect(() => {
+    syncPomodoroStore("reset_timer", getEventData("reset_timer"));
+  }, [getEventData("reset_timer"), syncPomodoroStore]);
+
+  useEffect(() => {
+    syncPomodoroStore("set_mode", getEventData("set_mode"));
+  }, [getEventData("set_mode"), syncPomodoroStore]);
+
+  useEffect(() => {
+    syncPomodoroStore("update_config", getEventData("update_config"));
+  }, [getEventData("update_config"), syncPomodoroStore]);
 
   useEffect(() => {
     const msg = getEventData("show_message_to_send");
