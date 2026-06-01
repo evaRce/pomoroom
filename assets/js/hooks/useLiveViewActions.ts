@@ -44,7 +44,7 @@ export function useOutgoingLiveViewActions({
   const loadOlderMessages = useEvent("load_older_messages");
   const installChatPlugin = useEvent("install_chat_plugin");
   const uninstallChatPlugin = useEvent("uninstall_chat_plugin");
-  const getPomodoroPluginConfig = useEvent("get_pomodoro_plugin_config");
+  const getPomodoroState = useEvent("get_pomodoro_state");
   const updatePomodoroPluginConfig = useEvent("update_pomodoro_plugin_config");
   const startPomodoroTimer = useEvent("start_pomodoro_timer");
   const pausePomodoroTimer = useEvent("pause_pomodoro_timer");
@@ -178,9 +178,9 @@ export function useOutgoingLiveViewActions({
       pushEventToLiveView("action.uninstall_chat_plugin", uninstallChatPlugin);
       removeEvent("uninstall_chat_plugin");
     }
-    if (getPomodoroPluginConfig) {
-      pushEventToLiveView("action.get_pomodoro_plugin_config", getPomodoroPluginConfig);
-      removeEvent("get_pomodoro_plugin_config");
+    if (getPomodoroState) {
+      pushEventToLiveView("action.get_pomodoro_state", getPomodoroState);
+      removeEvent("get_pomodoro_state");
     }
     if (updatePomodoroPluginConfig) {
       pushEventToLiveView("action.update_pomodoro_plugin_config", updatePomodoroPluginConfig);
@@ -286,7 +286,7 @@ export function useOutgoingLiveViewActions({
     loadOlderMessages,
     installChatPlugin,
     uninstallChatPlugin,
-    getPomodoroPluginConfig,
+    getPomodoroState,
     updatePomodoroPluginConfig,
     startPomodoroTimer,
     pausePomodoroTimer,

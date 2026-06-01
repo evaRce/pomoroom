@@ -24,7 +24,12 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
               }
             }
 
-            PubSub.broadcast(Pomoroom.PubSub, "chat:#{chat_id}", {:chat_plugin_installed, payload})
+            PubSub.broadcast(
+              Pomoroom.PubSub,
+              "chat:#{chat_id}",
+              {:chat_plugin_installed, payload}
+            )
+
             {:noreply, socket}
 
           {:error, reason} ->
@@ -60,7 +65,12 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
               }
             }
 
-            PubSub.broadcast(Pomoroom.PubSub, "chat:#{chat_id}", {:chat_plugin_uninstalled, payload})
+            PubSub.broadcast(
+              Pomoroom.PubSub,
+              "chat:#{chat_id}",
+              {:chat_plugin_uninstalled, payload}
+            )
+
             {:noreply, socket}
 
           {:error, reason} ->
@@ -82,13 +92,13 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
     end
   end
 
-  def handle_get_pomodoro_plugin_config(chat_id, chat_type, user, socket) do
+  def handle_get_pomodoro_state(chat_id, chat_type, user, socket) do
     case authorize_and_validate_plugin(chat_id, chat_type, "pomodoro", user.nickname) do
       :ok ->
-        case PomodoroTimerService.get_config(chat_id, chat_type) do
+        case PomodoroTimerService.get_state(chat_id, chat_type) do
           {:ok, timer_data} ->
             payload = %{
-              event_name: "pomodoro_plugin_config_loaded",
+              event_name: "pomodoro_state_loaded",
               event_data: timer_data
             }
 

@@ -284,11 +284,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
   end
 
   def handle_event(
-        "action.get_pomodoro_plugin_config",
+        "action.get_pomodoro_state",
         %{"chat_id" => chat_id, "chat_type" => chat_type},
         %{assigns: %{user_info: user}} = socket
       ) do
-    Plugins.handle_get_pomodoro_plugin_config(chat_id, chat_type, user, socket)
+    Plugins.handle_get_pomodoro_state(chat_id, chat_type, user, socket)
   end
 
   def handle_event(

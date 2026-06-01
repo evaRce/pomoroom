@@ -15,8 +15,8 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
     GenServer.start_link(__MODULE__, args, name: via_tuple(process_id))
   end
 
-  def get_config(process_id) do
-    GenServer.call(via_tuple(process_id), :get_config)
+  def get_state(process_id) do
+    GenServer.call(via_tuple(process_id), :get_state)
   end
 
   def update_config(process_id, config, expected_config_version) do
@@ -65,7 +65,7 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
   end
 
   @impl true
-  def handle_call(:get_config, _from, state) do
+  def handle_call(:get_state, _from, state) do
     {:reply, {:ok, format_payload(state)}, state}
   end
 

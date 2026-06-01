@@ -225,8 +225,8 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   }, [getEventData("show_older_messages")]);
 
   useEffect(() => {
-    syncPomodoroStore("pomodoro_plugin_config_loaded", getEventData("pomodoro_plugin_config_loaded"));
-  }, [getEventData("pomodoro_plugin_config_loaded"), syncPomodoroStore]);
+    syncPomodoroStore("pomodoro_state_loaded", getEventData("pomodoro_state_loaded"));
+  }, [getEventData("pomodoro_state_loaded"), syncPomodoroStore]);
 
   useEffect(() => {
     syncPomodoroStore("pomodoro_timer_state_changed", getEventData("pomodoro_timer_state_changed"));

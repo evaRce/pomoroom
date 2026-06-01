@@ -21,8 +21,6 @@ import {
   TimerSettings,
 } from "./PomodoroSettingsPopover";
 import {
-  hasRequestedConfig,
-  markConfigRequested,
   subscribeTimer,
   type TimerState,
 } from "./pomodoroTimerStore";
@@ -55,11 +53,12 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   // Refs
   const hasSyncedInitialTimerRef = useRef(false);
   const lastCompletionStampRef = useRef<string>("");
+  const lastStateResyncStampRef = useRef<string>("");
   const soundEndWork = useRef(new Audio("/sounds/bell-notification.wav"));
   const soundEndBreak = useRef(new Audio("/sounds/happy-bells-notification.wav"));
 
   // Events
-  const configLoadedEvent = useEvent("pomodoro_plugin_config_loaded");
+  const configLoadedEvent = useEvent("pomodoro_state_loaded");
   const configUpdatedEvent = useEvent("update_config");
   const configErrorEvent = useEvent("pomodoro_plugin_config_error");
 
@@ -334,8 +333,19 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     });
   };
 
+  const requestPomodoroState = useCallback(() => {
+    if (!chatId || !chatType) return;
+
+    addEvent("get_pomodoro_state", {
+      chat_id: chatId,
+      chat_type: chatType,
+    });
+  }, [addEvent, chatId, chatType]);
+
   const syncTimerState = useCallback((timer: TimerState | undefined) => {
     if (!timer) return;
+
+    const completionStamp = `${timer.lastCompletedMode || "none"}:${timer.lastUpdated}`;
 
     setTimerSnapshot(timer);
     setMode(timer.mode);
@@ -348,17 +358,13 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
       setSettings(timer.settings);
     }
 
-    if (!hasSyncedInitialTimerRef.current) {
-      hasSyncedInitialTimerRef.current = true;
-      lastCompletionStampRef.current = `${timer.lastCompletedMode || "none"}:${timer.lastUpdated}`;
-      return;
-    }
-
-    const completionStamp = `${timer.lastCompletedMode || "none"}:${timer.lastUpdated}`;
-
     if (timer.lastCompletedMode && completionStamp !== lastCompletionStampRef.current) {
       lastCompletionStampRef.current = completionStamp;
       handleTimerComplete(timer.lastCompletedMode);
+    }
+
+    if (!hasSyncedInitialTimerRef.current) {
+      hasSyncedInitialTimerRef.current = true;
     }
   }, [handleTimerComplete]);
 
@@ -380,6 +386,29 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     setTimeLeft(calculateRemainingSeconds(timerSnapshot, nowMs));
   }, [timerSnapshot, nowMs, calculateRemainingSeconds]);
 
+  useEffect(() => {
+    if (!chatId || !chatType) return;
+
+    requestPomodoroState();
+  }, [chatId, chatType, requestPomodoroState]);
+
+  useEffect(() => {
+    if (!timerSnapshot || !chatId || !chatType) return;
+
+    if (!timerSnapshot.isRunning || timeLeft > 0) {
+      return;
+    }
+
+    const resyncStamp = `${chatId}:${timerSnapshot.lastUpdated}:${timerSnapshot.mode}:${timerSnapshot.isRunning}`;
+
+    if (lastStateResyncStampRef.current === resyncStamp) {
+      return;
+    }
+
+    lastStateResyncStampRef.current = resyncStamp;
+    requestPomodoroState();
+  }, [chatId, chatType, requestPomodoroState, timeLeft, timerSnapshot]);
+
   // ============================================================================
   // EFFECTS - STORE SYNC
   // ============================================================================
@@ -388,7 +417,8 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     if (!chatId) return;
 
     hasSyncedInitialTimerRef.current = false;
-  lastCompletionStampRef.current = "";
+    lastCompletionStampRef.current = "";
+    lastStateResyncStampRef.current = "";
 
     const unsubscribe = subscribeTimer(chatId, syncTimerState);
 
@@ -398,20 +428,6 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   // ============================================================================
   // EFFECTS - CONFIG LOADING
   // ============================================================================
-
-  // Load config on mount
-  useEffect(() => {
-    if (!chatId || !chatType) return;
-
-    if (hasRequestedConfig(chatId)) return;
-
-    markConfigRequested(chatId);
-
-    addEvent("get_pomodoro_plugin_config", {
-      chat_id: chatId,
-      chat_type: chatType,
-    });
-  }, [chatId, chatType]);
 
   // Handle config loaded
   useEffect(() => {
@@ -432,7 +448,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     setSettings(newSettings);
     applyIncomingConfig(configLoadedEvent.config);
     applyIncomingTimerState(configLoadedEvent);
-    removeEvent("pomodoro_plugin_config_loaded");
+    removeEvent("pomodoro_state_loaded");
   }, [configLoadedEvent, chatId, chatType, applyIncomingConfig, applyIncomingTimerState, removeEvent]);
 
   // Handle config updated (after save)

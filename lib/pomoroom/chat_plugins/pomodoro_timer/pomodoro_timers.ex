@@ -3,7 +3,7 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimers do
 
   defdelegate changeset(args), to: PomodoroTimerSchema
   defdelegate timer_changeset(args), to: PomodoroTimerSchema
-  defdelegate get_config(chat_id, chat_type), to: PomodoroTimerService
+  defdelegate get_state(chat_id, chat_type), to: PomodoroTimerService
 
   defdelegate update_config(chat_id, chat_type, config, expected_config_version),
     to: PomodoroTimerService

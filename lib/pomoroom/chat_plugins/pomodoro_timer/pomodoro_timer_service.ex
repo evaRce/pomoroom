@@ -28,10 +28,10 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerService do
     end
   end
 
-  def get_config(chat_id, chat_type) do
+  def get_state(chat_id, chat_type) do
     case ensure_started(chat_id, chat_type) do
       {:ok, process_id} ->
-        PomodoroTimerServer.get_config(process_id)
+        PomodoroTimerServer.get_state(process_id)
 
       {:error, reason} ->
         {:error, reason}
@@ -62,7 +62,8 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerService do
       {:ok, process_id} ->
         PomodoroTimerServer.update_config(process_id, config, expected_config_version)
 
-      {:error, reason} -> {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

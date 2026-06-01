@@ -104,7 +104,7 @@ export function useChatSessionEvents({
   }, [eventName, eventData.reason, eventData.chat_id, eventData.chat_type]);
 
   useEffect(() => {
-    if (eventName === "pomodoro_plugin_config_loaded") {
+    if (eventName === "pomodoro_state_loaded") {
       addEvent(eventName, eventData);
     }
   }, [eventName, eventData.chat_id, eventData.timer_id, eventData.config]);
