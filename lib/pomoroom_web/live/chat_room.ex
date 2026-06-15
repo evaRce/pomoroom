@@ -114,6 +114,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     handle_pomodoro_broadcast(payload, socket, "pomodoro_timer_state_changed")
   end
 
+  def handle_info({:timer_finished, payload}, socket) do
+    handle_pomodoro_broadcast(payload, socket, "timer_finished")
+  end
+
   def handle_info({:start_timer, payload}, socket) do
     handle_pomodoro_broadcast(payload, socket, "start_timer")
   end
@@ -601,24 +605,13 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
   defp handle_pomodoro_broadcast(
          payload,
-         %{assigns: %{chat_id: current_chat_id}} = socket,
+         socket,
          event_name
        ) do
     normalized_payload = unwrap_event_data(payload)
 
-    broadcast_chat_id =
-      Map.get(normalized_payload, :chat_id) || Map.get(normalized_payload, "chat_id")
-
-    if current_chat_id == broadcast_chat_id do
-      {:noreply,
-       push_event(socket, "react", %{event_name: event_name, event_data: normalized_payload})}
-    else
-      {:noreply, socket}
-    end
-  end
-
-  defp handle_pomodoro_broadcast(_payload, socket, _event_name) do
-    {:noreply, socket}
+    {:noreply,
+     push_event(socket, "react", %{event_name: event_name, event_data: normalized_payload})}
   end
 
   defp handle_chat_plugin_broadcast(payload, socket, event_name) do

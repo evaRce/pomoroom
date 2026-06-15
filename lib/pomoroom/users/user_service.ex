@@ -65,6 +65,7 @@ defmodule Pomoroom.Users.UserService do
       chat_list ->
         contacts =
           Enum.flat_map(chat_list, fn chat ->
+            chat_id = Map.get(chat, "chat_id")
             members = Map.get(chat, "members", [])
             deleted_by = Map.get(chat, "deleted_by", [])
 
@@ -78,7 +79,7 @@ defmodule Pomoroom.Users.UserService do
             end)
             |> Enum.map(fn contact_nickname ->
               case get_by("nickname", contact_nickname) do
-                {:ok, user_info} -> user_info
+                {:ok, user_info} -> Map.put(user_info, :chat_id, chat_id)
                 {:error, _} -> nil
               end
             end)

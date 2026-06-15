@@ -110,6 +110,12 @@ export function useChatSessionEvents({
   }, [eventName, eventData.chat_id, eventData.timer_id, eventData.config]);
 
   useEffect(() => {
+    if (eventName === "timer_finished") {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.chat_id, eventData.timer_id, eventData.state]);
+
+  useEffect(() => {
     if (eventName === "pomodoro_timer_state_changed") {
       addEvent(eventName, eventData);
     }

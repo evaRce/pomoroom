@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { message } from "antd";
 import { useEventContext } from "../EventContext";
 import MessageItem from "./body/MessageItem";
 import ChatHeader from "./header/ChatHeader";
@@ -6,6 +7,10 @@ import ChatFooter from "./footer/ChatFooter";
 import { PomodoroTimer } from "../pomodoro_timer/PomodoroTimer";
 import { KanbanBoard } from "../kanban_board_panel/KanbanBoard";
 import { createTimer, hasTimer, updateTimer, type TimerState } from "../pomodoro_timer/pomodoroTimerStore";
+import {
+  getPomodoroNotifications,
+  markPomodoroNotification,
+} from "../pomodoro_timer/pomodoroNotificationStore";
 
 interface ChatPanelProps {
   isVisibleDetail: boolean;
@@ -25,8 +30,11 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   const [isPrivateChat, setIsPrivateChat] = useState(false);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [hasMoreOlder, setHasMoreOlder] = useState(true);
-  const [activePluginId, setActivePluginId] = useState<string | null>(null)
+  const [activePluginId, setActivePluginId] = useState<string | null>(null);
   const lastAppliedPomodoroSignatureByChatRef = useRef<Record<string, string>>({});
+  const pomodoroToastTimerRef = useRef<number | null>(null);
+  const soundEndWork = useRef(new Audio("/sounds/bell-notification.wav"));
+  const soundEndBreak = useRef(new Audio("/sounds/happy-bells-notification.wav"));
 
   const normalizePomodoroTimerPayload = (payload: any): TimerState | null => {
     if (!payload) {
@@ -196,10 +204,6 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   }, [getEventData("show_list_messages")]);
 
   useEffect(() => {
-    removeEvent("pomodoro_timer_state_changed");
-  }, [currentChatId, isPrivateChat, removeEvent]);
-
-  useEffect(() => {
     const olderMessagesPayload = getEventData("show_older_messages");
 
     if (olderMessagesPayload) {
@@ -229,8 +233,66 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   }, [getEventData("pomodoro_state_loaded"), syncPomodoroStore]);
 
   useEffect(() => {
-    syncPomodoroStore("pomodoro_timer_state_changed", getEventData("pomodoro_timer_state_changed"));
-  }, [getEventData("pomodoro_timer_state_changed"), syncPomodoroStore]);
+    syncPomodoroStore("timer_finished", getEventData("timer_finished"));
+  }, [getEventData("timer_finished"), syncPomodoroStore]);
+
+  useEffect(() => {
+    const finishedEvent = getEventData("timer_finished");
+
+    if (!finishedEvent?.chat_id) {
+      return;
+    }
+
+    const completedMode =
+      finishedEvent?.state?.lastCompletedMode ||
+      finishedEvent?.state?.last_completed_mode ||
+      null;
+
+    if (finishedEvent.chat_id === currentChatId) {
+      if (activePluginId !== "pomodoro") {
+        const soundPlayer = completedMode === "work" ? soundEndWork.current : soundEndBreak.current;
+
+        if (soundPlayer) {
+          soundPlayer.currentTime = 0;
+          void soundPlayer.play();
+        }
+      }
+
+      removeEvent("timer_finished");
+      return;
+    }
+
+    markPomodoroNotification(finishedEvent.chat_id, completedMode);
+
+    if (pomodoroToastTimerRef.current) {
+      window.clearTimeout(pomodoroToastTimerRef.current);
+    }
+
+    pomodoroToastTimerRef.current = window.setTimeout(() => {
+      const pendingChats = Object.values(getPomodoroNotifications()).filter(
+        (notification) => notification.hasPendingNotification
+      );
+
+      if (pendingChats.length === 0) {
+        pomodoroToastTimerRef.current = null;
+        return;
+      }
+
+      const finishingCount = pendingChats.length;
+      const toastMessage =
+        finishingCount === 1
+          ? "Un Pomodoro terminó en otro chat"
+          : `${finishingCount} Pomodoros terminaron en otros chats`;
+
+      message.info({
+        content: toastMessage,
+      });
+
+      pomodoroToastTimerRef.current = null;
+    }, 900);
+
+    removeEvent("timer_finished");
+  }, [activePluginId, currentChatId, getEventData("timer_finished"), removeEvent]);
 
   useEffect(() => {
     syncPomodoroStore("start_timer", getEventData("start_timer"));
@@ -251,6 +313,14 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   useEffect(() => {
     syncPomodoroStore("update_config", getEventData("update_config"));
   }, [getEventData("update_config"), syncPomodoroStore]);
+
+  useEffect(() => {
+    return () => {
+      if (pomodoroToastTimerRef.current) {
+        window.clearTimeout(pomodoroToastTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const msg = getEventData("show_message_to_send");

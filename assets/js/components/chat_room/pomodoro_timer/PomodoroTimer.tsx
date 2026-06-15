@@ -24,6 +24,7 @@ import {
   subscribeTimer,
   type TimerState,
 } from "./pomodoroTimerStore";
+import { clearPomodoroNotification } from "./pomodoroNotificationStore";
 
 interface PomodoroTimerProps {
   chatId: string;
@@ -346,6 +347,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     if (!timer) return;
 
     const completionStamp = `${timer.lastCompletedMode || "none"}:${timer.lastUpdated}`;
+    const shouldPlayCompletionSound = hasSyncedInitialTimerRef.current;
 
     setTimerSnapshot(timer);
     setMode(timer.mode);
@@ -360,7 +362,10 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
 
     if (timer.lastCompletedMode && completionStamp !== lastCompletionStampRef.current) {
       lastCompletionStampRef.current = completionStamp;
-      handleTimerComplete(timer.lastCompletedMode);
+
+      if (shouldPlayCompletionSound) {
+        handleTimerComplete(timer.lastCompletedMode);
+      }
     }
 
     if (!hasSyncedInitialTimerRef.current) {
@@ -391,6 +396,12 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
 
     requestPomodoroState();
   }, [chatId, chatType, requestPomodoroState]);
+
+  useEffect(() => {
+    if (!chatId) return;
+
+    clearPomodoroNotification(chatId);
+  }, [chatId]);
 
   useEffect(() => {
     if (!timerSnapshot || !chatId || !chatType) return;

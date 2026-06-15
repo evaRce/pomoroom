@@ -189,6 +189,11 @@ export default function ConversationTargetsList() {
       name:
         contact?.contact_data?.nickname ||
         groupData?.name,
+      chat_id:
+        contact?.contact_data?.chat_id ||
+        contact?.chat_id ||
+        groupData?.chat_id ||
+        null,
       image:
         contact?.contact_data?.image_profile ||
         groupData?.image,

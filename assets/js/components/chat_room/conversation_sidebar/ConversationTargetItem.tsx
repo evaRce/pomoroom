@@ -2,10 +2,13 @@ import React, { useState } from "react";
 import { Button, Dropdown } from "antd";
 import { useEventContext } from "../EventContext";
 import { DownOutlined, DeleteOutlined } from "@ant-design/icons";
+import { usePomodoroNotification } from "../pomodoro_timer/pomodoroNotificationStore";
 
 export default function ConversationTargetItem({ contact, isSelected, onSelect, onDelete }: any) {
   const { addEvent } = useEventContext();
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const notification = usePomodoroNotification(contact?.chat_id || "");
+  const hasPendingNotification = Boolean(notification?.hasPendingNotification);
 
   const handleChat = () => {
     if (!isSelected) {
@@ -92,10 +95,22 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
       <div className="flex-1 min-w-20">
         <a className="focus:outline-none" onClick={handleChat}>
           <div className="flex items-center justify-between">
-            <span className="text-sm pb-0 overflow-ellipsis overflow-hidden whitespace-nowrap truncate"
-              title={contact.name}>
-              {contact.name}
-            </span>
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <span
+                className="text-sm pb-0 overflow-ellipsis overflow-hidden whitespace-nowrap truncate"
+                title={contact.name}
+              >
+                {contact.name}
+              </span>
+              {hasPendingNotification && (
+                <span
+                  className={`h-2.5 w-2.5 rounded-full ${
+                    notification?.lastMode === "work" ? "bg-sky-500" : "bg-yellow-400"
+                  }`}
+                  title="Pomodoro pendiente"
+                />
+              )}
+            </div>
             {(contact.status_request === "pending" || contact.status_request === "rejected") && (
               <span className={`text-white font-bold text-xs rounded-full px-2 py-1 ${getBackgroundStatus()}`}>
                 {contact.status_request}

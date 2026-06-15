@@ -193,7 +193,7 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
           |> advance_tick()
 
         if next_state.is_running == false do
-          broadcast_state(next_state, :pomodoro_timer_state_changed)
+          broadcast_state(next_state, :timer_finished)
         end
 
         if next_state.is_running do
