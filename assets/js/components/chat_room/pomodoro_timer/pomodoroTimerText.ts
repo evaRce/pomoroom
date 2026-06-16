@@ -25,6 +25,9 @@ const pomodoroTimerText = {
     cyclesBeforeLongBreak: (min: number, max: number) => `Debe ser un número entre ${min} y ${max}`,
   },
   alertShortVsLong: "El tiempo de `descanso corto` debe ser menor que el tiempo de `descanso largo`.",
+  workTimerEnded: "Fin trabajo",
+  shortBreakTimerEnded: "Fin descanso corto",
+  longBreakTimerEnded: "Fin descanso largo",
 };
 
 export default pomodoroTimerText;

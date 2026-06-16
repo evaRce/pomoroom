@@ -569,7 +569,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
             "h-9 text-xs font-medium",
             isRunning && "cursor-not-allowed opacity-50",
             mode === "work"
-              ? "bg-sky-100 text-sky-500 hover:bg-sky-200 border border-sky-400"
+              ? "bg-sky-100 text-sky-600 hover:bg-sky-200 border border-sky-400"
               : "text-muted-foreground hover:bg-sky-300 border border-gray-200"
           )}
           disabled={isRunning}
@@ -585,7 +585,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
             "h-9 text-xs font-medium",
             isRunning && "cursor-not-allowed opacity-50",
             mode === "shortBreak"
-              ? "bg-green-100 text-green-600 hover:bg-green-200 border border-green-400"
+              ? "bg-green-100 text-green-700 hover:bg-green-200 border border-green-400"
               : "text-muted-foreground hover:bg-green-300 border border-gray-200"
           )}
           disabled={isRunning}
@@ -601,7 +601,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
             "h-9 text-xs font-medium",
             isRunning && "cursor-not-allowed opacity-50",
             mode === "longBreak"
-              ? "bg-yellow-100 text-yellow-600 hover:bg-yellow-200 border border-yellow-400"
+              ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border border-yellow-400"
               : "text-muted-foreground hover:bg-yellow-300 border border-gray-200"
           )}
           disabled={isRunning}
@@ -639,11 +639,11 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
             strokeLinecap="round"
             strokeDasharray={2 * Math.PI * 90}
             strokeDashoffset={2 * Math.PI * 90 * (1 - progress / 100)}
-              className={cn(
-                timerSnapshot?.isRunning
-                  ? "transition-[stroke-dashoffset] duration-1000 ease-linear"
-                  : "transition-none"
-              )}
+            className={cn(
+              timerSnapshot?.isRunning
+                ? "transition-[stroke-dashoffset] duration-1000 ease-linear"
+                : "transition-none"
+            )}
           />
         </svg>
 

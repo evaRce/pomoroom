@@ -3,7 +3,7 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
 
   alias Phoenix.PubSub
   alias Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerRepository, as: Repository
-
+  alias Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerNotifier
   @default_config %{
     work_duration: 25,
     short_break_duration: 5,
@@ -193,6 +193,7 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
           |> advance_tick()
 
         if next_state.is_running == false do
+          PomodoroTimerNotifier.timer_finished(next_state)
           broadcast_state(next_state, :timer_finished)
         end
 

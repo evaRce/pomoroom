@@ -289,7 +289,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
       });
 
       pomodoroToastTimerRef.current = null;
-    }, 900);
+    }, 1500);
 
     removeEvent("timer_finished");
   }, [activePluginId, currentChatId, getEventData("timer_finished"), removeEvent]);
@@ -463,7 +463,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
               messages.map((message) => {
                 const isMyMessage = message.data.from_user === userLogin?.nickname;
                 const shouldHideIdentity = isPrivateChat || (isMyMessage && !isPrivateChat);
-                
+
                 return (
                   <MessageItem
                     key={getMessageUniqueKey(message)}

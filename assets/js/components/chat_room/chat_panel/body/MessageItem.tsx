@@ -22,6 +22,17 @@ export default function MessageItem({
   const isMyMessage = message.data.from_user === userLogin?.nickname;
   const messagePosition = isMyMessage ? "chat-end" : "chat-start";
   const bubbleClass = isMyMessage ? "message-bubble-mine" : "message-bubble-other";
+  const isPomodoro = message.data.from_user === "pomodoro";
+
+  if (isPomodoro) {
+    return (
+      <div className="flex justify-center my-2">
+        <div className="bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm text-center">
+          <div>{message.data.text}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`chat ${messagePosition}`}>

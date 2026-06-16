@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Button, Dropdown } from "antd";
+import { Brain, Coffee, RotateCcw } from "lucide-react";
 import { useEventContext } from "../EventContext";
 import { DownOutlined, DeleteOutlined } from "@ant-design/icons";
 import { usePomodoroNotification } from "../pomodoro_timer/pomodoroNotificationStore";
+import pomodoroTimerText from "../pomodoro_timer/pomodoroTimerText";
 
 export default function ConversationTargetItem({ contact, isSelected, onSelect, onDelete }: any) {
   const { addEvent } = useEventContext();
@@ -80,6 +82,28 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
     setDropdownVisible(!dropdownVisible); // Toggle dropdown visibility
   };
 
+  const pomodoroEventVisuals = {
+    work: {
+      icon: <Brain size={14} />,
+      label: pomodoroTimerText.workTimerEnded,
+      className: "text-sky-600 bg-sky-100 border-sky-400",
+    },
+    shortBreak: {
+      icon: <Coffee size={14} />,
+      label: pomodoroTimerText.shortBreakTimerEnded,
+      className: "text-green-700 bg-green-100 border-green-400",
+    },
+    longBreak: {
+      icon: <RotateCcw size={14} />,
+      label: pomodoroTimerText.longBreakTimerEnded,
+      className: "text-yellow-700 bg-yellow-100 border-yellow-400",
+    },
+  };
+
+  const lastPomodoroEventVisual = notification?.lastMode
+    ? pomodoroEventVisuals[notification.lastMode]
+    : null;
+
   return (
     <div
       className={`relative rounded-lg p-2 flex items-center space-x-3 hover:border-gray-400 focus-within:ring-2 mb-1 hover:bg-gray-400 ${getBackgroundContact()}`}
@@ -97,18 +121,24 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
           <div className="flex items-center justify-between">
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <span
-                className="text-sm pb-0 overflow-ellipsis overflow-hidden whitespace-nowrap truncate"
+                className="flex-1 min-w-0 text-sm truncate pb-0"
                 title={contact.name}
               >
                 {contact.name}
               </span>
-              {hasPendingNotification && (
+              {hasPendingNotification && lastPomodoroEventVisual && (
                 <span
-                  className={`h-2.5 w-2.5 rounded-full ${
-                    notification?.lastMode === "work" ? "bg-sky-500" : "bg-yellow-400"
-                  }`}
-                  title="Pomodoro pendiente"
-                />
+                  className={`flex shrink-0 items-center gap-1 px-2 py-1 rounded-full border text-xs ${lastPomodoroEventVisual.className}`}
+                  title={lastPomodoroEventVisual.label}
+                >
+                  <span className="shrink-0">
+                    {lastPomodoroEventVisual.icon}
+                  </span>
+
+                  <span className="hidden xl:inline">
+                    {lastPomodoroEventVisual.label}
+                  </span>
+                </span>
               )}
             </div>
             {(contact.status_request === "pending" || contact.status_request === "rejected") && (
@@ -124,7 +154,7 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
                 onOpenChange={handleDropdownVisibility}
               >
                 <Button
-                  className="hover:bg-gray-700"
+                  className="hover:bg-gray-700 ml-1"
                   icon={<DownOutlined />}
                   onClick={handleButtonClick}
                 />

@@ -34,6 +34,10 @@ defmodule Pomoroom.ChatRoom.ChatServer do
     GenServer.call(via_tuple(chat_id), :join_chat)
   end
 
+  def send_plugin_message(chat_id, source, text) do
+    GenServer.call(via_tuple(chat_id), {:send_plugin_message, source, text})
+  end
+
   # Server Callbacks
   def init(state) do
     PubSub.subscribe(Pomoroom.PubSub, chat_topic(state.chat_id))
@@ -125,6 +129,28 @@ defmodule Pomoroom.ChatRoom.ChatServer do
       )
 
     {:reply, older_messages, state}
+  end
+
+  def handle_call({:send_plugin_message, source, text}, _from, state) do
+    case Messages.new_message(text, source, state.chat_id) do
+      {:ok, msg} ->
+        msg_with_image = %{
+          data: msg,
+          image_user: nil
+        }
+
+        PubSub.broadcast(
+          Pomoroom.PubSub,
+          chat_topic(state.chat_id),
+          {:new_message, msg_with_image}
+        )
+
+        new_messages = state.messages ++ [msg]
+        {:reply, {:ok, msg}, %{state | messages: new_messages}}
+
+      {:error, reason} ->
+        {:reply, {:error, reason}, state}
+    end
   end
 
   def handle_info({:new_message, _msg_with_image}, state) do
