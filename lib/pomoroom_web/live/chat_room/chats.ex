@@ -37,6 +37,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
       {:ok, private_chat} ->
         Runtime.ensure_chat_server_exists(private_chat.chat_id)
         PubSub.subscribe(Pomoroom.PubSub, pomodoro_topic(private_chat.chat_id))
+        PubSub.subscribe(Pomoroom.PubSub, kanban_topic(private_chat.chat_id))
 
         case FriendRequests.get(to_user, from_user) do
           {:ok, request} ->
@@ -76,7 +77,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
       {:ok, group_chat} ->
         Runtime.ensure_chat_server_exists(group_chat.chat_id)
         PubSub.subscribe(Pomoroom.PubSub, pomodoro_topic(group_chat.chat_id))
-
+        PubSub.subscribe(Pomoroom.PubSub, kanban_topic(group_chat.chat_id))
         case GroupChats.member_state(group_name, user.nickname) do
           {:active, joined_at} ->
             open_group_chat_with_members(group_name, group_chat, user, joined_at, nil, socket)
@@ -350,5 +351,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
 
   defp pomodoro_topic(chat_id) do
     "chat:#{chat_id}:pomodoro"
+  end
+
+  defp kanban_topic(chat_id) do
+    "chat:#{chat_id}:kanban"
   end
 end

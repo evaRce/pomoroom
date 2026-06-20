@@ -1,5 +1,15 @@
-defmodule Pomoroom.ChatPlugins.Kanbans do
-  alias Pomoroom.ChatPlugins.Kanbans.KanbanService
+defmodule Pomoroom.ChatPlugins.Kanban.Kanbans do
+  alias Pomoroom.ChatPlugins.Kanban.{KanbanService, KanbanBoardSchema, KanbanTaskSchema}
+
+  defdelegate changeset(board, attrs), to: KanbanBoardSchema
+  defdelegate kanban_board_changeset(attrs), to: KanbanBoardSchema
+  defdelegate kanban_board_changeset(kanban_id, columns), to: KanbanBoardSchema
+  defdelegate generate_kanban_id(), to: KanbanBoardSchema
+
+  defdelegate changeset(args), to: KanbanTaskSchema
+  defdelegate kanban_task_changeset(args), to: KanbanTaskSchema
+  defdelegate kanban_task_changeset(task_id, kanban_id, column_id, title, order_in_column), to: KanbanTaskSchema
+  defdelegate generate_task_id(), to: KanbanTaskSchema
 
   defdelegate create_kanban_board(kanban_id), to: KanbanService
   defdelegate default_columns(), to: KanbanService
@@ -18,4 +28,5 @@ defmodule Pomoroom.ChatPlugins.Kanbans do
   defdelegate ensure_started(chat_id, chat_type), to: KanbanService
   defdelegate start_kanban_process(chat_id, chat_type, kanban_id), to: KanbanService
   defdelegate terminate_kanban_process(chat_id, chat_type), to: KanbanService
+  defdelegate apply_operation(chat_id, chat_type, operation, args), to: KanbanService
 end

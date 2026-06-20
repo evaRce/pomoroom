@@ -92,18 +92,6 @@ export function useChatSessionEvents({
   }, [eventName, eventData.chat_id, eventData.timer_id, eventData.config]);
 
   useEffect(() => {
-    if (eventName === "show_kanban_board" && eventData.board) {
-      addEvent(eventName, eventData);
-    }
-  }, [eventName, eventData.board, eventData.chat_id, eventData.chat_type]);
-
-  useEffect(() => {
-    if (eventName === "kanban_board_error" && eventData.reason) {
-      addEvent(eventName, eventData);
-    }
-  }, [eventName, eventData.reason, eventData.chat_id, eventData.chat_type]);
-
-  useEffect(() => {
     if (eventName === "pomodoro_state_loaded") {
       addEvent(eventName, eventData);
     }
@@ -126,4 +114,64 @@ export function useChatSessionEvents({
       addEvent(eventName, eventData);
     }
   }, [eventName, eventData.chat_id, eventData.reason]);
+
+  useEffect(() => {
+    if (eventName === "show_kanban_board" && eventData.board) {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.board, eventData.chat_id, eventData.chat_type]);
+
+  useEffect(() => {
+    if (eventName === "kanban_board_error" && eventData.reason) {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.reason, eventData.chat_id, eventData.chat_type]);
+
+  useEffect(() => {
+    if (eventName === "kanban_column_added" && eventData.board) {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.board, eventData.chat_id, eventData.chat_type]);
+
+  useEffect(() => {
+    if (eventName === "kanban_column_renamed" && eventData.board) {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.board, eventData.chat_id, eventData.chat_type]);
+
+  useEffect(() => {
+    if (eventName === "kanban_column_removed" && eventData.board) {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.board, eventData.chat_id, eventData.chat_type]);
+
+  useEffect(() => {
+    if (eventName === "kanban_task_added" && eventData.board) {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.board, eventData.chat_id, eventData.chat_type]);
+
+  useEffect(() => {
+    if (eventName === "kanban_task_moved" && eventData.board) {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.board, eventData.chat_id, eventData.chat_type]);
+
+  useEffect(() => {
+    if (eventName === "kanban_task_reordered" && eventData.board) {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.board, eventData.chat_id, eventData.chat_type]);
+
+  useEffect(() => {
+    if (eventName === "kanban_task_renamed" && eventData.board) {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.board, eventData.chat_id, eventData.chat_type]);
+
+  useEffect(() => {
+    if (eventName === "kanban_task_deleted" && eventData.board) {
+      addEvent(eventName, eventData);
+    }
+  }, [eventName, eventData.board, eventData.chat_id, eventData.chat_type]);
 }

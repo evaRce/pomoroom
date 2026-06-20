@@ -1,15 +1,14 @@
 defmodule Pomoroom.ChatPlugins.Kanban.Runtime.Runtime do
   alias Pomoroom.ChatPlugins.Kanban.Runtime.KanbanServer
 
-  def ensure_kanban_process_started(chat_id, chat_type, kanban_id) do
-    process_id = KanbanServer.via_tuple(chat_id, chat_type, kanban_id)
-
+  def ensure_kanban_process_started(process_id, chat_id, chat_type, kanban_id) do
     case Registry.lookup(Registry.KanbanPluginBoard, process_id) do
       [] ->
         case DynamicSupervisor.start_child(
                Pomoroom.ChatPlugins.KanbanSupervisor,
                {KanbanServer,
                 %{
+                  process_id: process_id,
                   chat_id: chat_id,
                   chat_type: chat_type,
                   kanban_id: kanban_id

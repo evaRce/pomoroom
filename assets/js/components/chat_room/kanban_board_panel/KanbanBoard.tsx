@@ -15,7 +15,7 @@ import {
 } from "@dnd-kit/core";
 import type { CollisionDetection, DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
 import { Button } from "../../../../components-shadcn/ui/button";
-import { useEventContext } from "../EventContext";
+import { useEventContext, useEvent } from "../EventContext";
 import { KanbanColumn, KanbanTaskLimitWarningModal } from "./KanbanBoardComponents.tsx";
 import { KANBAN_TEXT } from "./kanbanText";
 import type { Column, ColumnId, Task } from "./KanbanBoardComponents.tsx";
@@ -100,6 +100,17 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
   const [showTaskLimitModal, setShowTaskLimitModal] = useState(false);
   const boardLoadedRef = useRef(false);
 
+  // Events
+  const kanbanColumnRenamedEvent = useEvent("kanban_column_renamed");
+  const kanbanColumnAddedEvent = useEvent("kanban_column_added");
+  const kanbanColumnRemovedEvent = useEvent("kanban_column_removed");
+  const kanbanTaskAddedEvent = useEvent("kanban_task_added");
+  const kanbanTaskMovedEvent = useEvent("kanban_task_moved");
+  const kanbanTaskReorderedEvent = useEvent("kanban_task_reordered");
+  const kanbanTaskRenamedEvent = useEvent("kanban_task_renamed");
+  const kanbanTaskDeletedEvent = useEvent("kanban_task_deleted");
+
+
   const applyBoard = (board: any) => {
     const nextColumns = Array.isArray(board?.columns)
       ? board.columns.map(mapServerColumn)
@@ -178,13 +189,92 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
     if (!payload) {
       return;
     }
-
     applyBoard(payload.board);
     setDraggedTaskId(null);
     setDragPreview(null);
 
     removeEvent("show_kanban_board");
   }, [getEventData("show_kanban_board"), removeEvent]);
+
+  useEffect(() => {
+    if (!kanbanColumnRenamedEvent) return;
+
+    applyBoard(kanbanColumnRenamedEvent.board);
+    setDraggedTaskId(null);
+    setDragPreview(null);
+
+    removeEvent("kanban_column_renamed");
+  }, [kanbanColumnRenamedEvent]);
+
+  useEffect(() => {
+    if (!kanbanColumnAddedEvent) return;
+
+    applyBoard(kanbanColumnAddedEvent.board);
+    setDraggedTaskId(null);
+    setDragPreview(null);
+
+    removeEvent("kanban_column_added");
+  }, [kanbanColumnAddedEvent]);
+
+  useEffect(() => {
+    if (!kanbanColumnRemovedEvent) return;
+
+    applyBoard(kanbanColumnRemovedEvent.board);
+    setDraggedTaskId(null);
+    setDragPreview(null);
+
+    removeEvent("kanban_column_removed");
+  }, [kanbanColumnRemovedEvent]);
+
+  useEffect(() => {
+    if (!kanbanTaskAddedEvent) return;
+
+    applyBoard(kanbanTaskAddedEvent.board);
+    setDraggedTaskId(null);
+    setDragPreview(null);
+
+    removeEvent("kanban_task_added");
+  }, [kanbanTaskAddedEvent]);
+
+  useEffect(() => {
+    if (!kanbanTaskMovedEvent) return;
+
+    applyBoard(kanbanTaskMovedEvent.board);
+    setDraggedTaskId(null);
+    setDragPreview(null);
+
+    removeEvent("kanban_task_moved");
+  }, [kanbanTaskMovedEvent]);
+
+  useEffect(() => {
+    if (!kanbanTaskReorderedEvent) return;
+
+    applyBoard(kanbanTaskReorderedEvent.board);
+    setDraggedTaskId(null);
+    setDragPreview(null);
+
+    removeEvent("kanban_task_reordered");
+  }, [kanbanTaskReorderedEvent]);
+
+  useEffect(() => {
+    if (!kanbanTaskRenamedEvent) return;
+
+    applyBoard(kanbanTaskRenamedEvent.board);
+    setDraggedTaskId(null);
+    setDragPreview(null);
+
+    removeEvent("kanban_task_renamed");
+  }, [kanbanTaskRenamedEvent]);
+
+  useEffect(() => {
+    if (!kanbanTaskDeletedEvent) return;
+
+    applyBoard(kanbanTaskDeletedEvent.board);
+    setDraggedTaskId(null);
+    setDragPreview(null);
+
+    removeEvent("kanban_task_deleted");
+  }, [kanbanTaskDeletedEvent]);
 
   useEffect(() => {
     const payload = getEventData("kanban_board_error");

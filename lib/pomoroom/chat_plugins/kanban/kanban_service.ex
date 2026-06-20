@@ -1,4 +1,4 @@
-defmodule Pomoroom.ChatPlugins.Kanbans.KanbanService do
+defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
   @default_columns [
     %{column_id: "todo", title: "Por hacer"},
     %{column_id: "inProgress", title: "En progreso"},
@@ -8,6 +8,7 @@ defmodule Pomoroom.ChatPlugins.Kanbans.KanbanService do
   alias Pomoroom.ChatPlugins.Kanban.{
     ColumnSchema,
     Runtime.Runtime,
+    Runtime.KanbanServer,
     KanbanRepository,
     KanbanTaskSchema
   }
@@ -54,6 +55,7 @@ defmodule Pomoroom.ChatPlugins.Kanbans.KanbanService do
 
   def start_kanban_process(chat_id, chat_type, kanban_id) do
     Runtime.ensure_kanban_process_started(
+      process_id(chat_id, chat_type),
       chat_id,
       chat_type,
       kanban_id
@@ -129,6 +131,28 @@ defmodule Pomoroom.ChatPlugins.Kanbans.KanbanService do
 
             case KanbanRepository.update_board(updated_board) do
               {:ok, _result} -> {:ok, sanitize_for_client(materialize_board(updated_board))}
+              {:error, reason} -> {:error, reason}
+            end
+
+          {:error, reason} ->
+            {:error, reason}
+        end
+
+      false ->
+        {:error, :invalid_params}
+    end
+  end
+
+  def rename_column(kanban_id, column_id, title) do
+    case valid_identifier?(kanban_id) and valid_identifier?(column_id) and
+           valid_identifier?(title) do
+      true ->
+        case KanbanRepository.get_board_by_kanban_id(kanban_id) do
+          {:ok, board} ->
+            updated_board = rename_column_in_board(board, column_id, title)
+
+            case KanbanRepository.update_board(updated_board) do
+              {:ok, _result} -> {:ok, materialize_board(updated_board)}
               {:error, reason} -> {:error, reason}
             end
 
@@ -318,6 +342,33 @@ defmodule Pomoroom.ChatPlugins.Kanbans.KanbanService do
     end
   end
 
+  def rename_task(task_id, title) do
+    case valid_identifier?(task_id) and valid_identifier?(title) do
+      true ->
+        case KanbanRepository.get_task_by_task_id(task_id) do
+          {:ok, task} ->
+            case KanbanRepository.get_board_by_kanban_id(task.kanban_id) do
+              {:ok, board} ->
+                updated_task = Map.put(task, :title, title)
+
+                case KanbanRepository.update_task(updated_task) do
+                  {:ok, _result} -> {:ok, sanitize_for_client(materialize_board(board))}
+                  {:error, reason} -> {:error, reason}
+                end
+
+              {:error, reason} ->
+                {:error, reason}
+            end
+
+          {:error, reason} ->
+            {:error, reason}
+        end
+
+      false ->
+        {:error, :invalid_params}
+    end
+  end
+
   def delete_task(task_id) do
     case KanbanRepository.get_task_by_task_id(task_id) do
       {:ok, task} ->
@@ -351,52 +402,49 @@ defmodule Pomoroom.ChatPlugins.Kanbans.KanbanService do
     end
   end
 
-  def rename_column(kanban_id, column_id, title) do
-    case valid_identifier?(kanban_id) and valid_identifier?(column_id) and
-           valid_identifier?(title) do
-      true ->
-        case KanbanRepository.get_board_by_kanban_id(kanban_id) do
-          {:ok, board} ->
-            updated_board = rename_column_in_board(board, column_id, title)
+  def apply_operation(chat_id, chat_type, operation, args) do
+    case ensure_started(chat_id, chat_type) do
+      {:ok, process_id} ->
+        case operation do
+          :add_column ->
+            KanbanServer.add_column_kanban(process_id, args)
 
-            case KanbanRepository.update_board(updated_board) do
-              {:ok, _result} -> {:ok, materialize_board(updated_board)}
-              {:error, reason} -> {:error, reason}
-            end
+          :rename_column ->
+            {column_id, title} = args
+            KanbanServer.rename_column_kanban(process_id, column_id, title)
 
-          {:error, reason} ->
-            {:error, reason}
+          :remove_column ->
+            KanbanServer.remove_column_kanban(process_id, args)
+
+          :add_task ->
+            {column_id, title} = args
+            KanbanServer.add_task_kanban(process_id, column_id, title)
+
+          :move_task ->
+            {task_id, from_column_id, to_column_id, new_position} = args
+
+            KanbanServer.move_task_kanban(
+              process_id,
+              task_id,
+              from_column_id,
+              to_column_id,
+              new_position
+            )
+
+          :reorder_task ->
+            {task_id, column_id, new_position} = args
+            KanbanServer.reorder_task_kanban(process_id, task_id, column_id, new_position)
+
+          :rename_task ->
+            {task_id, title} = args
+            KanbanServer.rename_task_kanban(process_id, task_id, title)
+
+          :delete_task ->
+            KanbanServer.delete_task_kanban(process_id, args)
         end
 
-      false ->
-        {:error, :invalid_params}
-    end
-  end
-
-  def rename_task(task_id, title) do
-    case valid_identifier?(task_id) and valid_identifier?(title) do
-      true ->
-        case KanbanRepository.get_task_by_task_id(task_id) do
-          {:ok, task} ->
-            case KanbanRepository.get_board_by_kanban_id(task.kanban_id) do
-              {:ok, board} ->
-                updated_task = Map.put(task, :title, title)
-
-                case KanbanRepository.update_task(updated_task) do
-                  {:ok, _result} -> {:ok, sanitize_for_client(materialize_board(board))}
-                  {:error, reason} -> {:error, reason}
-                end
-
-              {:error, reason} ->
-                {:error, reason}
-            end
-
-          {:error, reason} ->
-            {:error, reason}
-        end
-
-      false ->
-        {:error, :invalid_params}
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -657,24 +705,32 @@ defmodule Pomoroom.ChatPlugins.Kanbans.KanbanService do
     Enum.reduce_while(board_columns(board), :ok, fn column, :ok ->
       column_id = column_id_from_column(column)
 
-      Enum.reduce_while(Enum.with_index(task_ids_from_column(column)), :ok, fn {task_id, position},
-                                                                               :ok ->
-        case Map.get(tasks_map, task_id) do
-          nil ->
-            {:halt, {:error, :task_not_found}}
+      result =
+        Enum.reduce_while(Enum.with_index(task_ids_from_column(column)), :ok, fn {task_id,
+                                                                                  position},
+                                                                                 :ok ->
+          case Map.get(tasks_map, task_id) do
+            nil ->
+              {:halt, {:error, :task_not_found}}
 
-          task ->
-            updated_task =
-              task
-              |> Map.put(:column_id, column_id)
-              |> Map.put(:order_in_column, position)
+            task ->
+              updated_task =
+                %{
+                  task
+                  | column_id: column_id,
+                    order_in_column: position
+                }
+              case KanbanRepository.update_task(updated_task) do
+                {:ok, _} -> {:cont, :ok}
+                {:error, reason} -> {:halt, {:error, reason}}
+              end
+          end
+        end)
 
-            case KanbanRepository.update_task(updated_task) do
-              {:ok, _} -> {:cont, :ok}
-              {:error, reason} -> {:halt, {:error, reason}}
-            end
-        end
-      end)
+      case result do
+        :ok -> {:cont, :ok}
+        {:error, reason} -> {:halt, {:error, reason}}
+      end
     end)
   end
 

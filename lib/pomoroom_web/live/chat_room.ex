@@ -43,6 +43,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
             ChatServer.join_chat(chat_id)
             PubSub.subscribe(Pomoroom.PubSub, "chat:#{chat_id}")
             PubSub.subscribe(Pomoroom.PubSub, "chat:#{chat_id}:pomodoro")
+            PubSub.subscribe(Pomoroom.PubSub, "chat:#{chat_id}:kanban")
           end)
 
           subscribed_chat_ids = MapSet.new(all_chats_id)
@@ -136,6 +137,38 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
   def handle_info({:update_config, payload}, socket) do
     handle_pomodoro_broadcast(payload, socket, "update_config")
+  end
+
+  def handle_info({:kanban_column_added, payload}, socket) do
+    handle_kanban_broadcast(payload, socket, "kanban_column_added")
+  end
+
+  def handle_info({:kanban_column_renamed, payload}, socket) do
+    handle_kanban_broadcast(payload, socket, "kanban_column_renamed")
+  end
+
+  def handle_info({:kanban_column_removed, payload}, socket) do
+    handle_kanban_broadcast(payload, socket, "kanban_column_removed")
+  end
+
+  def handle_info({:kanban_task_added, payload}, socket) do
+    handle_kanban_broadcast(payload, socket, "kanban_task_added")
+  end
+
+  def handle_info({:kanban_task_moved, payload}, socket) do
+    handle_kanban_broadcast(payload, socket, "kanban_task_moved")
+  end
+
+  def handle_info({:kanban_task_reordered, payload}, socket) do
+    handle_kanban_broadcast(payload, socket, "kanban_task_reordered")
+  end
+
+  def handle_info({:kanban_task_renamed, payload}, socket) do
+    handle_kanban_broadcast(payload, socket, "kanban_task_renamed")
+  end
+
+  def handle_info({:kanban_task_deleted, payload}, socket) do
+    handle_kanban_broadcast(payload, socket, "kanban_task_deleted")
   end
 
   # Las request_offers solo le llegan al que INICIO la llamada
@@ -608,6 +641,13 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
          socket,
          event_name
        ) do
+    normalized_payload = unwrap_event_data(payload)
+
+    {:noreply,
+     push_event(socket, "react", %{event_name: event_name, event_data: normalized_payload})}
+  end
+
+  defp handle_kanban_broadcast(payload, socket, event_name) do
     normalized_payload = unwrap_event_data(payload)
 
     {:noreply,

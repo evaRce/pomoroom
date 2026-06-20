@@ -2,7 +2,7 @@ defmodule PomoroomWeb.PluginController do
   use PomoroomWeb, :controller
 
   alias Pomoroom.ChatPlugins
-  alias Pomoroom.ChatPlugins.Kanbans
+  alias Pomoroom.ChatPlugins.Kanban.Kanbans
 
   def index(conn, _params) do
     plugins = ChatPlugins.list_available_plugins()

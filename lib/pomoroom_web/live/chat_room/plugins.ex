@@ -3,8 +3,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
 
   alias Phoenix.PubSub
   alias Pomoroom.ChatPlugins
-  alias Pomoroom.ChatPlugins.Kanbans.KanbanService
-  alias Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerService
+  alias Pomoroom.ChatPlugins.Kanban.Kanbans
+  alias Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimers
   alias Pomoroom.GroupChats
   alias Pomoroom.PrivateChats
   alias Pomoroom.Users
@@ -95,7 +95,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
   def handle_get_pomodoro_state(chat_id, chat_type, user, socket) do
     case authorize_and_validate_plugin(chat_id, chat_type, "pomodoro", user.nickname) do
       :ok ->
-        case PomodoroTimerService.get_state(chat_id, chat_type) do
+        case PomodoroTimers.get_state(chat_id, chat_type) do
           {:ok, timer_data} ->
             payload = %{
               event_name: "pomodoro_state_loaded",
@@ -123,7 +123,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
       ) do
     case authorize_and_validate_plugin(chat_id, chat_type, "pomodoro", user.nickname) do
       :ok ->
-        case PomodoroTimerService.update_config(
+        case PomodoroTimers.update_config(
                chat_id,
                chat_type,
                config,
@@ -144,7 +144,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
   def handle_start_pomodoro_timer(chat_id, chat_type, user, socket) do
     case authorize_and_validate_plugin(chat_id, chat_type, "pomodoro", user.nickname) do
       :ok ->
-        case PomodoroTimerService.start(chat_id, chat_type) do
+        case PomodoroTimers.start(chat_id, chat_type) do
           {:ok, _timer_data} -> {:noreply, socket}
           {:error, reason} -> push_pomodoro_error(socket, chat_id, chat_type, reason)
         end
@@ -157,7 +157,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
   def handle_pause_pomodoro_timer(chat_id, chat_type, user, socket) do
     case authorize_and_validate_plugin(chat_id, chat_type, "pomodoro", user.nickname) do
       :ok ->
-        case PomodoroTimerService.pause(chat_id, chat_type) do
+        case PomodoroTimers.pause(chat_id, chat_type) do
           {:ok, _timer_data} -> {:noreply, socket}
           {:error, reason} -> push_pomodoro_error(socket, chat_id, chat_type, reason)
         end
@@ -170,7 +170,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
   def handle_reset_pomodoro_timer(chat_id, chat_type, user, socket) do
     case authorize_and_validate_plugin(chat_id, chat_type, "pomodoro", user.nickname) do
       :ok ->
-        case PomodoroTimerService.reset(chat_id, chat_type) do
+        case PomodoroTimers.reset(chat_id, chat_type) do
           {:ok, _timer_data} -> {:noreply, socket}
           {:error, reason} -> push_pomodoro_error(socket, chat_id, chat_type, reason)
         end
@@ -183,7 +183,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
   def handle_set_pomodoro_timer_mode(chat_id, chat_type, mode, user, socket) do
     case authorize_and_validate_plugin(chat_id, chat_type, "pomodoro", user.nickname) do
       :ok ->
-        case PomodoroTimerService.set_mode(chat_id, chat_type, mode) do
+        case PomodoroTimers.set_mode(chat_id, chat_type, mode) do
           {:ok, _timer_data} -> {:noreply, socket}
           {:error, reason} -> push_pomodoro_error(socket, chat_id, chat_type, reason)
         end
@@ -196,7 +196,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
   def handle_get_kanban_board(chat_id, chat_type, user, socket) do
     case authorize_and_validate_plugin(chat_id, chat_type, "kanban", user.nickname) do
       :ok ->
-        case KanbanService.get_board_for_chat(chat_id, chat_type) do
+        case Kanbans.get_board_for_chat(chat_id, chat_type) do
           {:ok, board} ->
             payload = %{
               event_name: "show_kanban_board",
@@ -362,7 +362,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
   defp maybe_terminate_kanban_process(chat_id) do
     case chat_context(chat_id) do
       {:ok, chat_type, _members} ->
-        KanbanService.terminate_kanban_process(chat_id, chat_type)
+        Kanbans.terminate_kanban_process(chat_id, chat_type)
 
       {:error, _reason} ->
         :ok
@@ -372,58 +372,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
   defp handle_kanban_operation(chat_id, chat_type, user, socket, operation, args) do
     case authorize_and_validate_plugin(chat_id, chat_type, "kanban", user.nickname) do
       :ok ->
-        case KanbanService.get_board_for_chat(chat_id, chat_type) do
-          {:ok, board} ->
-            kanban_id = Map.get(board, :kanban_id) || Map.get(board, "kanban_id")
-
-            result =
-              case operation do
-                :add_column ->
-                  KanbanService.add_column(kanban_id, args)
-
-                :remove_column ->
-                  KanbanService.remove_column(kanban_id, args)
-
-                :add_task ->
-                  {column_id, title} = args
-                  KanbanService.add_task(kanban_id, column_id, title)
-
-                :move_task ->
-                  {task_id, from_column_id, to_column_id, new_position} = args
-                  KanbanService.move_task(task_id, from_column_id, to_column_id, new_position)
-
-                :reorder_task ->
-                  {task_id, column_id, new_position} = args
-                  KanbanService.reorder_task(task_id, column_id, new_position)
-
-                :rename_column ->
-                  {column_id, title} = args
-                  KanbanService.rename_column(kanban_id, column_id, title)
-
-                :rename_task ->
-                  {task_id, title} = args
-                  KanbanService.rename_task(task_id, title)
-
-                :delete_task ->
-                  KanbanService.delete_task(args)
-              end
-
-            case result do
-              {:ok, updated_board} ->
-                payload = %{
-                  event_name: "show_kanban_board",
-                  event_data: %{
-                    chat_id: chat_id,
-                    chat_type: chat_type,
-                    board: updated_board
-                  }
-                }
-
-                {:noreply, push_event(socket, "react", payload)}
-
-              {:error, reason} ->
-                push_kanban_error(socket, chat_id, chat_type, reason)
-            end
+        case Kanbans.apply_operation(chat_id, chat_type, operation, args) do
+          {:ok, _updated_board} ->
+            {:noreply, socket}
 
           {:error, reason} ->
             push_kanban_error(socket, chat_id, chat_type, reason)
