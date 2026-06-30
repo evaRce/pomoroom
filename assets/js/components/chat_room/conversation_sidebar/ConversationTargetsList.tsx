@@ -2,13 +2,13 @@ import React, { useState, useEffect, Fragment, useRef } from "react";
 import { Button, Input } from "antd";
 import { SearchOutlined, CloseOutlined } from "@ant-design/icons";
 import ConversationTargetItem from "./ConversationTargetItem";
-import { useEventContext } from "../EventContext";
+import { useEventContext, useEvent } from "../EventContext";
 
 const INITIAL_BATCH_SIZE = 15;
 const BATCH_SIZE = 10;
 
 export default function ConversationTargetsList() {
-  const { addEvent, getEventData, removeEvent } = useEventContext() as any;
+  const { addEvent, removeEvent } = useEventContext() as any;
   const [contacts, setContacts] = useState<any[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -16,6 +16,16 @@ export default function ConversationTargetsList() {
   const [userLogin, setUserLogin] = useState<any>({});
   const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH_SIZE);
   const lastProcessedGroupAdminUpdatedRef = useRef("");
+
+  const addContactToListEvent = useEvent("add_contact_to_list");
+  const showListContactEvent = useEvent("show_list_contact");
+  const deleteRejectedContactEvent = useEvent("delete_rejected_contact");
+  const showUserInfoEvent = useEvent("show_user_info");
+  const updateContactStatusAcceptedEvent = useEvent("update_contact_status_to_accepted");
+  const updateContactStatusRejectedEvent = useEvent("update_contact_status_to_rejected");
+  const deselectContactEvent = useEvent("deselect_contact");
+  const addGroupToListEvent = useEvent("add_group_to_list");
+  const groupAdminUpdatedEvent = useEvent("group_admin_updated");
 
   const getCurrentUserRemovedAtFromGroup = (groupData: any, nickname: string) => {
     if (!groupData || !nickname) {
@@ -41,130 +51,102 @@ export default function ConversationTargetsList() {
   };
 
   useEffect(() => {
-    const contact = getEventData("add_contact_to_list");
-
-    if (contact) {
-      addContact(contact);
+    if (addContactToListEvent) {
+      addContact(addContactToListEvent);
       removeEvent("add_contact_to_list");
     }
-  }, [getEventData("add_contact_to_list")]);
+  }, [addContactToListEvent]);
 
   useEffect(() => {
-    const contactList = getEventData("show_list_contact");
-
-    if (Array.isArray(contactList) && contactList.length > 0) {
-      const normalizedList = contactList.map((contact: any) =>
+    if (Array.isArray(showListContactEvent) && showListContactEvent.length > 0) {
+      const normalizedList = showListContactEvent.map((contact: any) =>
         normalizeContact(contact)
       );
-
       setContacts(normalizedList);
       setVisibleCount(INITIAL_BATCH_SIZE);
       removeEvent("show_list_contact");
       return;
     }
 
-    if (contactList) {
+    if (showListContactEvent) {
       removeEvent("show_list_contact");
     }
-  }, [getEventData("show_list_contact")]);
+  }, [showListContactEvent]);
 
   useEffect(() => {
-    const contactToDelete = getEventData("delete_rejected_contact");
-
-    if (contactToDelete) {
-      deleteContact({ name: contactToDelete, is_group: false });
+    if (deleteRejectedContactEvent) {
+      deleteContact({ name: deleteRejectedContactEvent, is_group: false });
       removeEvent("delete_rejected_contact");
     }
-  }, [getEventData("delete_rejected_contact")]);
+  }, [deleteRejectedContactEvent]);
 
   useEffect(() => {
-    const userInfo = getEventData("show_user_info");
-
-    if (userInfo) {
-      setUserLogin(userInfo);
+    if (showUserInfoEvent) {
+      setUserLogin(showUserInfoEvent);
     }
-  }, [getEventData("show_user_info")]);
+  }, [showUserInfoEvent]);
 
   useEffect(() => {
-    const updateStatusRequest = getEventData(
-      "update_contact_status_to_accepted"
-    );
-
-    if (updateStatusRequest) {
+    if (updateContactStatusAcceptedEvent) {
       updateContactStatus(
-        updateStatusRequest?.request,
-        updateStatusRequest?.new_status
+        updateContactStatusAcceptedEvent?.request,
+        updateContactStatusAcceptedEvent?.new_status
       );
       removeEvent("update_contact_status_to_accepted");
     }
-  }, [getEventData("update_contact_status_to_accepted")]);
+  }, [updateContactStatusAcceptedEvent]);
 
   useEffect(() => {
-    const updateStatusRequest = getEventData(
-      "update_contact_status_to_rejected"
-    );
-    if (updateStatusRequest) {
+    if (updateContactStatusRejectedEvent) {
       updateContactStatus(
-        updateStatusRequest?.request,
-        updateStatusRequest?.new_status
+        updateContactStatusRejectedEvent?.request,
+        updateContactStatusRejectedEvent?.new_status
       );
       removeEvent("update_contact_status_to_rejected");
     }
-  }, [getEventData("update_contact_status_to_rejected")]);
+  }, [updateContactStatusRejectedEvent]);
 
   useEffect(() => {
-    const deselectContact = getEventData("deselect_contact");
-
-    if (deselectContact) {
+    if (deselectContactEvent) {
       if (
-        deselectContact?.from_user === selectedContact ||
-        deselectContact?.to_user === selectedContact
+        deselectContactEvent?.from_user === selectedContact ||
+        deselectContactEvent?.to_user === selectedContact
       ) {
         setSelectedContact("");
       }
       removeEvent("deselect_contact");
     }
-  }, [getEventData("deselect_contact")]);
+  }, [deselectContactEvent]);
 
   useEffect(() => {
-    const group = getEventData("add_group_to_list");
-
-    if (group) {
-      addContact(group);
+    if (addGroupToListEvent) {
+      addContact(addGroupToListEvent);
       removeEvent("add_group_to_list");
     }
-  }, [getEventData("add_group_to_list")]);
+  }, [addGroupToListEvent]);
 
   useEffect(() => {
-    const groupAdminUpdated = getEventData("group_admin_updated");
+    if (!groupAdminUpdatedEvent?.group_name) return;
 
-    if (!groupAdminUpdated?.group_name) {
-      return;
-    }
+    const adminUpdateSignature = `${groupAdminUpdatedEvent.chat_id || ""}:${groupAdminUpdatedEvent.group_name || ""}:${groupAdminUpdatedEvent.is_admin || false}`;
 
-    console.log("[ConversationTargetsList] group_admin_updated", groupAdminUpdated);
-
-    const adminUpdateSignature = `${groupAdminUpdated.chat_id || ""}:${groupAdminUpdated.group_name || ""}:${groupAdminUpdated.is_admin || false}`;
-
-    if (lastProcessedGroupAdminUpdatedRef.current === adminUpdateSignature) {
-      return;
-    }
+    if (lastProcessedGroupAdminUpdatedRef.current === adminUpdateSignature) return;
 
     lastProcessedGroupAdminUpdatedRef.current = adminUpdateSignature;
 
     setContacts((prevContacts) =>
       prevContacts.map((contact) => {
-        if (!contact?.is_group || contact.name !== groupAdminUpdated.group_name) {
+        if (!contact?.is_group || contact.name !== groupAdminUpdatedEvent.group_name) {
           return contact;
         }
 
         return {
           ...contact,
-          is_group_admin: Boolean(groupAdminUpdated.is_admin),
+          is_group_admin: Boolean(groupAdminUpdatedEvent.is_admin),
         };
       })
     );
-  }, [getEventData("group_admin_updated")]);
+  }, [groupAdminUpdatedEvent]);
 
   useEffect(() => {
     const results = contacts.filter((contact) =>

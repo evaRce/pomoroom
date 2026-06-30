@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button, Form, Input, Radio, message, Spin } from "antd";
-import { useEventContext } from "../EventContext";
+import { useEventContext, useEvent } from "../EventContext";
 
 export default function AddContactOrGroup({ sendDataToParent, receiveDataFromParent }) {
   const [form] = Form.useForm();
   const [inputStr, setInputStr] = useState("");
   const [entryType, setEntryType] = useState("contact");
-  const { addEvent, getEventData, removeEvent } = useEventContext();
+  const { addEvent, removeEvent } = useEventContext();
   const [loading, setLoading] = useState(false);
+  const errorAddingContactEvent = useEvent("error_adding_contact");
+  const addContactToListEvent = useEvent("add_contact_to_list");
+  const addGroupToListEvent = useEvent("add_group_to_list");
 
   const sendNewEntry = () => {
     if (!inputStr) {
@@ -40,36 +43,31 @@ export default function AddContactOrGroup({ sendDataToParent, receiveDataFromPar
   };
 
   useEffect(() => {
-    const errorContact = getEventData("error_adding_contact");
-    if (errorContact) {
+    if (errorAddingContactEvent) {
       form.setFields([
-        { name: 'newContactName', errors: [errorContact] }
+        { name: 'newContactName', errors: [errorAddingContactEvent] }
       ]);
       removeEvent("error_adding_contact");
       setLoading(false);
     }
-  }, [getEventData("error_adding_contact")]);
+  }, [errorAddingContactEvent]);
 
   useEffect(() => {
-    const successContact = getEventData("add_contact_to_list");
-    
-    if (successContact) {
-      const messageText = handleContactMessage(successContact);
-      handleTypeContactMessage(messageText, successContact.request.status);
+    if (addContactToListEvent) {
+      const messageText = handleContactMessage(addContactToListEvent);
+      handleTypeContactMessage(messageText, addContactToListEvent.request.status);
       removeEvent("add_contact_to_list");
       setLoading(false);
     }
-    
-  }, [getEventData("add_contact_to_list")]);
+  }, [addContactToListEvent]);
 
   useEffect(() => {
-    const successGroup = getEventData("add_group_to_list");
-    if (successGroup) {
+    if (addGroupToListEvent) {
       message.success('Grupo creado exitosamente!', 2);
       removeEvent("add_group_to_list");
       setLoading(false);
     }
-  }, [getEventData("add_group_to_list")]);
+  }, [addGroupToListEvent]);
 
   const handleContactMessage = (data) => {
     if (data.request.status === "accepted") {

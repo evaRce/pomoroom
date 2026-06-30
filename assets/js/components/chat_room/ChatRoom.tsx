@@ -22,7 +22,7 @@ export interface ChatRoomProps {
 
 export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
   const { eventName, eventData, pushEventToLiveView } = props;
-  const { addEvent, getEventData, removeEvent } = useEventContext();
+  const { addEvent, removeEvent } = useEventContext();
   const [component, setComponent] = useState("");
   const [imageNumber, setImageNumber] = useState(1);
   const [userNickname, setUserNickname] = useState("");
@@ -41,7 +41,6 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
   }, []);
 
   useOutgoingLiveViewActions({
-    getEventData,
     removeEvent,
     pushEventToLiveView,
     infoChatSelected,

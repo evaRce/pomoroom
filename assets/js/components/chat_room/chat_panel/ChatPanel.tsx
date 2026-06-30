@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { message } from "antd";
-import { useEventContext } from "../EventContext";
+import { useEventContext, useEvent } from "../EventContext";
 import MessageItem from "./body/MessageItem";
 import ChatHeader from "./header/ChatHeader";
 import ChatFooter from "./footer/ChatFooter";
@@ -20,7 +20,19 @@ const TOP_SCROLL_THRESHOLD_PX = 12;
 
 export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   const [messages, setMessages] = useState<any[]>([]);
-  const { addEvent, getEventData, removeEvent } = useEventContext() as any;
+  const { addEvent, removeEvent } = useEventContext() as any;
+
+  const showListMessagesEvent = useEvent("show_list_messages");
+  const showOlderMessagesEvent = useEvent("show_older_messages");
+  const pomodoroStateLoadedEvent = useEvent("pomodoro_state_loaded");
+  const timerFinishedEvent = useEvent("timer_finished");
+  const startTimerEvent = useEvent("start_timer");
+  const pauseTimerEvent = useEvent("pause_timer");
+  const resetTimerEvent = useEvent("reset_timer");
+  const setModeEvent = useEvent("set_mode");
+  const updateConfigEvent = useEvent("update_config");
+  const showMessageToSendEvent = useEvent("show_message_to_send");
+  const showUserInfoEvent = useEvent("show_user_info");
   const messagesEndRef = useRef<any>(null);
   const seenMessageIdsRef = useRef<Set<any>>(new Set());
   const previousScrollHeightRef = useRef(0);
@@ -191,24 +203,21 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   };
 
   useEffect(() => {
-    const msgs = getEventData("show_list_messages");
-    if (msgs) {
-      setMessages(buildUniqueMessagesAndSeedIds(msgs.messages || []));
-      setCurrentChatId(msgs.chat_id || "");
-      setIsPrivateChat(!msgs.group_data);
-      const hasMoreFromServer = typeof msgs.has_more === "boolean" ? msgs.has_more : false;
+    if (showListMessagesEvent) {
+      setMessages(buildUniqueMessagesAndSeedIds(showListMessagesEvent.messages || []));
+      setCurrentChatId(showListMessagesEvent.chat_id || "");
+      setIsPrivateChat(!showListMessagesEvent.group_data);
+      const hasMoreFromServer = typeof showListMessagesEvent.has_more === "boolean" ? showListMessagesEvent.has_more : false;
       setHasMoreOlder(hasMoreFromServer);
       setIsLoadingOlder(false);
       removeEvent("show_list_messages");
     }
-  }, [getEventData("show_list_messages")]);
+  }, [showListMessagesEvent]);
 
   useEffect(() => {
-    const olderMessagesPayload = getEventData("show_older_messages");
-
-    if (olderMessagesPayload) {
-      const olderMessages = olderMessagesPayload.messages || [];
-      const hasMore = Boolean(olderMessagesPayload.has_more);
+    if (showOlderMessagesEvent) {
+      const olderMessages = showOlderMessagesEvent.messages || [];
+      const hasMore = Boolean(showOlderMessagesEvent.has_more);
 
       if (olderMessages.length > 0) {
         const container = messagesEndRef.current;
@@ -216,7 +225,6 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
           previousScrollHeightRef.current = container.scrollHeight;
           isPrependingOlderRef.current = true;
         }
-
         setMessages((prevMessages) =>
           buildUniqueMessagesAndSeedIds([...olderMessages, ...prevMessages])
         );
@@ -226,29 +234,25 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
       setIsLoadingOlder(false);
       removeEvent("show_older_messages");
     }
-  }, [getEventData("show_older_messages")]);
+  }, [showOlderMessagesEvent]);
 
   useEffect(() => {
-    syncPomodoroStore("pomodoro_state_loaded", getEventData("pomodoro_state_loaded"));
-  }, [getEventData("pomodoro_state_loaded"), syncPomodoroStore]);
+    syncPomodoroStore("pomodoro_state_loaded", pomodoroStateLoadedEvent);
+  }, [pomodoroStateLoadedEvent, syncPomodoroStore]);
 
   useEffect(() => {
-    syncPomodoroStore("timer_finished", getEventData("timer_finished"));
-  }, [getEventData("timer_finished"), syncPomodoroStore]);
+    syncPomodoroStore("timer_finished", timerFinishedEvent);
+  }, [timerFinishedEvent, syncPomodoroStore]);
 
   useEffect(() => {
-    const finishedEvent = getEventData("timer_finished");
-
-    if (!finishedEvent?.chat_id) {
-      return;
-    }
+    if (!timerFinishedEvent?.chat_id) return;
 
     const completedMode =
-      finishedEvent?.state?.lastCompletedMode ||
-      finishedEvent?.state?.last_completed_mode ||
+      timerFinishedEvent?.state?.lastCompletedMode ||
+      timerFinishedEvent?.state?.last_completed_mode ||
       null;
 
-    if (finishedEvent.chat_id === currentChatId) {
+    if (timerFinishedEvent.chat_id === currentChatId) {
       if (activePluginId !== "pomodoro") {
         const soundPlayer = completedMode === "work" ? soundEndWork.current : soundEndBreak.current;
 
@@ -262,7 +266,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
       return;
     }
 
-    markPomodoroNotification(finishedEvent.chat_id, completedMode);
+    markPomodoroNotification(timerFinishedEvent.chat_id, completedMode);
 
     if (pomodoroToastTimerRef.current) {
       window.clearTimeout(pomodoroToastTimerRef.current);
@@ -284,35 +288,32 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
           ? "Un Pomodoro terminó en otro chat"
           : `${finishingCount} Pomodoros terminaron en otros chats`;
 
-      message.info({
-        content: toastMessage,
-      });
-
+      message.info({ content: toastMessage });
       pomodoroToastTimerRef.current = null;
     }, 1500);
 
     removeEvent("timer_finished");
-  }, [activePluginId, currentChatId, getEventData("timer_finished"), removeEvent]);
+  }, [activePluginId, currentChatId, timerFinishedEvent]);
 
   useEffect(() => {
-    syncPomodoroStore("start_timer", getEventData("start_timer"));
-  }, [getEventData("start_timer"), syncPomodoroStore]);
+    syncPomodoroStore("start_timer", startTimerEvent);
+  }, [startTimerEvent, syncPomodoroStore]);
 
   useEffect(() => {
-    syncPomodoroStore("pause_timer", getEventData("pause_timer"));
-  }, [getEventData("pause_timer"), syncPomodoroStore]);
+    syncPomodoroStore("pause_timer", pauseTimerEvent);
+  }, [pauseTimerEvent, syncPomodoroStore]);
 
   useEffect(() => {
-    syncPomodoroStore("reset_timer", getEventData("reset_timer"));
-  }, [getEventData("reset_timer"), syncPomodoroStore]);
+    syncPomodoroStore("reset_timer", resetTimerEvent);
+  }, [resetTimerEvent, syncPomodoroStore]);
 
   useEffect(() => {
-    syncPomodoroStore("set_mode", getEventData("set_mode"));
-  }, [getEventData("set_mode"), syncPomodoroStore]);
+    syncPomodoroStore("set_mode", setModeEvent);
+  }, [setModeEvent, syncPomodoroStore]);
 
   useEffect(() => {
-    syncPomodoroStore("update_config", getEventData("update_config"));
-  }, [getEventData("update_config"), syncPomodoroStore]);
+    syncPomodoroStore("update_config", updateConfigEvent);
+  }, [updateConfigEvent, syncPomodoroStore]);
 
   useEffect(() => {
     return () => {
@@ -323,25 +324,22 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   }, []);
 
   useEffect(() => {
-    const msg = getEventData("show_message_to_send");
-    if (msg) {
-      const eventChatId = msg.message?.data?.chat_id || "";
+    if (showMessageToSendEvent) {
+      const eventChatId = showMessageToSendEvent.message?.data?.chat_id || "";
 
       if (eventChatId && eventChatId === currentChatId) {
-        addMessage(msg.message);
+        addMessage(showMessageToSendEvent.message);
       }
 
       removeEvent("show_message_to_send");
     }
-  }, [getEventData("show_message_to_send"), currentChatId]);
-
+  }, [showMessageToSendEvent, currentChatId]);
 
   useEffect(() => {
-    const user = getEventData("show_user_info")
-    if (user) {
-      setUserLogin(user);
+    if (showUserInfoEvent) {
+      setUserLogin(showUserInfoEvent);
     }
-  }, [getEventData("show_user_info")]);
+  }, [showUserInfoEvent]);
 
   const addMessage = (message: any) => {
     if (!message || !message.data || message.data.text.trim() === "") {

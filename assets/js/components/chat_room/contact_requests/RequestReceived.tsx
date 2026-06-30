@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { useEventContext } from "../EventContext";
+import { useEventContext, useEvent } from "../EventContext";
 import { Button, Space, Typography } from "antd";
 
 const { Text } = Typography;
 
 export default function RequestReceived({ imageNumber }) {
-  const { addEvent, getEventData, removeEvent } = useEventContext();
+  const { addEvent, removeEvent } = useEventContext();
   const [requestData, setRequestData] = useState(null);
+  const requestReceivedEvent = useEvent("open_chat_request_received");
 
   useEffect(() => {
-    const request = getEventData("open_chat_request_received");
-    if (request) {
-      setRequestData(request);
+    if (requestReceivedEvent) {
+      setRequestData(requestReceivedEvent);
       removeEvent("open_chat_request_received");
     }
-  }, [getEventData("open_chat_request_received")]);
+  }, [requestReceivedEvent]);
 
   const handleStatus = (newStatus) => {
     addEvent("update_status_request", {

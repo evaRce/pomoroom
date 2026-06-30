@@ -5,15 +5,13 @@ type EventsDataMap = Record<string, any>;
 type EventContextType = {
   eventsData: EventsDataMap,
   addEvent: (eventName: string, eventData: any) => void,
-  getEventData: (eventName:string) => any,
   removeEvent: (eventName: string) => void
 };
 
 const EventContext = createContext<EventContextType>({
   eventsData: {},
-  addEvent: () => {},
-  getEventData: () => {},
-  removeEvent: () => {},
+  addEvent: () => { },
+  removeEvent: () => { },
 });
 
 export const EventProvider = ({ children }) => {
@@ -26,10 +24,6 @@ export const EventProvider = ({ children }) => {
     }));
   }, []);
 
-  const getEventData = (eventName: string) => {
-    return eventsData[eventName];
-  };
-
   const removeEvent = useCallback((eventName: string) => {
     setEventsData((prevEventsData) => {
       const newEventsData = { ...prevEventsData };
@@ -39,7 +33,7 @@ export const EventProvider = ({ children }) => {
   }, []);
 
   return (
-    <EventContext.Provider value={{ eventsData, addEvent, getEventData, removeEvent }}>
+    <EventContext.Provider value={{ eventsData, addEvent, removeEvent }}>
       {children}
     </EventContext.Provider>
   );

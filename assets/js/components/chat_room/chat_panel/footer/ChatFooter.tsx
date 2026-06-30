@@ -6,18 +6,25 @@ import {
   SendOutlined,
   SmileOutlined,
 } from "@ant-design/icons";
-import { useEventContext } from "../../EventContext";
+import { useEventContext, useEvent } from "../../EventContext";
 
 export default function ChatFooter() {
   const [inputStr, setInputStr] = useState("");
   const [showPicker, setShowPicker] = useState(false);
-  const { addEvent, getEventData, removeEvent } = useEventContext();
+  const { addEvent, removeEvent } = useEventContext();
   const [chatData, setChatData] = useState<any>({});
   const [modalVisible, setModalVisible] = useState(false);
   const [isGroupMemberRemoved, setIsGroupMemberRemoved] = useState(false);
   const [groupMemberRemovedMessage, setGroupMemberRemovedMessage] = useState("");
   const lastProcessedGroupMemberRemovedEventSignatureRef = useRef("");
   const lastProcessedGroupMemberAddedEventSignatureRef = useRef("");
+
+  const openPrivateChatEvent = useEvent("open_private_chat");
+  const activeChatContextEvent = useEvent("active_chat_context");
+  const openGroupChatEvent = useEvent("open_group_chat");
+  const groupMemberRemovedEvent = useEvent("group_member_removed");
+  const groupMemberAddedEvent = useEvent("group_member_added");
+
   const onEmojiClick = (emojiObject: any, event: any) => {
     setInputStr((prevInput) => prevInput + emojiObject.emoji);
     setShowPicker(false);
@@ -29,87 +36,67 @@ export default function ChatFooter() {
       : "Has sido eliminado del grupo";
 
   useEffect(() => {
-    const privateChat = getEventData("open_private_chat");
-
-    if (privateChat) {
-      setChatData(privateChat);
+    if (openPrivateChatEvent) {
+      setChatData(openPrivateChatEvent);
       removeEvent("open_private_chat");
     }
-  }, [getEventData("open_private_chat")]);
+  }, [openPrivateChatEvent]);
 
   useEffect(() => {
-    const activeChatContext = getEventData("active_chat_context");
-
-    if (activeChatContext) {
-      setChatData(activeChatContext);
-      setIsGroupMemberRemoved(Boolean(activeChatContext.removed_at));
+    if (activeChatContextEvent) {
+      setChatData(activeChatContextEvent);
+      setIsGroupMemberRemoved(Boolean(activeChatContextEvent.removed_at));
       setGroupMemberRemovedMessage(
-        activeChatContext.removed_at
-          ? buildRemovedMessage(activeChatContext.group_data?.name)
+        activeChatContextEvent.removed_at
+          ? buildRemovedMessage(activeChatContextEvent.group_data?.name)
           : ""
       );
     }
-  }, [getEventData("active_chat_context")]);
+  }, [activeChatContextEvent]);
 
   useEffect(() => {
-      const groupChat = getEventData("open_group_chat");
-
-    if (groupChat) {
-      setChatData(groupChat);
-      setIsGroupMemberRemoved(Boolean(groupChat.removed_at));
+    if (openGroupChatEvent) {
+      setChatData(openGroupChatEvent);
+      setIsGroupMemberRemoved(Boolean(openGroupChatEvent.removed_at));
       setGroupMemberRemovedMessage(
-        groupChat.removed_at ? buildRemovedMessage(groupChat.group_data?.name) : ""
+        openGroupChatEvent.removed_at ? buildRemovedMessage(openGroupChatEvent.group_data?.name) : ""
       );
       removeEvent("open_group_chat");
     }
-  }, [getEventData("open_group_chat")]);
+  }, [openGroupChatEvent]);
 
   useEffect(() => {
-    const groupMemberRemovedEvent = getEventData("group_member_removed");
-
-    if (!groupMemberRemovedEvent) {
-      return;
-    }
+    if (!groupMemberRemovedEvent) return;
 
     const removedEventSignature = `${groupMemberRemovedEvent.chat_id || ""}:${groupMemberRemovedEvent.group_name || ""}:${groupMemberRemovedEvent.removed_at || ""}`;
 
-    if (lastProcessedGroupMemberRemovedEventSignatureRef.current === removedEventSignature) {
-      return;
-    }
+    if (lastProcessedGroupMemberRemovedEventSignatureRef.current === removedEventSignature) return;
 
     const isSameChatById =
-      groupMemberRemovedEvent &&
       chatData?.chat_id &&
       groupMemberRemovedEvent.chat_id &&
       chatData.chat_id === groupMemberRemovedEvent.chat_id;
 
-    if (groupMemberRemovedEvent && isSameChatById) {
+    if (isSameChatById) {
       lastProcessedGroupMemberRemovedEventSignatureRef.current = removedEventSignature;
       setIsGroupMemberRemoved(true);
       setGroupMemberRemovedMessage(buildRemovedMessage(groupMemberRemovedEvent.group_name));
     }
-  }, [getEventData("group_member_removed")]);
+  }, [groupMemberRemovedEvent]);
 
   useEffect(() => {
-    const groupMemberAddedEvent = getEventData("group_member_added");
-
-    if (!groupMemberAddedEvent) {
-      return;
-    }
+    if (!groupMemberAddedEvent) return;
 
     const addedEventSignature = `${groupMemberAddedEvent.chat_id || ""}:${groupMemberAddedEvent.group_name || ""}:${groupMemberAddedEvent.message || ""}`;
 
-    if (lastProcessedGroupMemberAddedEventSignatureRef.current === addedEventSignature) {
-      return;
-    }
+    if (lastProcessedGroupMemberAddedEventSignatureRef.current === addedEventSignature) return;
 
     const isSameChatById =
-      groupMemberAddedEvent &&
       chatData?.chat_id &&
       groupMemberAddedEvent.chat_id &&
       chatData.chat_id === groupMemberAddedEvent.chat_id;
 
-    if (groupMemberAddedEvent && isSameChatById) {
+    if (isSameChatById) {
       lastProcessedGroupMemberAddedEventSignatureRef.current = addedEventSignature;
       setIsGroupMemberRemoved(false);
       setGroupMemberRemovedMessage("");
@@ -120,13 +107,12 @@ export default function ChatFooter() {
         message.success(groupMemberAddedEvent.message);
       }
     }
-  }, [getEventData("group_member_added")]);
+  }, [groupMemberAddedEvent]);
 
   const handleSendMessage = (e: any) => {
     e.preventDefault();
 
-    const activeChatContext = getEventData("active_chat_context");
-    const currentData = chatData?.chat_id ? chatData : activeChatContext || chatData;
+    const currentData = chatData?.chat_id ? chatData : activeChatContextEvent || chatData;
 
     if (isGroupMemberRemoved && currentData?.group_data) {
       return;
@@ -155,7 +141,7 @@ export default function ChatFooter() {
   return (
     <footer className={`shrink-0 flex min-h-16 justify-between ${isGroupMemberRemoved && chatData.group_data ? '' : 'bg-gray-300'} ${footerPadding}`}>
       {isGroupMemberRemoved && chatData.group_data ? (
-        <div className="flex h-full w-full items-center justify-center bg-yellow-300 text-yellow-900 text-2xl font-bold tracking-wide" style={{padding: 0, borderRadius: 0}}>
+        <div className="flex h-full w-full items-center justify-center bg-yellow-300 text-yellow-900 text-2xl font-bold tracking-wide" style={{ padding: 0, borderRadius: 0 }}>
           <span className="mx-3" role="img" aria-label="warning">⚠️</span>
           {groupMemberRemovedMessage}
         </div>

@@ -1,22 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { Button, Modal, Dropdown } from "antd";
 import { UserAddOutlined, MoreOutlined } from '@ant-design/icons';
-import { useEventContext } from "../EventContext";
+import { useEventContext, useEvent } from "../EventContext";
 import AddContactOrGroup from "./AddContactOrGroup";
 
 export default function CurrentUserCard() {
 	const [userLogin, setUserLogin] = useState(null);
 	const [showModal, setShowModal] = useState(false);
-	const { addEvent, getEventData, removeEvent } = useEventContext();
+	const { addEvent } = useEventContext();
 	const [dropdownVisible, setDropdownVisible] = useState(false);
+	const userInfoEvent = useEvent("show_user_info");
 
 	useEffect(() => {
-		const user = getEventData("show_user_info");
-		if (user) {
-			setUserLogin(user);
-			// removeEvent("show_user_info");
+		if (userInfoEvent) {
+			setUserLogin(userInfoEvent);
 		}
-	}, [getEventData("show_user_info")]);
+	}, [userInfoEvent]);
 
 	const showAddEntryModal = () => {
 		setShowModal(true);

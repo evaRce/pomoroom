@@ -1,10 +1,9 @@
 import { useEffect } from "react";
-import { useEventContext, useEvent } from "../components/chat_room/EventContext";
+import { useEvent } from "../components/chat_room/EventContext";
 import { clearAllTimers, clearRequestedConfigs } from "../components/chat_room/pomodoro_timer/pomodoroTimerStore";
 import { clearAllPomodoroNotifications } from "../components/chat_room/pomodoro_timer/pomodoroNotificationStore";
 
 type UseOutgoingLiveViewActionsParams = {
-  getEventData: (eventName: string) => any;
   removeEvent: (eventName: string) => void;
   pushEventToLiveView: (event: string, payload: object) => any;
   infoChatSelected: any;
@@ -15,7 +14,6 @@ type UseOutgoingLiveViewActionsParams = {
 };
 
 export function useOutgoingLiveViewActions({
-  getEventData,
   removeEvent,
   pushEventToLiveView,
   infoChatSelected,

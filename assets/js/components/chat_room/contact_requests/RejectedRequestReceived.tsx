@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { useEventContext } from "../EventContext";
+import { useEventContext, useEvent } from "../EventContext";
 import { Button, Typography } from 'antd';
 
 const { Text } = Typography;
 
 export default function RejectedRequestReceived({ imageNumber }) {
-  const { addEvent, getEventData, removeEvent } = useEventContext();
+  const { addEvent, removeEvent } = useEventContext();
   const [requestData, setRequestData] = useState(null);
+  const rejectedRequestReceivedEvent = useEvent("open_rejected_request_received");
 
   useEffect(() => {
-    const rejectedRequest = getEventData("open_rejected_request_received");
-    if (rejectedRequest) {
-      setRequestData(rejectedRequest);
+    if (rejectedRequestReceivedEvent) {
+      setRequestData(rejectedRequestReceivedEvent);
       removeEvent("open_rejected_request_received");
     }
-  }, [getEventData("open_rejected_request_received")]);
+  }, [rejectedRequestReceivedEvent]);
 
   const handleRejectedRequest = () => {
     addEvent("delete_rejected_contact", requestData.to_user);

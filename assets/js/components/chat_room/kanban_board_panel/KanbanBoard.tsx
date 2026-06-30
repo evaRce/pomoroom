@@ -85,7 +85,7 @@ function getInsertionIndex(
 }
 
 export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
-  const { addEvent, getEventData, removeEvent } = useEventContext() as any;
+  const { addEvent, removeEvent } = useEventContext() as any;
   const [columns, setColumns] = useState<Column[]>([]);
   const [newTaskInputs, setNewTaskInputs] = useState<Record<ColumnId, string>>({});
   const [showAddInput, setShowAddInput] = useState<Record<ColumnId, boolean>>({});
@@ -101,6 +101,8 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
   const boardLoadedRef = useRef(false);
 
   // Events
+  const showKanbanBoardEvent = useEvent("show_kanban_board");
+  const kanbanBoardErrorEvent = useEvent("kanban_board_error");
   const kanbanColumnRenamedEvent = useEvent("kanban_column_renamed");
   const kanbanColumnAddedEvent = useEvent("kanban_column_added");
   const kanbanColumnRemovedEvent = useEvent("kanban_column_removed");
@@ -184,17 +186,14 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
   }, [addEvent, chatId, chatType]);
 
   useEffect(() => {
-    const payload = getEventData("show_kanban_board");
+    if (!showKanbanBoardEvent) return;
 
-    if (!payload) {
-      return;
-    }
-    applyBoard(payload.board);
+    applyBoard(showKanbanBoardEvent.board);
     setDraggedTaskId(null);
     setDragPreview(null);
 
     removeEvent("show_kanban_board");
-  }, [getEventData("show_kanban_board"), removeEvent]);
+  }, [showKanbanBoardEvent]);
 
   useEffect(() => {
     if (!kanbanColumnRenamedEvent) return;
@@ -277,19 +276,15 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
   }, [kanbanTaskDeletedEvent]);
 
   useEffect(() => {
-    const payload = getEventData("kanban_board_error");
+    if (!kanbanBoardErrorEvent) return;
 
-    if (!payload) {
-      return;
-    }
-
-    console.error("Kanban error", payload);
+    console.error("Kanban error", kanbanBoardErrorEvent);
 
     setDraggedTaskId(null);
     setDragPreview(null);
 
     removeEvent("kanban_board_error");
-  }, [getEventData("kanban_board_error"), removeEvent]);
+  }, [kanbanBoardErrorEvent]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

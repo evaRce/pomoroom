@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Button, Modal, Input, List } from "antd";
 import { CopyOutlined, SearchOutlined, CloseOutlined } from "@ant-design/icons";
-import { useEventContext } from "../../EventContext";
+import { useEventContext, useEvent } from "../../EventContext";
 import GroupMemberItem from "../../info_panel/GroupMemberItem";
 
 export default function AddMembersModal({
@@ -9,18 +9,18 @@ export default function AddMembersModal({
   isModalVisibleFromAddContacts,
   isModalVisibleFromHeader,
 }) {
-  const { addEvent, getEventData, removeEvent } = useEventContext();
+  const { addEvent, removeEvent } = useEventContext();
   const [contacts, setContacts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredContacts, setFilteredContacts] = useState([]);
+  const showMyContactsEvent = useEvent("show_my_contacts");
 
   useEffect(() => {
-    const myContacts = getEventData("show_my_contacts");
-    if (myContacts) {
-      setContacts(myContacts);
+    if (showMyContactsEvent) {
+      setContacts(showMyContactsEvent);
       removeEvent("show_my_contacts");
     }
-  }, [getEventData("show_my_contacts")]);
+  }, [showMyContactsEvent]);
 
   useEffect(() => {
     const results = contacts.filter((contact) =>

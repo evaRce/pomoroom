@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useSyncExternalStore } from "react";
 import { Avatar, Button } from "antd";
 import { Info, Puzzle, UserPlus } from "lucide-react";
-import { useEventContext } from "../../EventContext";
+import { useEventContext, useEvent } from "../../EventContext";
 import AddMembersModal from "./AddMembersModal";
 import CallPanel from "../../call_panel/CallPanel";
 import PluginMarketPlace, { AvailablePlugin, InstalledPlugin } from "../PluginMarketPlace";
@@ -20,8 +20,20 @@ export default function ChatHeader({
   activePluginId,
   onTogglePluginTab,
 }: ChatHeaderProps) {
-  const { addEvent, getEventData, removeEvent } = useEventContext() as any;
+  const { addEvent, removeEvent } = useEventContext() as any;
   const [pluginDisplayMap, setPluginDisplayMap] = useState<Record<string, { name: string; icon: string }>>({});
+
+  const openPrivateChatEvent = useEvent("open_private_chat");
+  const openGroupChatEvent = useEvent("open_group_chat");
+  const chatPluginInstalledEvent = useEvent("chat_plugin_installed");
+  const chatPluginInstallFailedEvent = useEvent("chat_plugin_install_failed");
+  const chatPluginUninstalledEvent = useEvent("chat_plugin_uninstalled");
+  const chatPluginUninstallFailedEvent = useEvent("chat_plugin_uninstall_failed");
+  const groupMemberRemovedEvent = useEvent("group_member_removed");
+  const groupMemberAddedEvent = useEvent("group_member_added");
+  const checkAdminEvent = useEvent("check_admin");
+  const groupAdminUpdatedEvent = useEvent("group_admin_updated");
+  const membersSnapshotEvent = useEvent("members_snapshot");
   const [chatData, setChatData] = useState<any>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [checkAdmin, setCheckAdmin] = useState<any>({});
@@ -122,28 +134,25 @@ export default function ChatHeader({
   ) as TimerState | undefined;
 
   useEffect(() => {
-    const privateChat = getEventData("open_private_chat");
-
-    if (privateChat) {
-      setChatData(privateChat);
-      setInstalledPlugins(normalizeInstalledPlugins(getPluginsFromChat(privateChat)));
+    if (openPrivateChatEvent) {
+      setChatData(openPrivateChatEvent);
+      setInstalledPlugins(normalizeInstalledPlugins(getPluginsFromChat(openPrivateChatEvent)));
       removeEvent("active_chat_context");
-      addEvent("active_chat_context", privateChat);
+      addEvent("active_chat_context", openPrivateChatEvent);
       onTogglePluginTab(null);
     }
-  }, [getEventData("open_private_chat")]);
+  }, [openPrivateChatEvent]);
 
   useEffect(() => {
-    const groupChat = getEventData("open_group_chat");
-    if (groupChat) {
-      setChatData(groupChat);
-      setIsGroupMemberRemoved(Boolean(groupChat.removed_at));
-      setInstalledPlugins(normalizeInstalledPlugins(getPluginsFromChat(groupChat)));
+    if (openGroupChatEvent) {
+      setChatData(openGroupChatEvent);
+      setIsGroupMemberRemoved(Boolean(openGroupChatEvent.removed_at));
+      setInstalledPlugins(normalizeInstalledPlugins(getPluginsFromChat(openGroupChatEvent)));
       removeEvent("active_chat_context");
-      addEvent("active_chat_context", groupChat);
+      addEvent("active_chat_context", openGroupChatEvent);
       onTogglePluginTab(null);
     }
-  }, [getEventData("open_group_chat")]);
+  }, [openGroupChatEvent]);
 
   useEffect(() => {
     if (!chatData) {
@@ -154,18 +163,14 @@ export default function ChatHeader({
   }, [chatData, pluginDisplayMap]);
 
   useEffect(() => {
-    const pluginInstalledEvent = getEventData("chat_plugin_installed");
+    if (!chatPluginInstalledEvent) return;
 
-    if (!pluginInstalledEvent) {
-      return;
-    }
-
-    if (pluginInstalledEvent.chat_id !== currentChatId) {
+    if (chatPluginInstalledEvent.chat_id !== currentChatId) {
       removeEvent("chat_plugin_installed");
       return;
     }
 
-    const installedPlugin = normalizePlugin(pluginInstalledEvent.plugin);
+    const installedPlugin = normalizePlugin(chatPluginInstalledEvent.plugin);
 
     if (!installedPlugin) {
       removeEvent("chat_plugin_installed");
@@ -176,44 +181,34 @@ export default function ChatHeader({
       if (prevPlugins.some((plugin) => plugin.type === installedPlugin.type)) {
         return prevPlugins;
       }
-
       return [...prevPlugins, installedPlugin];
     });
 
     setPendingPluginId(null);
-
     removeEvent("chat_plugin_installed");
-  }, [getEventData("chat_plugin_installed"), currentChatId]);
+  }, [chatPluginInstalledEvent, currentChatId]);
 
   useEffect(() => {
-    const pluginInstallFailedEvent = getEventData("chat_plugin_install_failed");
+    if (!chatPluginInstallFailedEvent) return;
 
-    if (!pluginInstallFailedEvent) {
-      return;
-    }
-
-    if (pluginInstallFailedEvent.chat_id !== currentChatId) {
+    if (chatPluginInstallFailedEvent.chat_id !== currentChatId) {
       removeEvent("chat_plugin_install_failed");
       return;
     }
 
     setPendingPluginId(null);
     removeEvent("chat_plugin_install_failed");
-  }, [getEventData("chat_plugin_install_failed"), currentChatId]);
+  }, [chatPluginInstallFailedEvent, currentChatId]);
 
   useEffect(() => {
-    const pluginUninstalledEvent = getEventData("chat_plugin_uninstalled");
+    if (!chatPluginUninstalledEvent) return;
 
-    if (!pluginUninstalledEvent) {
-      return;
-    }
-
-    if (pluginUninstalledEvent.chat_id !== currentChatId) {
+    if (chatPluginUninstalledEvent.chat_id !== currentChatId) {
       removeEvent("chat_plugin_uninstalled");
       return;
     }
 
-    const uninstalledPlugin = normalizePlugin(pluginUninstalledEvent.plugin);
+    const uninstalledPlugin = normalizePlugin(chatPluginUninstalledEvent.plugin);
 
     if (!uninstalledPlugin) {
       removeEvent("chat_plugin_uninstalled");
@@ -229,28 +224,22 @@ export default function ChatHeader({
     }
 
     setPendingPluginId(null);
-
     removeEvent("chat_plugin_uninstalled");
-  }, [getEventData("chat_plugin_uninstalled"), currentChatId, activePluginId]);
+  }, [chatPluginUninstalledEvent, currentChatId, activePluginId]);
 
   useEffect(() => {
-    const pluginUninstallFailedEvent = getEventData("chat_plugin_uninstall_failed");
+    if (!chatPluginUninstallFailedEvent) return;
 
-    if (!pluginUninstallFailedEvent) {
-      return;
-    }
-
-    if (pluginUninstallFailedEvent.chat_id !== currentChatId) {
+    if (chatPluginUninstallFailedEvent.chat_id !== currentChatId) {
       removeEvent("chat_plugin_uninstall_failed");
       return;
     }
 
     setPendingPluginId(null);
     removeEvent("chat_plugin_uninstall_failed");
-  }, [getEventData("chat_plugin_uninstall_failed"), currentChatId]);
+  }, [chatPluginUninstallFailedEvent, currentChatId]);
 
   useEffect(() => {
-    const groupMemberRemovedEvent = getEventData("group_member_removed");
     const isRemovedEventForCurrentChat =
       groupMemberRemovedEvent &&
       ((currentChatId && groupMemberRemovedEvent.chat_id && currentChatId === groupMemberRemovedEvent.chat_id) ||
@@ -266,11 +255,9 @@ export default function ChatHeader({
         group_name: groupMemberRemovedEvent.group_name,
       });
     }
-  }, [getEventData("group_member_removed"), currentChatId, currentGroupName]);
+  }, [groupMemberRemovedEvent, currentChatId, currentGroupName]);
 
   useEffect(() => {
-    const groupMemberAddedEvent = getEventData("group_member_added");
-
     const isAddedEventForCurrentChat =
       groupMemberAddedEvent &&
       ((currentChatId && groupMemberAddedEvent.chat_id && currentChatId === groupMemberAddedEvent.chat_id) ||
@@ -281,12 +268,7 @@ export default function ChatHeader({
     if (groupMemberAddedEvent && isAddedEventForCurrentChat) {
       setIsGroupMemberRemoved(false);
       setChatData((prevChatData: any) =>
-        prevChatData
-          ? {
-            ...prevChatData,
-            removed_at: null,
-          }
-          : prevChatData
+        prevChatData ? { ...prevChatData, removed_at: null } : prevChatData
       );
 
       if (typeof groupMemberAddedEvent.is_admin === "boolean") {
@@ -295,20 +277,16 @@ export default function ChatHeader({
 
       removeEvent("group_member_removed");
     }
-  }, [getEventData("group_member_added"), currentChatId, currentGroupName]);
+  }, [groupMemberAddedEvent, currentChatId, currentGroupName]);
 
   useEffect(() => {
-    const adminData = getEventData("check_admin");
-
-    if (adminData) {
-      setCheckAdmin({ is_admin: Boolean(adminData?.is_admin) });
+    if (checkAdminEvent) {
+      setCheckAdmin({ is_admin: Boolean(checkAdminEvent?.is_admin) });
       removeEvent("check_admin");
     }
-  }, [getEventData("check_admin")]);
+  }, [checkAdminEvent]);
 
   useEffect(() => {
-    const groupAdminUpdatedEvent = getEventData("group_admin_updated");
-
     const isAdminUpdateForCurrentChat =
       groupAdminUpdatedEvent &&
       ((currentChatId && groupAdminUpdatedEvent.chat_id && currentChatId === groupAdminUpdatedEvent.chat_id) ||
@@ -319,17 +297,14 @@ export default function ChatHeader({
     if (groupAdminUpdatedEvent && isAdminUpdateForCurrentChat) {
       setCheckAdmin({ is_admin: Boolean(groupAdminUpdatedEvent.is_admin) });
     }
-  }, [getEventData("group_admin_updated"), currentChatId, currentGroupName]);
+  }, [groupAdminUpdatedEvent, currentChatId, currentGroupName]);
 
   useEffect(() => {
-    const membersSnapshot = getEventData("members_snapshot");
     const currentNickname = userLogin?.nickname;
 
-    if (!membersSnapshot?.members || !currentNickname || !isGroupChat) {
-      return;
-    }
+    if (!membersSnapshotEvent?.members || !currentNickname || !isGroupChat) return;
 
-    const currentMember = membersSnapshot.members.find(
+    const currentMember = membersSnapshotEvent.members.find(
       (member: any) => member?.nickname === currentNickname
     );
 
@@ -340,7 +315,7 @@ export default function ChatHeader({
       setIsGroupMemberRemoved(nextIsRemoved);
       removeEvent("members_snapshot");
     }
-  }, [getEventData("members_snapshot"), userLogin?.nickname, isGroupChat]);
+  }, [membersSnapshotEvent, userLogin?.nickname, isGroupChat]);
 
   useEffect(() => {
     if (chatData) {

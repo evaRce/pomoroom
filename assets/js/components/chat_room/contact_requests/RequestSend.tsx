@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { useEventContext } from "../EventContext";
+import { useEventContext, useEvent } from "../EventContext";
 import { Typography } from 'antd';
 
 const { Text } = Typography;
 
 export default function RequestSend({ imageNumber }) {
-  const { getEventData, removeEvent } = useEventContext();
+  const { removeEvent } = useEventContext();
   const [requestData, setRequestData] = useState({});
+  const requestSendEvent = useEvent("open_chat_request_send");
 
   useEffect(() => {
-    const request = getEventData("open_chat_request_send");
-    if (request) {
-      setRequestData(request);
+    if (requestSendEvent) {
+      setRequestData(requestSendEvent);
       removeEvent("open_chat_request_send");
     }
-  }, [getEventData("open_chat_request_send")]);
+  }, [requestSendEvent]);
 
   return (
     <div className="flex flex-col flex-1 justify-center items-center">
