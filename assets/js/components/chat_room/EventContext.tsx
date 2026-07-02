@@ -17,10 +17,15 @@ const EventContext = createContext<EventContextType>({
 export const EventProvider = ({ children }) => {
   const [eventsData, setEventsData] = useState<EventsDataMap>({});
 
+  // Accepts a plain value or a functional updater (prev => newValue).
+  // Functional updaters are used for queue-based events (e.g. ICE candidates)
+  // where multiple rapid calls must accumulate rather than overwrite each other.
   const addEvent = useCallback((eventName: string, eventData: any) => {
     setEventsData((prevEventsData) => ({
       ...prevEventsData,
-      [eventName]: eventData,
+      [eventName]: typeof eventData === "function"
+        ? eventData(prevEventsData[eventName])
+        : eventData,
     }));
   }, []);
 

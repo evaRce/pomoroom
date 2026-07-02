@@ -35,11 +35,9 @@ export function useOutgoingLiveViewActions({
   const addContactToGroup = useEvent("add_member");
   const deleteMember = useEvent("delete_member");
   const setAdmin = useEvent("set_admin");
-  const startCall = useEvent("start_private_call");
-  const newIceCandidate = useEvent("new_ice_candidate");
-  const newSdpOffer = useEvent("new_sdp_offer");
-  const newAnswer = useEvent("new_answer");
-  const endCall = useEvent("end_private_call");
+  const joinRoom = useEvent("join_room");
+  const leaveRoom = useEvent("leave_room");
+  const signals = useEvent("signals");
   const loadOlderMessages = useEvent("load_older_messages");
   const installChatPlugin = useEvent("install_chat_plugin");
   const uninstallChatPlugin = useEvent("uninstall_chat_plugin");
@@ -145,25 +143,17 @@ export function useOutgoingLiveViewActions({
       pushEventToLiveView("action.set_admin", setAdmin);
       removeEvent("set_admin");
     }
-    if (startCall) {
-      pushEventToLiveView("action.start_private_call", startCall);
-      removeEvent("start_private_call");
+    if (joinRoom) {
+      pushEventToLiveView("action.join_room", joinRoom);
+      removeEvent("join_room");
     }
-    if (newIceCandidate) {
-      pushEventToLiveView("action.new_ice_candidate", newIceCandidate);
-      removeEvent("new_ice_candidate");
+    if (leaveRoom) {
+      pushEventToLiveView("action.leave_room", leaveRoom);
+      removeEvent("leave_room");
     }
-    if (newSdpOffer) {
-      pushEventToLiveView("action.new_sdp_offer", newSdpOffer);
-      removeEvent("new_sdp_offer");
-    }
-    if (newAnswer) {
-      pushEventToLiveView("action.new_answer", newAnswer);
-      removeEvent("new_answer");
-    }
-    if (endCall) {
-      pushEventToLiveView("action.end_private_call", endCall);
-      removeEvent("end_private_call");
+    if (signals?.length > 0) {
+      signals.forEach((s: any) => pushEventToLiveView("action.signal", s));
+      removeEvent("signals");
     }
     if (loadOlderMessages) {
       pushEventToLiveView("action.load_older_messages", loadOlderMessages);
@@ -278,11 +268,9 @@ export function useOutgoingLiveViewActions({
     addContactToGroup,
     deleteMember,
     setAdmin,
-    startCall,
-    newIceCandidate,
-    newSdpOffer,
-    newAnswer,
-    endCall,
+    joinRoom,
+    leaveRoom,
+    signals,
     loadOlderMessages,
     installChatPlugin,
     uninstallChatPlugin,

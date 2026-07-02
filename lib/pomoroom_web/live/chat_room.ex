@@ -171,11 +171,6 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     handle_kanban_broadcast(payload, socket, "kanban_task_deleted")
   end
 
-  # Las request_offers solo le llegan al que INICIO la llamada
-  def handle_info({:request_offers, %{from_user: request_from_user}}, socket) do
-    Calls.handle_request_offers(socket, request_from_user)
-  end
-
   def handle_info({:friend_request_sent, payload}, socket) do
     FriendRequests.handle_friend_request_sent(payload, socket)
   end
@@ -206,43 +201,17 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     Plugins.handle_presence_diff(socket)
   end
 
-  def handle_info(
-        %Broadcast{topic: topic, event: "presence_diff", payload: _payload},
-        %{assigns: %{user_info: %{nickname: nickname}, chat_id: chat_id}} = socket
-      ) do
-    Calls.handle_presence_diff(socket, topic, nickname, chat_id)
+  # Calls
+  def handle_info(%Broadcast{topic: "call:" <> _, event: "presence_diff"}, socket) do
+    Calls.handle_presence_diff(socket)
   end
 
-  def handle_info(
-        {:new_ice_candidate,
-         %{"candidate" => _candidate, "from_user" => _from_user, "to_user" => _to_user} = payload},
-        socket
-      ) do
-    Calls.handle_new_ice_candidate_info(socket, payload)
-  end
-
-  def handle_info(
-        {:new_sdp_offer,
-         %{
-           "description" => %{"sdp" => _sdp, "type" => "offer"},
-           "from_user" => _from_user,
-           "to_user" => _to_user
-         } = payload},
-        socket
-      ) do
-    Calls.handle_new_sdp_offer_info(socket, payload)
-  end
-
-  def handle_info(
-        {:new_answer,
-         %{
-           "description" => %{"sdp" => _sdp, "type" => "answer"},
-           "from_user" => _from_user,
-           "to_user" => _to_user
-         } = payload},
-        socket
-      ) do
-    Calls.handle_new_answer_info(socket, payload)
+  def handle_info({signal_type, payload}, socket)
+      when signal_type in [:sdp_offer, :sdp_answer, :ice_candidate] do
+    {:noreply, push_event(socket, "react", %{
+      event_name: Atom.to_string(signal_type),
+      event_data: payload
+    })}
   end
 
   def handle_event("action.get_user_info", _args, %{assigns: %{user_info: user}} = socket) do
@@ -586,45 +555,30 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     Groups.handle_set_admin(group_name, member_name, operation, user, socket)
   end
 
-  # Start call,
+  # Call related events
   def handle_event(
-        "action.start_private_call",
-        %{"contact_name" => to_user},
-        %{assigns: %{user_info: from_user, chat_id: chat_id}} = socket
-      ) do
-    Calls.handle_start_private_call(socket, to_user, from_user, chat_id)
+      "action.join_room",
+      %{"contact_name" => to_user},
+      %{assigns: %{user_info: from_user}} = socket
+    ) do
+    Calls.handle_join_room(socket, to_user, from_user)
   end
 
   def handle_event(
-        "action.new_ice_candidate",
-        %{"candidate" => _candidate, "to_user" => to_user} = payload,
-        %{assigns: %{user_info: from_user, chat_id: chat_id}} = socket
-      ) do
-    Calls.handle_new_ice_candidate_event(socket, payload, to_user, from_user, chat_id)
+      "action.leave_room",
+      _payload,
+      %{assigns: %{user_info: from_user}} = socket
+    ) do
+    Calls.handle_leave_room(socket, from_user)
   end
 
   def handle_event(
-        "action.new_sdp_offer",
-        %{"description" => _description, "to_user" => to_user} = payload,
-        %{assigns: %{user_info: from_user, chat_id: chat_id}} = socket
-      ) do
-    Calls.handle_new_sdp_offer_event(socket, payload, to_user, from_user, chat_id)
-  end
-
-  def handle_event(
-        "action.new_answer",
-        %{"description" => _description, "to_user" => to_user} = payload,
-        %{assigns: %{user_info: from_user, chat_id: chat_id}} = socket
-      ) do
-    Calls.handle_new_answer_event(socket, payload, to_user, from_user, chat_id)
-  end
-
-  def handle_event(
-        "action.end_private_call",
-        _payload,
-        %{assigns: %{user_info: from_user, chat_id: chat_id}} = socket
-      ) do
-    Calls.handle_end_private_call(socket, from_user, chat_id)
+      "action.signal",
+      %{"to_user" => to_user, "signal_type" => signal_type} = payload,
+      %{assigns: %{user_info: from_user}} = socket
+    ) do
+    full_payload = Map.put(payload, "from_user", from_user.nickname)
+    Calls.relay_to_user(socket, to_user, signal_type, full_payload, from_user.nickname)
   end
 
   def handle_event("action.logout", _payload, socket) do

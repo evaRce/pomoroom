@@ -419,7 +419,7 @@ export default function ChatHeader({
     <header className="shrink-0 border-b border-gray-200 bg-white shadow-sm">
       {chatData && (
         <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 min-w-0 flex-1">
             <button
               type="button"
               onClick={showUserDetails}
@@ -479,7 +479,7 @@ export default function ChatHeader({
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {chatData?.group_data && checkAdmin.is_admin && !isGroupMemberRemoved && (
               <Button
                 type="text"

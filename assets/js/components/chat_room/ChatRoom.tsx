@@ -86,7 +86,6 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
     eventName,
     eventData,
     addEvent,
-    userNickname,
   });
 
   return (

@@ -4,46 +4,28 @@ type UseCallSignalingEventsParams = {
   eventName: string;
   eventData: any;
   addEvent: (eventName: string, eventData: any) => void;
-  userNickname: string;
 };
 
+// Routes incoming LiveView "react" events for the call system into EventContext.
+// ICE candidates use a functional updater to APPEND to a queue rather than overwrite,
+// since multiple candidates can arrive before React processes the previous one.
 export function useCallSignalingEvents({
   eventName,
   eventData,
   addEvent,
-  userNickname,
 }: UseCallSignalingEventsParams) {
   useEffect(() => {
-    if (eventName === "connected_users") {
-      addEvent("connected_users", eventData.connected_users);
-    }
-  }, [eventData.connected_users]);
+    const handlers: Record<string, () => void> = {
+      ice_candidate: () =>
+        addEvent("ice_candidates", (prev: any[] | undefined) => [
+          ...(prev ?? []),
+          eventData,
+        ]),
+      room_users: () => addEvent("room_users", eventData),
+      sdp_offer: () => addEvent("sdp_offer", eventData),
+      sdp_answer: () => addEvent("sdp_answer", eventData),
+    };
 
-  useEffect(() => {
-    if (eventName === "offer_requests") {
-      console.log("[", userNickname, "]OFFER REq llego");
-      addEvent(eventName, eventData.offer_requests);
-    }
-  }, [eventData.offer_requests]);
-
-  useEffect(() => {
-    if (eventName === "receive_ice_candidate_offers") {
-      console.log("[", userNickname, "] receive_ice_candidate_offers llego");
-      addEvent(eventName, eventData.ice_candidate_offers);
-    }
-  }, [eventData.ice_candidate_offers]);
-
-  useEffect(() => {
-    if (eventName === "receive_sdp_offers") {
-      console.log("[", userNickname, "] receive_sdp_offers llego");
-      addEvent(eventName, eventData.sdp_offer);
-    }
-  }, [eventData.sdp_offer]);
-
-  useEffect(() => {
-    if (eventName === "receive_answers") {
-      console.log("[", userNickname, "] receive_answers  llego");
-      addEvent(eventName, eventData.answers);
-    }
-  }, [eventData.answers]);
+    handlers[eventName]?.();
+  }, [eventName, eventData]);
 }
