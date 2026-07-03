@@ -541,10 +541,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
   # Call related events
   def handle_event(
       "action.join_room",
-      %{"contact_name" => to_user},
+      %{"chat_id" => chat_id},
       %{assigns: %{user_info: from_user}} = socket
     ) do
-    Calls.handle_join_room(socket, to_user, from_user)
+    Calls.handle_join_room(socket, chat_id, from_user)
   end
 
   def handle_event("action.logout", _payload, socket) do

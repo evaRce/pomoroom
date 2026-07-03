@@ -490,7 +490,9 @@ export default function ChatHeader({
               />
             )}
 
-            {!chatData?.group_data && <CallPanel chatName={chatName} />}
+            {(!isGroupChat || !isGroupMemberRemoved) && (
+              <CallPanel chatId={currentChatId} chatName={chatName} />
+            )}
 
             <Button
               type="text"
