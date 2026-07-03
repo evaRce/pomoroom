@@ -3,6 +3,16 @@ import Config
 # Configure MongoDB
 config :pomoroom, :db, database: "pomoroom_dev", username: "mongo", password: "abc123."
 
+# Configure LiveKit (api_key/api_secret match `livekit-server --dev` defaults).
+# ws_url is intentionally omitted: Pomoroom.LiveKit.ws_url/1 builds it from
+# whatever host the browser used, pointed at the TLS proxy in front of
+# livekit-server (see priv/livekit/nginx.conf) — plain ws:// gets blocked as
+# mixed content by browsers once the app itself is loaded over https.
+config :pomoroom, :livekit,
+  api_key: "devkey",
+  api_secret: "secret",
+  ws_port: 7443
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
@@ -12,7 +22,13 @@ config :pomoroom, :db, database: "pomoroom_dev", username: "mongo", password: "a
 config :pomoroom, PomoroomWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
-  http: [ip: {127, 0, 0, 1}, port: 4000],
+  http: [port: 4000],
+  https: [
+    port: 4001,
+    cipher_suite: :strong,
+    certfile: "priv/cert/selfsigned.pem",
+    keyfile: "priv/cert/selfsigned_key.pem"
+  ],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,

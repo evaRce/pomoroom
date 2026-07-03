@@ -18,6 +18,16 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Calls do
         PubSub.subscribe(Pomoroom.PubSub, call_topic(chat_id))
         PubSub.subscribe(Pomoroom.PubSub, call_topic(chat_id) <> ":" <> from_nickname)
         Presence.track(self(), call_topic(chat_id), from_nickname, %{})
+
+        token = Pomoroom.LiveKit.generate_token(from_nickname, chat_id)
+        ws_url = Pomoroom.LiveKit.ws_url(socket.host_uri.host)
+
+        socket =
+          push_event(socket, "react", %{
+            event_name: "livekit_token",
+            event_data: %{token: token, ws_url: ws_url}
+          })
+
         {:noreply, assign(socket, :call_chat_id, chat_id)}
 
       {:error, _} ->

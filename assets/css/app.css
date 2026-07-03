@@ -8,3 +8,4 @@
 
 /* Component Styles */
 @import '../js/components/chat_room/chat_panel/body/MessageItem.module.css';
+@import '@livekit/components-styles';

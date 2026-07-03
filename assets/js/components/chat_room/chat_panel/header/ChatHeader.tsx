@@ -490,7 +490,7 @@ export default function ChatHeader({
               />
             )}
 
-            {!chatData?.group_data && <CallPanel chatName={chatName} userLogin={userLogin} />}
+            {!chatData?.group_data && <CallPanel chatName={chatName} />}
 
             <Button
               type="text"

@@ -21,6 +21,11 @@ if System.get_env("PHX_SERVER") do
 end
 
 if config_env() == :prod do
+  config :pomoroom, :livekit,
+    api_key: System.get_env("LIVEKIT_API_KEY") || raise("environment variable LIVEKIT_API_KEY is missing"),
+    api_secret: System.get_env("LIVEKIT_API_SECRET") || raise("environment variable LIVEKIT_API_SECRET is missing"),
+    ws_url: System.get_env("LIVEKIT_URL") || raise("environment variable LIVEKIT_URL is missing")
+
   database_url =
     System.get_env("DATABASE_URL") ||
       raise """
