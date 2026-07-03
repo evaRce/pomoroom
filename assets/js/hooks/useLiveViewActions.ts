@@ -36,8 +36,6 @@ export function useOutgoingLiveViewActions({
   const deleteMember = useEvent("delete_member");
   const setAdmin = useEvent("set_admin");
   const joinRoom = useEvent("join_room");
-  const leaveRoom = useEvent("leave_room");
-  const signals = useEvent("signals");
   const loadOlderMessages = useEvent("load_older_messages");
   const installChatPlugin = useEvent("install_chat_plugin");
   const uninstallChatPlugin = useEvent("uninstall_chat_plugin");
@@ -146,14 +144,6 @@ export function useOutgoingLiveViewActions({
     if (joinRoom) {
       pushEventToLiveView("action.join_room", joinRoom);
       removeEvent("join_room");
-    }
-    if (leaveRoom) {
-      pushEventToLiveView("action.leave_room", leaveRoom);
-      removeEvent("leave_room");
-    }
-    if (signals?.length > 0) {
-      signals.forEach((s: any) => pushEventToLiveView("action.signal", s));
-      removeEvent("signals");
     }
     if (loadOlderMessages) {
       pushEventToLiveView("action.load_older_messages", loadOlderMessages);
@@ -269,8 +259,6 @@ export function useOutgoingLiveViewActions({
     deleteMember,
     setAdmin,
     joinRoom,
-    leaveRoom,
-    signals,
     loadOlderMessages,
     installChatPlugin,
     uninstallChatPlugin,

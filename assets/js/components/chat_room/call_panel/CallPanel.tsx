@@ -27,7 +27,6 @@ export default function CallPanel({ chatName }: CallPanelProps) {
     setInRoom(false);
     setModalVisible(false);
     removeEvent("livekit_token");
-    addEvent("leave_room", {});
   };
 
   return (

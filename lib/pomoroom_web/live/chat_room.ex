@@ -48,14 +48,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
           subscribed_chat_ids = MapSet.new(all_chats_id)
           socket = assign(socket, :subscribed_chat_ids, subscribed_chat_ids)
-          socket = Calls.reset_call_state(socket)
 
           {:ok, socket, layout: false}
         else
-          socket =
-            socket
-            |> assign(:subscribed_chat_ids, subscribed_chat_ids)
-            |> Calls.reset_call_state()
+          socket = assign(socket, :subscribed_chat_ids, subscribed_chat_ids)
 
           {:ok, socket, layout: false}
         end
@@ -199,19 +195,6 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
   def handle_info(%Broadcast{topic: "online_users", event: "presence_diff"}, socket) do
     Plugins.handle_presence_diff(socket)
-  end
-
-  # Calls
-  def handle_info(%Broadcast{topic: "call:" <> _, event: "presence_diff"}, socket) do
-    Calls.handle_presence_diff(socket)
-  end
-
-  def handle_info({signal_type, payload}, socket)
-      when signal_type in [:sdp_offer, :sdp_answer, :ice_candidate] do
-    {:noreply, push_event(socket, "react", %{
-      event_name: Atom.to_string(signal_type),
-      event_data: payload
-    })}
   end
 
   def handle_event("action.get_user_info", _args, %{assigns: %{user_info: user}} = socket) do
@@ -562,23 +545,6 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
       %{assigns: %{user_info: from_user}} = socket
     ) do
     Calls.handle_join_room(socket, to_user, from_user)
-  end
-
-  def handle_event(
-      "action.leave_room",
-      _payload,
-      %{assigns: %{user_info: from_user}} = socket
-    ) do
-    Calls.handle_leave_room(socket, from_user)
-  end
-
-  def handle_event(
-      "action.signal",
-      %{"to_user" => to_user, "signal_type" => signal_type} = payload,
-      %{assigns: %{user_info: from_user}} = socket
-    ) do
-    full_payload = Map.put(payload, "from_user", from_user.nickname)
-    Calls.relay_to_user(socket, to_user, signal_type, full_payload, from_user.nickname)
   end
 
   def handle_event("action.logout", _payload, socket) do

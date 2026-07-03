@@ -19,6 +19,9 @@ erl_crash.dump
 # Self-signed TLS cert/key generated locally via `mix phx.gen.cert`.
 /priv/cert/
 
+# Local dev seed data (test users/credentials).
+/priv/repo/seeds.exs
+
 # Also ignore archive artifacts (built via "mix archive.build").
 *.ez
 
