@@ -1,0 +1,31 @@
+services:
+  db:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pomoroom-db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo
+      MONGO_INITDB_ROOT_PASSWORD: abc123.
+    ports:
+      - "27017:27017"
+
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: pomoroom-livekit
+    command: --dev --bind 0.0.0.0
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+
+  livekit-tls:
+    image: nginx:alpine
+    container_name: pomoroom-livekit-tls
+    depends_on:
+      - livekit
+    ports:
+      - "7443:7443"
+    volumes:
+      - ./priv/livekit/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./priv/cert:/certs:ro

@@ -16,6 +16,9 @@
 # If the VM crashes, it generates a dump, let's ignore it too.
 erl_crash.dump
 
+# Self-signed TLS cert/key generated locally via `mix phx.gen.cert`.
+/priv/cert/
+
 # Also ignore archive artifacts (built via "mix archive.build").
 *.ez
 
