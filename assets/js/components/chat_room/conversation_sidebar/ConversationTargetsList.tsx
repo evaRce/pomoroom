@@ -26,6 +26,7 @@ export default function ConversationTargetsList() {
   const deselectContactEvent = useEvent("deselect_contact");
   const addGroupToListEvent = useEvent("add_group_to_list");
   const groupAdminUpdatedEvent = useEvent("group_admin_updated");
+  const showListMessagesEvent = useEvent("show_list_messages");
 
   const getCurrentUserRemovedAtFromGroup = (groupData: any, nickname: string) => {
     if (!groupData || !nickname) {
@@ -124,6 +125,18 @@ export default function ConversationTargetsList() {
       removeEvent("add_group_to_list");
     }
   }, [addGroupToListEvent]);
+
+  useEffect(() => {
+    if (!showListMessagesEvent?.chat_id) return;
+
+    const openContact = contacts.find(
+      (contact) => contact.chat_id === showListMessagesEvent.chat_id
+    );
+
+    if (openContact) {
+      setSelectedContact(openContact.name);
+    }
+  }, [showListMessagesEvent, contacts]);
 
   useEffect(() => {
     if (!groupAdminUpdatedEvent?.group_name) return;

@@ -21,10 +21,15 @@ if System.get_env("PHX_SERVER") do
 end
 
 if config_env() == :prod do
+  livekit_url = System.get_env("LIVEKIT_URL") || raise("environment variable LIVEKIT_URL is missing")
+
   config :pomoroom, :livekit,
     api_key: System.get_env("LIVEKIT_API_KEY") || raise("environment variable LIVEKIT_API_KEY is missing"),
     api_secret: System.get_env("LIVEKIT_API_SECRET") || raise("environment variable LIVEKIT_API_SECRET is missing"),
-    ws_url: System.get_env("LIVEKIT_URL") || raise("environment variable LIVEKIT_URL is missing")
+    ws_url: livekit_url,
+    # Room Service API calls (server-to-server) can reuse the same LiveKit URL.
+    # Internally, the client converts wss:// URLs to https:// for these requests.
+    admin_url: livekit_url
 
   database_url =
     System.get_env("DATABASE_URL") ||

@@ -57,6 +57,20 @@ defmodule Pomoroom.Users.UserService do
     end
   end
 
+  def get_many_by(field, values) do
+    values
+    |> Enum.uniq()
+    |> then(&UserRepository.find_many_by(field, &1))
+    |> Map.new(fn user_data ->
+      user =
+        user_data
+        |> Map.drop(["_id", "password"])
+        |> UserSchema.changeset_without_passw()
+
+      {Map.fetch!(user_data, field), user.changes}
+    end)
+  end
+
   def get_contacts(nickname) do
     case UserRepository.list_private_chats_for_user(nickname) do
       [] ->

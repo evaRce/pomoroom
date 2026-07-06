@@ -21,6 +21,7 @@ defmodule Pomoroom.Application do
       PomoroomWeb.Presence,
       # Start the Finch HTTP client for sending emails
       {Finch, name: Pomoroom.Finch},
+      Pomoroom.LiveKit.RoomCache,
       # Start a worker by calling: Pomoroom.Worker.start_link(arg)
       # {Pomoroom.Worker, arg},
       # Start to serve requests, typically the last entry

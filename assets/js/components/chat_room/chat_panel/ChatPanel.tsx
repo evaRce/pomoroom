@@ -6,6 +6,8 @@ import ChatHeader from "./header/ChatHeader";
 import ChatFooter from "./footer/ChatFooter";
 import { PomodoroTimer } from "../pomodoro_timer/PomodoroTimer";
 import { KanbanBoard } from "../kanban_board_panel/KanbanBoard";
+import CallScreen from "../call_panel/CallScreen";
+import { useCallContext } from "../call_panel/CallContext";
 import { createTimer, hasTimer, updateTimer, type TimerState } from "../pomodoro_timer/pomodoroTimerStore";
 import {
   getPomodoroNotifications,
@@ -19,9 +21,11 @@ interface ChatPanelProps {
 const TOP_SCROLL_THRESHOLD_PX = 12;
 
 export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
-  const [messages, setMessages] = useState<any[]>([]);
   const { addEvent, removeEvent } = useEventContext() as any;
+  const { activeCallChatId, activeCallRoomName, connectedAt, isMinimized, setMinimized, setViewingChatId, leaveCall } =
+    useCallContext();
 
+  const [messages, setMessages] = useState<any[]>([]);
   const showListMessagesEvent = useEvent("show_list_messages");
   const showOlderMessagesEvent = useEvent("show_older_messages");
   const pomodoroStateLoadedEvent = useEvent("pomodoro_state_loaded");
@@ -33,16 +37,19 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   const updateConfigEvent = useEvent("update_config");
   const showMessageToSendEvent = useEvent("show_message_to_send");
   const showUserInfoEvent = useEvent("show_user_info");
-  const messagesEndRef = useRef<any>(null);
-  const seenMessageIdsRef = useRef<Set<any>>(new Set());
-  const previousScrollHeightRef = useRef(0);
-  const isPrependingOlderRef = useRef(false);
+
   const [userLogin, setUserLogin] = useState<any>(null);
   const [currentChatId, setCurrentChatId] = useState<string>("");
   const [isPrivateChat, setIsPrivateChat] = useState(false);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [hasMoreOlder, setHasMoreOlder] = useState(true);
   const [activePluginId, setActivePluginId] = useState<string | null>(null);
+  const [avatarByNickname, setAvatarByNickname] = useState<Record<string, string>>({});
+
+  const messagesEndRef = useRef<any>(null);
+  const seenMessageIdsRef = useRef<Set<any>>(new Set());
+  const previousScrollHeightRef = useRef(0);
+  const isPrependingOlderRef = useRef(false);
   const lastAppliedPomodoroSignatureByChatRef = useRef<Record<string, string>>({});
   const pomodoroToastTimerRef = useRef<number | null>(null);
   const soundEndWork = useRef(new Audio("/sounds/bell-notification.wav"));
@@ -206,13 +213,15 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
     if (showListMessagesEvent) {
       setMessages(buildUniqueMessagesAndSeedIds(showListMessagesEvent.messages || []));
       setCurrentChatId(showListMessagesEvent.chat_id || "");
+      setViewingChatId(showListMessagesEvent.chat_id || null);
       setIsPrivateChat(!showListMessagesEvent.group_data);
+      setAvatarByNickname(showListMessagesEvent.user_avatar_map || {});
       const hasMoreFromServer = typeof showListMessagesEvent.has_more === "boolean" ? showListMessagesEvent.has_more : false;
       setHasMoreOlder(hasMoreFromServer);
       setIsLoadingOlder(false);
       removeEvent("show_list_messages");
     }
-  }, [showListMessagesEvent]);
+  }, [showListMessagesEvent, setViewingChatId]);
 
   useEffect(() => {
     if (showOlderMessagesEvent) {
@@ -341,6 +350,10 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
     }
   }, [showUserInfoEvent]);
 
+  useEffect(() => {
+    return () => setViewingChatId(null);
+  }, [setViewingChatId]);
+
   const addMessage = (message: any) => {
     if (!message || !message.data || message.data.text.trim() === "") {
       return; // No añadir mensajes vacíos
@@ -431,53 +444,70 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
     setActivePluginId(pluginId);
   };
 
+  const hasCallForThisChat = !!currentChatId && activeCallChatId === currentChatId;
+  const isCallScreenVisible = hasCallForThisChat && !isMinimized;
+
   return (
     <div className="flex h-full min-h-0 min-w-0 w-full flex-grow flex-col border-l border-r">
-      <ChatHeader
-        userLogin={userLogin}
-        isVisibleDetail={isVisibleDetail}
-        activePluginId={activePluginId}
-        onTogglePluginTab={handleTogglePluginTab}
-      />
-
-      {/* Content area - either chat messages or plugin */}
-      {activePluginId ? (
-        <div
-          className="min-h-0 min-w-0 flex-1 overflow-y-auto"
-          style={{ scrollbarWidth: "thin" }}
-        >
-          {renderPlugin(activePluginId)}
+      {hasCallForThisChat && (
+        <div className={`flex min-h-0 flex-1 flex-col ${isCallScreenVisible ? "" : "hidden"}`}>
+          <CallScreen
+            roomName={activeCallRoomName}
+            connectedAt={connectedAt}
+            avatarByNickname={avatarByNickname}
+            onEndCall={leaveCall}
+            onClose={() => setMinimized(true)}
+          />
         </div>
-      ) : (
-        <>
-          {/* Messages area */}
-          <main
-            className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden border-b border-t p-5"
-            style={{ scrollbarWidth: "thin" }}
-            ref={messagesEndRef}
-            onScroll={handleMessagesScroll}
-          >
-            {messages.length > 0 &&
-              messages.map((message) => {
-                const isMyMessage = message.data.from_user === userLogin?.nickname;
-                const shouldHideIdentity = isPrivateChat || (isMyMessage && !isPrivateChat);
-
-                return (
-                  <MessageItem
-                    key={getMessageUniqueKey(message)}
-                    message={message}
-                    userLogin={userLogin}
-                    hideSenderIdentity={shouldHideIdentity}
-                  />
-                );
-              })}
-            <div></div>
-          </main>
-
-          {/* Message input area */}
-          <ChatFooter />
-        </>
       )}
+
+      <div className={`flex min-h-0 flex-1 flex-col ${isCallScreenVisible ? "hidden" : ""}`}>
+        <ChatHeader
+          userLogin={userLogin}
+          isVisibleDetail={isVisibleDetail}
+          activePluginId={activePluginId}
+          onTogglePluginTab={handleTogglePluginTab}
+        />
+
+        {/* Content area - either plugin or chat messages */}
+        {activePluginId ? (
+          <div
+            className="min-h-0 min-w-0 flex-1 overflow-y-auto"
+            style={{ scrollbarWidth: "thin" }}
+          >
+            {renderPlugin(activePluginId)}
+          </div>
+        ) : (
+          <>
+            {/* Messages area */}
+            <main
+              className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden border-b border-t p-5"
+              style={{ scrollbarWidth: "thin" }}
+              ref={messagesEndRef}
+              onScroll={handleMessagesScroll}
+            >
+              {messages.length > 0 &&
+                messages.map((message) => {
+                  const isMyMessage = message.data.from_user === userLogin?.nickname;
+                  const shouldHideIdentity = isPrivateChat || (isMyMessage && !isPrivateChat);
+
+                  return (
+                    <MessageItem
+                      key={getMessageUniqueKey(message)}
+                      message={message}
+                      userLogin={userLogin}
+                      hideSenderIdentity={shouldHideIdentity}
+                    />
+                  );
+                })}
+              <div></div>
+            </main>
+
+            {/* Message input area */}
+            <ChatFooter />
+          </>
+        )}
+      </div>
     </div>
   );
 }

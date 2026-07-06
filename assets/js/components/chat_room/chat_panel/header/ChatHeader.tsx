@@ -3,7 +3,7 @@ import { Avatar, Button } from "antd";
 import { Info, Puzzle, UserPlus } from "lucide-react";
 import { useEventContext, useEvent } from "../../EventContext";
 import AddMembersModal from "./AddMembersModal";
-import CallPanel from "../../call_panel/CallPanel";
+import CallButton from "../../call_panel/CallButton";
 import PluginMarketPlace, { AvailablePlugin, InstalledPlugin } from "../PluginMarketPlace";
 import { getTimer, subscribeTimer, type TimerState } from "../../pomodoro_timer/pomodoroTimerStore";
 
@@ -491,7 +491,7 @@ export default function ChatHeader({
             )}
 
             {(!isGroupChat || !isGroupMemberRemoved) && (
-              <CallPanel chatId={currentChatId} chatName={chatName} />
+              <CallButton chatId={currentChatId} chatName={chatName} isGroupChat={isGroupChat} />
             )}
 
             <Button

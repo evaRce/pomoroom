@@ -160,7 +160,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
       end
 
     is_admin = GroupChats.is_admin?(group_name, user.nickname)
-    user_image_map_by_nickname = build_user_image_map_by_nickname(visible_messages)
+    member_nicknames = Enum.map(group_chat.members, & &1["user_id"])
+    message_sender_nicknames = Enum.map(visible_messages, & &1.from_user)
+    avatar_map = build_user_image_map(member_nicknames ++ message_sender_nicknames)
 
     socket =
       socket
@@ -172,7 +174,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
       Enum.map(visible_messages, fn msg ->
         %{
           data: msg,
-          image_user: Map.get(user_image_map_by_nickname, msg.from_user)
+          image_user: Map.get(avatar_map, msg.from_user)
         }
       end)
 
@@ -185,7 +187,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
         plugins: ChatPluginService.get_plugins_from_chat(group_chat),
         messages: messages_with_images_user,
         has_more: length(messages_with_images_user) == @initial_messages_limit,
-        removed_at: removed_at
+        removed_at: removed_at,
+        user_avatar_map: avatar_map
       }
     }
 
@@ -283,7 +286,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
             to_user_data: to_user_data,
             plugins: ChatPluginService.get_plugins_from_chat(private_chat),
             messages: messages_with_images_user,
-            has_more: length(messages_with_images_user) == @initial_messages_limit
+            has_more: length(messages_with_images_user) == @initial_messages_limit,
+            user_avatar_map: %{
+              user.nickname => user.image_profile,
+              to_user_data.nickname => to_user_data.image_profile
+            }
           }
         }
 
@@ -297,20 +304,23 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
   end
 
   defp build_user_image_map_by_nickname(messages) do
-    Enum.reduce(messages, %{}, fn msg, acc ->
-      nickname = msg.from_user
+    messages
+    |> Enum.map(& &1.from_user)
+    |> build_user_image_map()
+  end
 
-      if Map.has_key?(acc, nickname) do
-        acc
-      else
-        case Users.get_by("nickname", nickname) do
-          {:ok, user_data} ->
-            Map.put(acc, nickname, user_data.image_profile)
+  defp build_user_image_map(nicknames) do
+    unique_nicknames = Enum.uniq(nicknames)
+    users_by_nickname = Users.get_many_by("nickname", unique_nicknames)
 
-          {:error, _reason} ->
-            Map.put(acc, nickname, nil)
+    Map.new(unique_nicknames, fn nickname ->
+      image_profile =
+        case Map.fetch(users_by_nickname, nickname) do
+          {:ok, user_data} -> user_data.image_profile
+          :error -> nil
         end
-      end
+
+      {nickname, image_profile}
     end)
   end
 

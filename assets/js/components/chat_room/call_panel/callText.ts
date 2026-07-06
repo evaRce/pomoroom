@@ -1,0 +1,42 @@
+const callText = {
+  button: {
+    showRoom: "Mostrar sala",
+    anotherCallActive: "Ya estás en otra llamada",
+    joinRoom: "Entrar a la sala",
+    connecting: "Conectando...",
+  },
+
+  connection: {
+    connectFailed:
+      "No se pudo conectar a la llamada. Puede que ya esté llena (máximo 10 participantes) o haya un problema de conexión.",
+  },
+
+  screen: {
+    roomTitle: (roomName: string) => (roomName ? `Sala con ${roomName}` : "Sala de llamada"),
+    participantsCount: (count: number) => `${count} participante${count === 1 ? "" : "s"}`,
+    you: "Tú",
+    muteMic: "Silenciar micrófono",
+    unmuteMic: "Activar micrófono",
+    turnOffCamera: "Apagar cámara",
+    turnOnCamera: "Encender cámara",
+    startScreenShare: "Compartir pantalla",
+    stopScreenShare: "Dejar de compartir pantalla",
+    screenShareBlocked:
+      "Otro usuario está compartiendo pantalla actualmente. Debe dejar de compartir para que puedas hacerlo tú",
+    screenShareConflict:
+      "Otro participante ha empezado a compartir pantalla justo antes que tú. Se ha detenido tu recurso compartido.",
+    endCall: "Finalizar llamada",
+    enterFullscreen: "Pantalla completa",
+    exitFullscreen: "Salir de pantalla completa",
+    close: "Cerrar",
+    overflowUnit: (count: number) => `usuario${count === 1 ? "" : "s"}`,
+  },
+
+  minibar: {
+    callWith: (roomName: string) => `Llamada con ${roomName}`,
+    callInProgress: "Llamada en curso",
+    callActiveElsewhere: "Llamada activa en otro chat",
+  },
+};
+
+export default callText;

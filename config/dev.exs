@@ -3,15 +3,21 @@ import Config
 # Configure MongoDB
 config :pomoroom, :db, database: "pomoroom_dev", username: "mongo", password: "abc123."
 
-# Configure LiveKit (api_key/api_secret match `livekit-server --dev` defaults).
-# ws_url is intentionally omitted: Pomoroom.LiveKit.ws_url/1 builds it from
-# whatever host the browser used, pointed at the TLS proxy in front of
-# livekit-server (see priv/livekit/nginx.conf) — plain ws:// gets blocked as
-# mixed content by browsers once the app itself is loaded over https.
+# LiveKit configuration
+#
+# - api_key / api_secret: default credentials for `livekit-server --dev`
+# - ws_port: browser connection via TLS proxy (wss://)
+# - admin_url: backend → LiveKit (direct HTTP, no proxy)
+#
+# Note:
+# When the app runs over HTTPS, browsers block insecure ws:// connections.
+# For this reason, WebSocket traffic is routed through a TLS proxy (port 7443).
+
 config :pomoroom, :livekit,
   api_key: "devkey",
   api_secret: "secret",
-  ws_port: 7443
+  ws_port: 7443,
+  admin_url: "http://localhost:7880"
 
 # For development, we disable any cache and enable
 # debugging and code reloading.

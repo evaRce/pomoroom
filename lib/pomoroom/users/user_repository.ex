@@ -12,6 +12,11 @@ defmodule Pomoroom.Users.UserRepository do
 		Mongo.find_one(:mongo, "users", query)
 	end
 
+	def find_many_by(field, values) do
+		query = %{field => %{"$in" => values}}
+		Mongo.find(:mongo, "users", query) |> Enum.to_list()
+	end
+
 	def exists_by_nickname?(nickname) do
 		case find_one_by("nickname", nickname) do
 			nil -> false

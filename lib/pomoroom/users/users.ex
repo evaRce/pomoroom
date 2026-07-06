@@ -8,6 +8,7 @@ defmodule Pomoroom.Users do
   defdelegate delete_all_users(), to: UserService
   defdelegate get_with_passw(field, value), to: UserService
   defdelegate get_by(field, value), to: UserService
+  defdelegate get_many_by(field, values), to: UserService
   defdelegate get_contacts(user), to: UserService
   defdelegate get_all_contacts(user), to: UserService
   defdelegate get_all_my_chats_id(user), to: UserService

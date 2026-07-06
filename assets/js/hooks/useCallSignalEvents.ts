@@ -6,8 +6,6 @@ type UseCallSignalingEventsParams = {
   addEvent: (eventName: string, eventData: any) => void;
 };
 
-// Routes the incoming LiveView "react" event carrying the LiveKit access token
-// (pushed by Calls.handle_join_room) into EventContext, where CallPanel reads it.
 export function useCallSignalingEvents({
   eventName,
   eventData,

@@ -8,7 +8,8 @@ import RequestSend from "./contact_requests/RequestSend";
 import RejectedRequestSend from "./contact_requests/RejectedRequestSend";
 import RejectedRequestReceived from "./contact_requests/RejectedRequestReceived";
 import ConversationSidebar from "./conversation_sidebar/ConversationSidebar";
-import ActiveCallModal from "./call_panel/ActiveCallModal";
+import { CallSessionProvider } from "./call_panel/CallContext";
+import MinimizedCallBar from "./call_panel/MinimizedCallBar";
 import { useOutgoingLiveViewActions } from "../../hooks/useLiveViewActions";
 import { useUserContactsAndGroupsEvents } from "../../hooks/useUserContactsAndGroupsEvents";
 import { useChatSessionEvents } from "../../hooks/useChatSessionEvents";
@@ -90,24 +91,26 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
   });
 
   return (
-    <div className="flex h-screen w-screen min-h-screen md:min-h-48 overflow-x-hidden">
-      <ConversationSidebar />
-      <ActiveCallModal />
-      {component === "ChatPanel" && (
-        <ChatPanel isVisibleDetail={isVisibleDetail} />
-      )}
-      {component === "RequestSend" && <RequestSend imageNumber={imageNumber} />}
-      {component === "RequestReceived" && (
-        <RequestReceived imageNumber={imageNumber} />
-      )}
-      {component === "RejectedRequestSend" && (
-        <RejectedRequestSend imageNumber={imageNumber} />
-      )}
-      {component === "RejectedRequestReceived" && (
-        <RejectedRequestReceived imageNumber={imageNumber} />
-      )}
-      {component === "" && <BackGround imageNumber={imageNumber} />}
-      {isVisibleDetail === true && <ChatDetailPanel />}
-    </div>
+    <CallSessionProvider>
+      <div className="flex h-screen w-screen min-h-screen md:min-h-48 overflow-x-hidden">
+        <ConversationSidebar />
+        {component === "ChatPanel" && (
+          <ChatPanel isVisibleDetail={isVisibleDetail} />
+        )}
+        {component === "RequestSend" && <RequestSend imageNumber={imageNumber} />}
+        {component === "RequestReceived" && (
+          <RequestReceived imageNumber={imageNumber} />
+        )}
+        {component === "RejectedRequestSend" && (
+          <RejectedRequestSend imageNumber={imageNumber} />
+        )}
+        {component === "RejectedRequestReceived" && (
+          <RejectedRequestReceived imageNumber={imageNumber} />
+        )}
+        {component === "" && <BackGround imageNumber={imageNumber} />}
+        {isVisibleDetail === true && <ChatDetailPanel />}
+        <MinimizedCallBar />
+      </div>
+    </CallSessionProvider>
   );
 };
