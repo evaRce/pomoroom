@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { message } from "antd";
 import { Button } from "../../../../components-shadcn/ui/button";
-import { cn } from "../../../../lib/utils";
+import { cn, formatDuration } from "../../../../lib/utils";
 import pomodoroTimerText from "./pomodoroTimerText";
 import { useEventContext, useEvent } from "../EventContext";
 import {
@@ -184,11 +184,6 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     return Math.max(Math.ceil(durationMs / 1000), 0);
   }, [getDuration]);
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
 
   const validate = (newSettings: TimerSettings) => {
     const e: Record<string, string> = {};
@@ -653,7 +648,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
             <span className="text-sm font-medium">{modeInfo.label}</span>
           </div>
           <span className="text-6xl font-bold text-foreground font-mono tracking-tight">
-            {formatTime(timeLeft)}
+            {formatDuration(timeLeft)}
           </span>
           <span className="text-sm text-slate-500 mt-2">
             {pomodoroTimerText.cycle} {cyclesCompleted + 1}

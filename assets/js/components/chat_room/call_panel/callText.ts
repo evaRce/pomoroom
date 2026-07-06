@@ -7,8 +7,11 @@ const callText = {
   },
 
   connection: {
-    connectFailed:
-      "No se pudo conectar a la llamada. Puede que ya esté llena (máximo 10 participantes) o haya un problema de conexión.",
+    joinNotAllowed: "No se pudo entrar a la llamada: acceso no autorizado.",
+    joinUnreachable:
+      "No se pudo contactar con el servidor de llamadas. Revisa tu conexión a internet e inténtalo de nuevo.",
+    joinFailed: "No se pudo conectar a la llamada. Inténtalo de nuevo.",
+    callDropped: "Se perdió la conexión con la llamada.",
   },
 
   screen: {
@@ -19,6 +22,7 @@ const callText = {
     unmuteMic: "Activar micrófono",
     turnOffCamera: "Apagar cámara",
     turnOnCamera: "Encender cámara",
+    switchCamera: "Cambiar de cámara",
     startScreenShare: "Compartir pantalla",
     stopScreenShare: "Dejar de compartir pantalla",
     screenShareBlocked:

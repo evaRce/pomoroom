@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Button, Tooltip, message } from "antd";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Avatar, Button, Tooltip, message } from "antd";
 import {
   Mic,
   MicOff,
@@ -10,10 +10,12 @@ import {
   ScreenShare,
   ScreenShareOff,
   Maximize2,
+  SwitchCamera,
 } from "lucide-react";
 import { useLocalParticipant, useParticipants, useTracks, VideoTrack } from "@livekit/components-react";
 import { Track } from "livekit-client";
-import type { Participant, TrackPublication } from "livekit-client";
+import type { Participant, TrackPublication, VideoCaptureOptions } from "livekit-client";
+import { formatDuration } from "../../../../lib/utils";
 import callText from "./callText";
 
 interface CallScreenProps {
@@ -24,14 +26,69 @@ interface CallScreenProps {
   onClose: () => void;
 }
 
-function formatDuration(seconds: number) {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-}
-
 function initials(name: string) {
   return name?.trim()?.charAt(0)?.toUpperCase() || "?";
+}
+
+const CONTROLS_HIDE_DELAY_MS = 10000;
+const ACTIVITY_THROTTLE_MS = 250;
+
+function useAutoHideControls() {
+  const [visible, setVisible] = useState(true);
+  const hideTimeoutRef = useRef<number>();
+  const lastActivityRef = useRef(0);
+
+  const clearHideTimer = () => window.clearTimeout(hideTimeoutRef.current);
+
+  const scheduleHide = () => {
+    clearHideTimer();
+    hideTimeoutRef.current = window.setTimeout(() => setVisible(false), CONTROLS_HIDE_DELAY_MS);
+  };
+
+  const show = () => {
+    const now = Date.now();
+    if (now - lastActivityRef.current < ACTIVITY_THROTTLE_MS) return;
+    lastActivityRef.current = now;
+    setVisible(true);
+    scheduleHide();
+  };
+
+  useEffect(() => {
+    setVisible(true);
+    scheduleHide();
+    return clearHideTimer;
+  }, []);
+
+  return {
+    visible,
+    activityProps: { onMouseMove: show, onTouchStart: show, onClick: show },
+    controlsHoverProps: { onMouseEnter: clearHideTimer, onMouseLeave: scheduleHide },
+  };
+}
+
+function FloatingControls({
+  visible,
+  hoverProps,
+  children,
+}: {
+  visible: boolean;
+  hoverProps: { onMouseEnter: () => void; onMouseLeave: () => void };
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={`pointer-events-none absolute inset-x-0 bottom-4 flex justify-center transition-opacity duration-300 ${
+        visible ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      <div
+        {...hoverProps}
+        className="pointer-events-auto flex items-center gap-3 rounded-full bg-white/90 px-4 py-2 shadow-lg backdrop-blur"
+      >
+        {children}
+      </div>
+    </div>
+  );
 }
 
 function ParticipantTile({
@@ -41,6 +98,9 @@ function ParticipantTile({
   hasVideo,
   videoTrackRef,
   isMuted,
+  canSwitchCamera,
+  isSwitchingCamera,
+  onSwitchCamera,
   className = "",
 }: {
   participant: Participant;
@@ -49,6 +109,9 @@ function ParticipantTile({
   hasVideo: boolean;
   videoTrackRef: any;
   isMuted: boolean;
+  canSwitchCamera?: boolean;
+  isSwitchingCamera?: boolean;
+  onSwitchCamera?: () => void;
   className?: string;
 }) {
   const displayName = isLocal ? callText.screen.you : participant.name || participant.identity;
@@ -63,15 +126,27 @@ function ParticipantTile({
           <span className="absolute bottom-2 left-2 max-w-[80%] truncate rounded bg-black/55 px-2 py-0.5 text-xs text-white">
             {displayName}
           </span>
+          {canSwitchCamera && (
+            <button
+              type="button"
+              onClick={onSwitchCamera}
+              disabled={isSwitchingCamera}
+              title={callText.screen.switchCamera}
+              className="absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/55 text-white disabled:opacity-50"
+            >
+              <SwitchCamera className="h-4 w-4" />
+            </button>
+          )}
         </>
       ) : (
         <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-2">
-          <div className="flex aspect-square w-[42%] min-w-[32px] max-w-[80px] items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-gray-50">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt={displayName} className="h-full w-full object-cover" />
-            ) : (
-              <span className="text-lg font-semibold text-gray-500">{initials(displayName)}</span>
-            )}
+          <div className="aspect-square w-[42%] min-w-[32px] max-w-[80px]">
+            <Avatar
+              src={avatarUrl}
+              className="!h-full !w-full border border-gray-200 bg-gray-50 !text-lg font-semibold !text-gray-500"
+            >
+              {initials(displayName)}
+            </Avatar>
           </div>
           <span className="max-w-full truncate text-sm font-medium text-gray-700">{displayName}</span>
         </div>
@@ -188,6 +263,41 @@ export default function CallScreen({
   const [duration, setDuration] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
+  const [isSwitchingCamera, setIsSwitchingCamera] = useState(false);
+  const {
+    visible: controlsVisible,
+    activityProps,
+    controlsHoverProps,
+  } = useAutoHideControls();
+
+  useEffect(() => {
+    const updateCameraCount = () => {
+      navigator.mediaDevices
+        ?.enumerateDevices()
+        .then((devices) => {
+          setHasMultipleCameras(devices.filter((d) => d.kind === "videoinput").length > 1);
+        })
+        .catch(() => {});
+    };
+    
+    updateCameraCount();
+    navigator.mediaDevices?.addEventListener("devicechange", updateCameraCount);
+    return () => navigator.mediaDevices?.removeEventListener("devicechange", updateCameraCount);
+  }, [isCameraEnabled]);
+
+  const switchCamera = () => {
+    if (isSwitchingCamera) return;
+    const nextFacingMode = facingMode === "user" ? "environment" : "user";
+    const videoTrack = localParticipant.getTrackPublication(Track.Source.Camera)?.videoTrack;
+    if (!videoTrack) return;
+    setIsSwitchingCamera(true);
+    void videoTrack
+      .restartTrack({ facingMode: { exact: nextFacingMode } } as unknown as VideoCaptureOptions)
+      .then(() => setFacingMode(nextFacingMode))
+      .finally(() => setIsSwitchingCamera(false));
+  };
 
   useEffect(() => {
     if (!connectedAt) {
@@ -242,8 +352,16 @@ export default function CallScreen({
     }
   };
 
+  const trackRefByKey = useMemo(() => {
+    const map = new Map<string, (typeof trackRefs)[number]>();
+    for (const t of trackRefs) {
+      map.set(`${t.participant.identity}:${t.source}`, t);
+    }
+    return map;
+  }, [trackRefs]);
+
   const findTrack = (nickname: string, source: Track.Source) =>
-    trackRefs.find((t) => t.participant.identity === nickname && t.source === source);
+    trackRefByKey.get(`${nickname}:${source}`);
 
   const isPublicationActive = (publication: TrackPublication | undefined) =>
     !!publication && !publication.isMuted;
@@ -263,6 +381,9 @@ export default function CallScreen({
         hasVideo={hasVideo}
         videoTrackRef={cameraRef}
         isMuted={isMuted}
+        canSwitchCamera={participant.isLocal && hasVideo && hasMultipleCameras}
+        isSwitchingCamera={isSwitchingCamera}
+        onSwitchCamera={switchCamera}
         className={className}
       />
     );
@@ -314,7 +435,9 @@ export default function CallScreen({
               <ScreenShare className="h-5 w-5" />
             )
           }
-          onClick={() => localParticipant.setScreenShareEnabled(!isScreenShareEnabled)}
+          onClick={() =>
+            localParticipant.setScreenShareEnabled(!isScreenShareEnabled, { audio: true })
+          }
           title={screenShareToggleTitle}
         />
       </span>
@@ -346,22 +469,22 @@ export default function CallScreen({
             title={callText.screen.exitFullscreen}
           />
         </div>
-        <div className="min-h-0 flex-1 px-4 pb-2">
+        <div className="relative min-h-0 flex-1 px-4 pb-2" {...activityProps}>
           <VideoTrack trackRef={screenShareTrackRef} className="h-full w-full object-contain" />
-        </div>
-        <div className="flex shrink-0 items-center justify-center gap-4 py-5">
-          {micButton}
-          {cameraButton}
-          {hangupButton}
-          <Button
-            type="text"
-            shape="circle"
-            size="large"
-            className="!bg-orange-50 !text-brand"
-            icon={<ScreenShareOff className="h-5 w-5" />}
-            onClick={() => localParticipant.setScreenShareEnabled(false)}
-            title={callText.screen.stopScreenShare}
-          />
+          <FloatingControls visible={controlsVisible} hoverProps={controlsHoverProps}>
+            {micButton}
+            {cameraButton}
+            {hangupButton}
+            <Button
+              type="text"
+              shape="circle"
+              size="large"
+              className="!bg-orange-50 !text-brand"
+              icon={<ScreenShareOff className="h-5 w-5" />}
+              onClick={() => localParticipant.setScreenShareEnabled(false)}
+              title={callText.screen.stopScreenShare}
+            />
+          </FloatingControls>
         </div>
       </div>
     );
@@ -402,7 +525,10 @@ export default function CallScreen({
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden px-6 py-4">
+      <div
+        className="relative flex min-h-0 flex-1 flex-col gap-4 overflow-hidden px-6 py-4"
+        {...activityProps}
+      >
         {screenShareTrackRef && (
           <div className="relative min-h-0 flex-[3] overflow-hidden rounded-xl bg-black">
             <VideoTrack trackRef={screenShareTrackRef} className="h-full w-full object-contain" />
@@ -412,13 +538,13 @@ export default function CallScreen({
         <div className={`min-h-0 ${screenShareTrackRef ? "flex-[2]" : "flex-1"}`}>
           <ParticipantGrid participants={participants} renderTile={renderTile} />
         </div>
-      </div>
 
-      <div className="flex shrink-0 items-center justify-center gap-4 border-t border-gray-200 bg-white py-5">
-        {micButton}
-        {cameraButton}
-        {screenShareButton}
-        {hangupButton}
+        <FloatingControls visible={controlsVisible} hoverProps={controlsHoverProps}>
+          {micButton}
+          {cameraButton}
+          {screenShareButton}
+          {hangupButton}
+        </FloatingControls>
       </div>
     </div>
   );

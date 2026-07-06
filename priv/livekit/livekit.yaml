@@ -1,0 +1,22 @@
+# LiveKit config for local development.
+#
+# Mirrors `livekit-server --dev` defaults (devkey/secret, TCP 7881, UDP 7882)
+# and enables TURN (UDP) so clients behind restrictive NAT/firewalls can
+# still connect via relay (fixes common ICE failures — see priv/CLAUDE.md).
+#
+# TURN/TLS is intentionally not configured: it requires a real domain with
+# valid TLS certificates, which are only available in production.
+
+port: 7880
+
+keys:
+  devkey: secret
+
+rtc:
+  tcp_port: 7881
+  udp_port: 7882
+  use_external_ip: true
+
+turn:
+  enabled: true
+  udp_port: 3478

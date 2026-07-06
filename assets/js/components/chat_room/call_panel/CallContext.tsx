@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { message } from "antd";
-import { Room, RoomEvent } from "livekit-client";
+import { ConnectionError, ConnectionErrorReason, DisconnectReason, Room, RoomEvent } from "livekit-client";
 import { RoomContext, RoomAudioRenderer } from "@livekit/components-react";
 import { useEventContext, useEvent } from "../EventContext";
 import callText from "./callText";
@@ -26,11 +26,11 @@ const CallContext = createContext<CallContextValue>({
   connectingChatId: null,
   connectedAt: null,
   isMinimized: false,
-  setMinimized: () => {},
+  setMinimized: () => { },
   viewingChatId: null,
-  setViewingChatId: () => {},
-  joinCall: () => {},
-  leaveCall: () => {},
+  setViewingChatId: () => { },
+  joinCall: () => { },
+  leaveCall: () => { },
 });
 
 export const useCallContext = () => useContext(CallContext);
@@ -53,15 +53,18 @@ export function CallSessionProvider({ children }: { children: React.ReactNode })
     const handleConnected = () => {
       setConnectedAt(Date.now());
       setConnectingChatId(null);
-      void room.localParticipant.setMicrophoneEnabled(true).catch(() => {});
     };
-    const handleDisconnected = () => {
+    const handleDisconnected = (reason?: DisconnectReason) => {
       connectingChatIdRef.current = null;
       setConnectedAt(null);
       setConnectingChatId(null);
       setMinimized(false);
       removeEvent("livekit_token");
       removeEvent("call_room_name");
+
+      if (reason !== undefined && reason !== DisconnectReason.CLIENT_INITIATED) {
+        message.error(callText.connection.callDropped);
+      }
     };
 
     room.on(RoomEvent.Connected, handleConnected);
@@ -78,10 +81,22 @@ export function CallSessionProvider({ children }: { children: React.ReactNode })
     if (connectingChatIdRef.current === livekitTokenEvent.chat_id) return;
 
     connectingChatIdRef.current = livekitTokenEvent.chat_id;
-    room.connect(livekitTokenEvent.ws_url, livekitTokenEvent.token).catch(() => {
+    room.connect(livekitTokenEvent.ws_url, livekitTokenEvent.token).catch((error) => {
       connectingChatIdRef.current = null;
       setConnectingChatId(null);
-      message.error(callText.connection.connectFailed);
+
+      if (!(error instanceof ConnectionError) || error.reason !== ConnectionErrorReason.Cancelled) {
+        const errorMessage =
+          error instanceof ConnectionError && error.reason === ConnectionErrorReason.NotAllowed
+            ? callText.connection.joinNotAllowed
+            : error instanceof ConnectionError &&
+              (error.reason === ConnectionErrorReason.ServerUnreachable ||
+                error.reason === ConnectionErrorReason.WebSocket ||
+                error.reason === ConnectionErrorReason.Timeout)
+              ? callText.connection.joinUnreachable
+              : callText.connection.joinFailed;
+        message.error(errorMessage);
+      }
 
       removeEvent("livekit_token");
       removeEvent("call_room_name");
