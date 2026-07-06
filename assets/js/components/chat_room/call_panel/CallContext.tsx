@@ -43,7 +43,7 @@ export function CallSessionProvider({ children }: { children: React.ReactNode })
   const livekitTokenEvent = useEvent("livekit_token");
   const callRoomNameEvent = useEvent("call_room_name");
   const room = useMemo(() => new Room(), []);
-  const connectingChatIdRef = useRef<string | null>(null);
+  const lastConnectAttemptedTokenRef = useRef<string | null>(null);
   const [connectedAt, setConnectedAt] = useState<number | null>(null);
   const [connectingChatId, setConnectingChatId] = useState<string | null>(null);
   const [isMinimized, setMinimized] = useState(false);
@@ -55,7 +55,6 @@ export function CallSessionProvider({ children }: { children: React.ReactNode })
       setConnectingChatId(null);
     };
     const handleDisconnected = (reason?: DisconnectReason) => {
-      connectingChatIdRef.current = null;
       setConnectedAt(null);
       setConnectingChatId(null);
       setMinimized(false);
@@ -78,11 +77,10 @@ export function CallSessionProvider({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (!livekitTokenEvent) return;
     if (livekitTokenEvent.chat_id !== connectingChatId) return;
-    if (connectingChatIdRef.current === livekitTokenEvent.chat_id) return;
+    if (lastConnectAttemptedTokenRef.current === livekitTokenEvent.token) return;
 
-    connectingChatIdRef.current = livekitTokenEvent.chat_id;
+    lastConnectAttemptedTokenRef.current = livekitTokenEvent.token;
     room.connect(livekitTokenEvent.ws_url, livekitTokenEvent.token).catch((error) => {
-      connectingChatIdRef.current = null;
       setConnectingChatId(null);
 
       if (!(error instanceof ConnectionError) || error.reason !== ConnectionErrorReason.Cancelled) {
