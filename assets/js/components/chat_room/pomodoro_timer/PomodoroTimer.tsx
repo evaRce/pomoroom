@@ -21,6 +21,7 @@ import {
   TimerSettings,
 } from "./PomodoroSettingsPopover";
 import {
+  normalizeTimerPayload,
   subscribeTimer,
   type TimerState,
 } from "./pomodoroTimerStore";
@@ -87,81 +88,19 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   }, []);
 
   const applyIncomingTimerState = useCallback((eventPayload: any) => {
-    if (!eventPayload) return;
+    const nextTimer = normalizeTimerPayload(eventPayload);
+    if (!nextTimer) return;
 
-    const payloadState = eventPayload.state || {};
-    const payloadConfig = eventPayload.config || {};
-    const serverNow = eventPayload.server_now ?? payloadState.server_now ?? Date.now();
-    const serverClockOffsetMs = Date.now() - serverNow;
-    const adjustedNowMs = Date.now() - serverClockOffsetMs;
-    const payloadSettings = payloadState.settings || {};
-    const nextSettings: TimerSettings = {
-      workDuration: payloadSettings.workDuration ?? payloadConfig.work_duration ?? 0,
-      shortBreakDuration: payloadSettings.shortBreakDuration ?? payloadConfig.short_break_duration ?? 0,
-      longBreakDuration: payloadSettings.longBreakDuration ?? payloadConfig.long_break_duration ?? 0,
-      cyclesBeforeLongBreak:
-        payloadSettings.cyclesBeforeLongBreak ?? payloadConfig.cycles_before_long_break ?? 0,
-    };
-    const nextMode = payloadState.mode || "work";
-    const nextModeSnapshots = payloadState.modeSnapshots || {
-      work: nextSettings.workDuration * 60,
-      shortBreak: nextSettings.shortBreakDuration * 60,
-      longBreak: nextSettings.longBreakDuration * 60,
-    };
-    const nextDurationMs =
-      payloadState.durationMs ??
-      payloadState.duration_ms ??
-      nextModeSnapshots[nextMode as keyof typeof nextModeSnapshots] * 1000;
-    const nextStartedAt = payloadState.startedAt ?? payloadState.started_at ?? null;
-    const nextPausedAt = payloadState.pausedAt ?? payloadState.paused_at ?? null;
-    const nextSessionElapsedMs =
-      payloadState.sessionElapsedMs ?? payloadState.session_elapsed_ms ?? 0;
-    const nextSessionStartedAt =
-      payloadState.sessionStartedAt ?? payloadState.session_started_at ?? null;
-    const resolvedTimeLeft = (() => {
-      if (Boolean(payloadState.isRunning ?? payloadState.is_running) && nextStartedAt) {
-        return Math.max(Math.ceil((nextDurationMs - (adjustedNowMs - nextStartedAt)) / 1000), 0);
-      }
-
-      if (nextStartedAt && nextPausedAt) {
-        return Math.max(Math.ceil((nextDurationMs - (nextPausedAt - nextStartedAt)) / 1000), 0);
-      }
-
-      return Math.max(Math.ceil(nextDurationMs / 1000), 0);
-    })();
-
-    setSettings(nextSettings);
-    setTimerSnapshot({
-      timeLeft: resolvedTimeLeft,
-      isRunning: Boolean(payloadState.isRunning ?? payloadState.is_running),
-      mode: nextMode,
-      cyclesCompleted: payloadState.cyclesCompleted ?? payloadState.cycles_completed ?? 0,
-      hasPendingWorkHalfCycle: Boolean(
-        payloadState.hasPendingWorkHalfCycle ?? payloadState.has_pending_work_half_cycle
-      ),
-      configVersion: eventPayload.config_version ?? 0,
-      settings: nextSettings,
-      modeSnapshots: nextModeSnapshots,
-      lastCompletedMode: payloadState.lastCompletedMode ?? payloadState.last_completed_mode ?? null,
-      lastUpdated: payloadState.lastUpdated ?? payloadState.last_updated ?? Date.now(),
-      startedAt: nextStartedAt,
-      pausedAt: nextPausedAt,
-      durationMs: nextDurationMs,
-      serverClockOffsetMs,
-      sessionElapsedMs: nextSessionElapsedMs,
-      sessionStartedAt: nextSessionStartedAt,
-    });
-
-    setMode(nextMode);
-    setIsRunning(Boolean(payloadState.isRunning ?? payloadState.is_running));
-    setCyclesCompleted(payloadState.cyclesCompleted ?? payloadState.cycles_completed ?? 0);
-    setHasPendingWorkHalfCycle(
-      Boolean(payloadState.hasPendingWorkHalfCycle ?? payloadState.has_pending_work_half_cycle)
-    );
-    setConfigVersion(eventPayload.config_version ?? 0);
+    setSettings(nextTimer.settings);
+    setTimerSnapshot(nextTimer);
+    setMode(nextTimer.mode);
+    setIsRunning(nextTimer.isRunning);
+    setCyclesCompleted(nextTimer.cyclesCompleted);
+    setHasPendingWorkHalfCycle(nextTimer.hasPendingWorkHalfCycle);
+    setConfigVersion(nextTimer.configVersion);
     setTimerId(eventPayload.timer_id || "");
     setNowMs(Date.now());
-    lastCompletionStampRef.current = `${payloadState.lastCompletedMode || payloadState.last_completed_mode || "none"}:${payloadState.lastUpdated ?? payloadState.last_updated ?? Date.now()}`;
+    lastCompletionStampRef.current = `${nextTimer.lastCompletedMode || "none"}:${nextTimer.lastUpdated}`;
     hasSyncedInitialTimerRef.current = true;
   }, []);
 

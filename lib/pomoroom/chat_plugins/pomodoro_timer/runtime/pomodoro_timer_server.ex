@@ -412,12 +412,12 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
         cycles_completed: state.cycles_completed,
         has_pending_work_half_cycle: state.has_pending_work_half_cycle,
         settings: %{
-          workDuration: state.config.work_duration,
-          shortBreakDuration: state.config.short_break_duration,
-          longBreakDuration: state.config.long_break_duration,
-          cyclesBeforeLongBreak: state.config.cycles_before_long_break
+          work_duration: state.config.work_duration,
+          short_break_duration: state.config.short_break_duration,
+          long_break_duration: state.config.long_break_duration,
+          cycles_before_long_break: state.config.cycles_before_long_break
         },
-        modeSnapshots: %{
+        mode_snapshots: %{
           work: mode_duration(state.config, "work"),
           shortBreak: mode_duration(state.config, "shortBreak"),
           longBreak: mode_duration(state.config, "longBreak")

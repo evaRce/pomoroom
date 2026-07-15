@@ -8,7 +8,12 @@ import { PomodoroTimer } from "../pomodoro_timer/PomodoroTimer";
 import { KanbanBoard } from "../kanban_board_panel/KanbanBoard";
 import CallScreen from "../call_panel/CallScreen";
 import { useCallContext } from "../call_panel/CallContext";
-import { createTimer, hasTimer, updateTimer, type TimerState } from "../pomodoro_timer/pomodoroTimerStore";
+import {
+  createTimer,
+  hasTimer,
+  normalizeTimerPayload,
+  updateTimer,
+} from "../pomodoro_timer/pomodoroTimerStore";
 import {
   getPomodoroNotifications,
   markPomodoroNotification,
@@ -55,74 +60,6 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   const soundEndWork = useRef(new Audio("/sounds/bell-notification.wav"));
   const soundEndBreak = useRef(new Audio("/sounds/happy-bells-notification.wav"));
 
-  const normalizePomodoroTimerPayload = (payload: any): TimerState | null => {
-    if (!payload) {
-      return null;
-    }
-
-    const payloadConfig = payload.config || {};
-    const payloadState = payload.state || {};
-    const serverNow = payload.server_now ?? payloadState.server_now ?? Date.now();
-    const serverClockOffsetMs = Date.now() - serverNow;
-    const adjustedNowMs = Date.now() - serverClockOffsetMs;
-    const payloadSettings = payloadState.settings || {};
-    const settings = {
-      workDuration: payloadSettings.workDuration ?? payloadConfig.work_duration ?? 0,
-      shortBreakDuration: payloadSettings.shortBreakDuration ?? payloadConfig.short_break_duration ?? 0,
-      longBreakDuration: payloadSettings.longBreakDuration ?? payloadConfig.long_break_duration ?? 0,
-      cyclesBeforeLongBreak:
-        payloadSettings.cyclesBeforeLongBreak ?? payloadConfig.cycles_before_long_break ?? 0,
-    };
-    const mode = payloadState.mode || "work";
-    const modeSnapshots = payloadState.modeSnapshots || {
-      work: settings.workDuration * 60,
-      shortBreak: settings.shortBreakDuration * 60,
-      longBreak: settings.longBreakDuration * 60,
-    };
-    const durationMs =
-      payloadState.durationMs ??
-      payloadState.duration_ms ??
-      modeSnapshots[mode as keyof typeof modeSnapshots] * 1000;
-    const startedAt = payloadState.startedAt ?? payloadState.started_at ?? null;
-    const pausedAt = payloadState.pausedAt ?? payloadState.paused_at ?? null;
-    const resolvedTimeLeft = (() => {
-      if (Boolean(payloadState.isRunning ?? payloadState.is_running) && startedAt) {
-        return Math.max(Math.ceil((durationMs - (adjustedNowMs - startedAt)) / 1000), 0);
-      }
-
-      if (startedAt && pausedAt) {
-        return Math.max(Math.ceil((durationMs - (pausedAt - startedAt)) / 1000), 0);
-      }
-
-      return Math.max(Math.ceil(durationMs / 1000), 0);
-    })();
-    const lastUpdated = payloadState.lastUpdated ?? payloadState.last_updated ?? serverNow;
-    const sessionElapsedMs = payloadState.sessionElapsedMs ?? payloadState.session_elapsed_ms ?? 0;
-    const sessionStartedAt =
-      payloadState.sessionStartedAt ?? payloadState.session_started_at ?? null;
-
-    return {
-      timeLeft: resolvedTimeLeft,
-      isRunning: Boolean(payloadState.isRunning ?? payloadState.is_running),
-      mode,
-      cyclesCompleted: payloadState.cyclesCompleted ?? payloadState.cycles_completed ?? 0,
-      hasPendingWorkHalfCycle: Boolean(
-        payloadState.hasPendingWorkHalfCycle ?? payloadState.has_pending_work_half_cycle
-      ),
-      configVersion: payload.config_version ?? 0,
-      settings,
-      modeSnapshots,
-      lastCompletedMode: payloadState.lastCompletedMode ?? payloadState.last_completed_mode ?? null,
-      lastUpdated,
-      startedAt,
-      pausedAt,
-      durationMs,
-      serverClockOffsetMs,
-      sessionElapsedMs,
-      sessionStartedAt,
-    };
-  };
-
   const getPomodoroSignature = useCallback((eventName: string, payload: any) => {
     const state = payload?.state || {};
 
@@ -132,11 +69,11 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
       payload?.timer_id || "",
       payload?.config_version ?? 0,
       state.mode || state.last_completed_mode || "",
-      state.started_at ?? state.startedAt ?? "",
-      state.paused_at ?? state.pausedAt ?? "",
-      state.last_updated ?? state.lastUpdated ?? "",
-      state.time_left ?? state.timeLeft ?? "",
-      state.session_started_at ?? state.sessionStartedAt ?? "",
+      state.started_at ?? "",
+      state.paused_at ?? "",
+      state.last_updated ?? "",
+      state.time_left ?? "",
+      state.session_started_at ?? "",
       payload?.config?.work_duration ?? "",
       payload?.config?.short_break_duration ?? "",
       payload?.config?.long_break_duration ?? "",
@@ -151,7 +88,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
       return;
     }
 
-    const nextTimer = normalizePomodoroTimerPayload(payload);
+    const nextTimer = normalizeTimerPayload(payload);
     if (!nextTimer) {
       return;
     }

@@ -286,3 +286,70 @@ export function getSnapshotForMode(chatId: string, mode: TimerMode): number {
 
   return getModeSnapshot(timer, mode);
 }
+
+/**
+ * Used by every component that receives
+ * pomodoro events, so the time/mode/session math only lives here.
+ */
+export function normalizeTimerPayload(payload: any): TimerState | null {
+  if (!payload) return null;
+
+  const payloadConfig = payload.config || {};
+  const payloadState = payload.state || {};
+  const serverNow = payload.server_now ?? payloadState.server_now ?? Date.now();
+  const serverClockOffsetMs = Date.now() - serverNow;
+  const adjustedNowMs = Date.now() - serverClockOffsetMs;
+  const payloadSettings = payloadState.settings || {};
+
+  const settings: TimerSettings = {
+    workDuration: payloadSettings.work_duration ?? payloadConfig.work_duration ?? 0,
+    shortBreakDuration: payloadSettings.short_break_duration ?? payloadConfig.short_break_duration ?? 0,
+    longBreakDuration: payloadSettings.long_break_duration ?? payloadConfig.long_break_duration ?? 0,
+    cyclesBeforeLongBreak:
+      payloadSettings.cycles_before_long_break ?? payloadConfig.cycles_before_long_break ?? 0,
+  };
+
+  const mode = (payloadState.mode || "work") as TimerMode;
+  const modeSnapshots: Record<TimerMode, number> = payloadState.mode_snapshots || {
+    work: settings.workDuration * 60,
+    shortBreak: settings.shortBreakDuration * 60,
+    longBreak: settings.longBreakDuration * 60,
+  };
+  const durationMs = payloadState.duration_ms ?? modeSnapshots[mode] * 1000;
+  const startedAt = payloadState.started_at ?? null;
+  const pausedAt = payloadState.paused_at ?? null;
+  const isRunning = Boolean(payloadState.is_running);
+  const sessionElapsedMs = payloadState.session_elapsed_ms ?? 0;
+  const sessionStartedAt = payloadState.session_started_at ?? null;
+
+  const resolvedTimeLeft = (() => {
+    if (isRunning && startedAt) {
+      return Math.max(Math.ceil((durationMs - (adjustedNowMs - startedAt)) / 1000), 0);
+    }
+
+    if (startedAt && pausedAt) {
+      return Math.max(Math.ceil((durationMs - (pausedAt - startedAt)) / 1000), 0);
+    }
+
+    return Math.max(Math.ceil(durationMs / 1000), 0);
+  })();
+
+  return {
+    timeLeft: resolvedTimeLeft,
+    isRunning,
+    mode,
+    cyclesCompleted: payloadState.cycles_completed ?? 0,
+    hasPendingWorkHalfCycle: Boolean(payloadState.has_pending_work_half_cycle),
+    configVersion: payload.config_version ?? 0,
+    settings,
+    modeSnapshots,
+    lastCompletedMode: payloadState.last_completed_mode ?? null,
+    lastUpdated: payloadState.last_updated ?? serverNow,
+    startedAt,
+    pausedAt,
+    durationMs,
+    serverClockOffsetMs,
+    sessionElapsedMs,
+    sessionStartedAt,
+  };
+}
