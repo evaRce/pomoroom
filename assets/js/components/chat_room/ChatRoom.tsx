@@ -9,7 +9,6 @@ import RejectedRequestSend from "./contact_requests/RejectedRequestSend";
 import RejectedRequestReceived from "./contact_requests/RejectedRequestReceived";
 import ConversationSidebar from "./conversation_sidebar/ConversationSidebar";
 import { CallSessionProvider } from "./call_panel/CallContext";
-import MinimizedCallBar from "./call_panel/MinimizedCallBar";
 import { useOutgoingLiveViewActions } from "../../hooks/useLiveViewActions";
 import { useUserContactsAndGroupsEvents } from "../../hooks/useUserContactsAndGroupsEvents";
 import { useChatSessionEvents } from "../../hooks/useChatSessionEvents";
@@ -109,7 +108,6 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
         )}
         {component === "" && <BackGround imageNumber={imageNumber} />}
         {isVisibleDetail === true && <ChatDetailPanel />}
-        <MinimizedCallBar />
       </div>
     </CallSessionProvider>
   );

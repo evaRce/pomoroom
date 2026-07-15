@@ -37,9 +37,7 @@ const callText = {
   },
 
   minibar: {
-    callWith: (roomName: string) => `Llamada con ${roomName}`,
-    callInProgress: "Llamada en curso",
-    callActiveElsewhere: "Llamada activa en otro chat",
+    callInProgress: "En llamada",
   },
 };
 

@@ -75,7 +75,7 @@ export default function CurrentUserCard() {
 	};
 
 	return (
-		<div className="flex h-[10vh] w-[20vw] justify-between sm:items-center py-7 px-2 gap-2 ">
+		<div className="flex w-[20vw] shrink-0 justify-between sm:items-center py-4 px-2 gap-2">
 			{userLogin && (
 				<div className="flex relative rounded-lg items-center space-x-2 mb-1">
 					<div className="flex-shrink-0">

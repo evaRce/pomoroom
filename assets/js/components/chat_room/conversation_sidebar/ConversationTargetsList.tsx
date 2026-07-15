@@ -317,8 +317,8 @@ export default function ConversationTargetsList() {
   const visibleContacts = filteredContacts.slice(0, visibleCount);
 
   return (
-    <div className="flex flex-col h-[90vh] w-[20vw]">
-      <div className="flex items-center w-[20vw] bg-gray-100">
+    <div className="flex flex-col h-full min-h-0 w-[20vw]">
+      <div className="flex items-center w-[20vw] bg-gray-100 shrink-0">
         <Input
           className="my-2 ml-2 mr-1 lg:w-[18vw] w-[16vw]"
           type="text"
@@ -337,7 +337,7 @@ export default function ConversationTargetsList() {
         )}
       </div>
       <div
-        className="overflow-auto w-[20vw] p-1"
+        className="flex-1 min-h-0 overflow-auto w-[20vw] p-1"
         style={{ scrollbarWidth: "thin" }}
         onScroll={handleListScroll}
       >

@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "antd";
-import { Mic, MicOff, PhoneOff, MessageCircle } from "lucide-react";
+import { Mic, MicOff, PhoneOff } from "lucide-react";
 import { useLocalParticipant } from "@livekit/components-react";
 import { useCallContext } from "./CallContext";
 import { useEventContext } from "../EventContext";
@@ -11,7 +11,6 @@ export default function MinimizedCallBar() {
     activeCallChatId,
     activeCallRoomName,
     activeCallIsGroupChat,
-    isMinimized,
     viewingChatId,
     setMinimized,
     leaveCall,
@@ -19,9 +18,7 @@ export default function MinimizedCallBar() {
   const { addEvent } = useEventContext();
   const { localParticipant, isMicrophoneEnabled } = useLocalParticipant();
 
-  const isCallScreenVisible = !!activeCallChatId && activeCallChatId === viewingChatId && !isMinimized;
-
-  if (!activeCallChatId || isCallScreenVisible) return null;
+  if (!activeCallChatId) return null;
 
   const isSameChat = activeCallChatId === viewingChatId;
   const canNavigateToCall = !isSameChat && !!activeCallRoomName;
@@ -46,32 +43,25 @@ export default function MinimizedCallBar() {
   const isClickable = isSameChat || canNavigateToCall;
 
   return (
-    <div
-      role={isClickable ? "button" : undefined}
-      onClick={isClickable ? handleBarClick : undefined}
-      className={`fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-full border border-gray-200 bg-white px-4 py-2 shadow-lg ${
-        isClickable ? "cursor-pointer" : ""
-      }`}
-    >
-      {isSameChat ? (
-        <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-      ) : (
-        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-100 text-brand">
-          <MessageCircle className="h-3 w-3" />
-        </span>
-      )}
-      <span className="text-sm font-medium text-gray-700">
-        {isSameChat
-          ? activeCallRoomName
-            ? callText.minibar.callWith(activeCallRoomName)
-            : callText.minibar.callInProgress
-          : callText.minibar.callActiveElsewhere}
-      </span>
+    <div className="mx-2 my-2 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-2">
+      <div
+        role={isClickable ? "button" : undefined}
+        onClick={isClickable ? handleBarClick : undefined}
+        className={`flex min-w-0 flex-1 items-center gap-2 ${isClickable ? "cursor-pointer" : ""}`}
+      >
+        <p className="m-0 flex min-w-0 flex-1 items-center gap-1.5 truncate text-sm leading-none">
+          <span className="font-semibold text-green-700">{callText.minibar.callInProgress}</span>
+          {activeCallRoomName && (
+            <>
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-green-500 animate-pulse" />
+              <span className="truncate text-gray-500">{activeCallRoomName}</span>
+            </>
+          )}
+        </p>
+      </div>
       <Button
-        type="text"
         shape="circle"
-        size="small"
-        className={isMicrophoneEnabled ? "!text-gray-600 hover:!bg-gray-100" : "!bg-red-50 !text-red-600"}
+        className={`!flex !h-9 !w-9 !items-center !justify-center !p-0 ${isMicrophoneEnabled ? "!border-gray-300 !bg-white !text-gray-700 hover:!bg-gray-100" : "!border-red-200 !bg-red-50 !text-red-600"}`}
         icon={isMicrophoneEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
         onClick={(event) => {
           stop(event);
@@ -80,10 +70,10 @@ export default function MinimizedCallBar() {
         title={isMicrophoneEnabled ? callText.screen.muteMic : callText.screen.unmuteMic}
       />
       <Button
-        type="text"
         shape="circle"
-        size="small"
+        className="!flex !h-9 !w-9 !items-center !justify-center !p-0"
         danger
+        type="primary"
         icon={<PhoneOff className="h-4 w-4" />}
         onClick={(event) => {
           stop(event);
