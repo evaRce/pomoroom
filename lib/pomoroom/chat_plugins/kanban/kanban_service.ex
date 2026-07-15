@@ -127,10 +127,14 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
               task_ids: []
             }
 
-            updated_board = Map.put(board, :columns, board_columns(board) ++ [column])
+            new_columns = board_columns(board) ++ [column]
 
-            case KanbanRepository.update_board(updated_board) do
-              {:ok, _result} -> {:ok, sanitize_for_client(materialize_board(updated_board))}
+            case KanbanRepository.update_board_if_version_matches(
+                   kanban_id,
+                   new_columns,
+                   board.board_version
+                 ) do
+              {:ok, updated_board} -> {:ok, sanitize_for_client(materialize_board(updated_board))}
               {:error, reason} -> {:error, reason}
             end
 
@@ -149,10 +153,14 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
       true ->
         case KanbanRepository.get_board_by_kanban_id(kanban_id) do
           {:ok, board} ->
-            updated_board = rename_column_in_board(board, column_id, title)
+            new_columns = renamed_columns(board, column_id, title)
 
-            case KanbanRepository.update_board(updated_board) do
-              {:ok, _result} -> {:ok, materialize_board(updated_board)}
+            case KanbanRepository.update_board_if_version_matches(
+                   kanban_id,
+                   new_columns,
+                   board.board_version
+                 ) do
+              {:ok, updated_board} -> {:ok, materialize_board(updated_board)}
               {:error, reason} -> {:error, reason}
             end
 
@@ -182,10 +190,12 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
                     column_id_from_column(col) == column_id
                   end)
 
-                updated_board = Map.put(board, :columns, remaining_columns)
-
-                case KanbanRepository.update_board(updated_board) do
-                  {:ok, _result} ->
+                case KanbanRepository.update_board_if_version_matches(
+                       kanban_id,
+                       remaining_columns,
+                       board.board_version
+                     ) do
+                  {:ok, updated_board} ->
                     case delete_tasks(task_ids_from_column(column)) do
                       :ok -> {:ok, sanitize_for_client(materialize_board(updated_board))}
                       {:error, reason} -> {:error, reason}
@@ -232,13 +242,15 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
 
                 case KanbanRepository.create_task(task) do
                   {:ok, _result} ->
-                    updated_columns =
+                    new_columns =
                       replace_column_task_ids(columns, column_id, task_ids ++ [task_id])
 
-                    updated_board = Map.put(board, :columns, updated_columns)
-
-                    case KanbanRepository.update_board(updated_board) do
-                      {:ok, _board_result} ->
+                    case KanbanRepository.update_board_if_version_matches(
+                           kanban_id,
+                           new_columns,
+                           board.board_version
+                         ) do
+                      {:ok, updated_board} ->
                         {:ok, sanitize_for_client(materialize_board(updated_board))}
 
                       {:error, reason} ->
@@ -374,10 +386,14 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
       {:ok, task} ->
         case KanbanRepository.get_board_by_kanban_id(task.kanban_id) do
           {:ok, board} ->
-            updated_board = remove_task_from_board(board, task)
+            new_columns = columns_without_task(board, task)
 
-            case KanbanRepository.update_board(updated_board) do
-              {:ok, _board_result} ->
+            case KanbanRepository.update_board_if_version_matches(
+                   board.kanban_id,
+                   new_columns,
+                   board.board_version
+                 ) do
+              {:ok, updated_board} ->
                 case KanbanRepository.delete_task(task_id) do
                   {:ok, _result} ->
                     case sync_board_tasks(updated_board) do
@@ -487,15 +503,17 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
             updated_from_ids = Enum.reject(from_task_ids, fn id -> id == task.task_id end)
             inserted_to_ids = insert_task_id(to_task_ids, task.task_id, new_position)
 
-            updated_columns =
+            new_columns =
               columns
               |> replace_column_task_ids(from_column_id, updated_from_ids)
               |> replace_column_task_ids(to_column_id, inserted_to_ids)
 
-            updated_board = Map.put(board, :columns, updated_columns)
-
-            case KanbanRepository.update_board(updated_board) do
-              {:ok, _result} ->
+            case KanbanRepository.update_board_if_version_matches(
+                   board.kanban_id,
+                   new_columns,
+                   board.board_version
+                 ) do
+              {:ok, updated_board} ->
                 case update_column_tasks_order(from_column_id, updated_from_ids) do
                   :ok ->
                     case update_column_tasks_order(to_column_id, inserted_to_ids) do
@@ -548,11 +566,14 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
             remaining_task_ids = Enum.reject(current_task_ids, fn id -> id == task.task_id end)
             reordered_task_ids = insert_task_id(remaining_task_ids, task.task_id, new_position)
 
-            updated_columns = replace_column_task_ids(columns, column_id, reordered_task_ids)
-            updated_board = Map.put(board, :columns, updated_columns)
+            new_columns = replace_column_task_ids(columns, column_id, reordered_task_ids)
 
-            case KanbanRepository.update_board(updated_board) do
-              {:ok, _result} ->
+            case KanbanRepository.update_board_if_version_matches(
+                   board.kanban_id,
+                   new_columns,
+                   board.board_version
+                 ) do
+              {:ok, updated_board} ->
                 case update_column_tasks_order(column_id, reordered_task_ids) do
                   :ok ->
                     updated_task =
@@ -666,35 +687,29 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
     Map.get(column, :column_id) || Map.get(column, "column_id")
   end
 
-  defp rename_column_in_board(board, column_id, title) do
-    updated_columns =
-      Enum.map(board_columns(board), fn column ->
-        case column_id_from_column(column) == column_id do
-          true -> Map.put(column, :title, title)
-          false -> column
-        end
-      end)
-
-    Map.put(board, :columns, updated_columns)
+  defp renamed_columns(board, column_id, title) do
+    Enum.map(board_columns(board), fn column ->
+      case column_id_from_column(column) == column_id do
+        true -> Map.put(column, :title, title)
+        false -> column
+      end
+    end)
   end
 
-  defp remove_task_from_board(board, task) do
-    updated_columns =
-      Enum.map(board_columns(board), fn column ->
-        case column_id_from_column(column) == task.column_id do
-          true ->
-            updated_ids =
-              task_ids_from_column(column)
-              |> Enum.reject(fn current_task_id -> current_task_id == task.task_id end)
+  defp columns_without_task(board, task) do
+    Enum.map(board_columns(board), fn column ->
+      case column_id_from_column(column) == task.column_id do
+        true ->
+          updated_ids =
+            task_ids_from_column(column)
+            |> Enum.reject(fn current_task_id -> current_task_id == task.task_id end)
 
-            Map.put(column, :task_ids, updated_ids)
+          Map.put(column, :task_ids, updated_ids)
 
-          false ->
-            column
-        end
-      end)
-
-    Map.put(board, :columns, updated_columns)
+        false ->
+          column
+      end
+    end)
   end
 
   defp sync_board_tasks(board) do

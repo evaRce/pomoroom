@@ -23,15 +23,42 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanRepository do
     end
   end
 
-  def update_board(board) do
-    changes = board_changes(board)
+  def update_board_if_version_matches(kanban_id, columns, expected_board_version) do
+    next_board_version = expected_board_version + 1
 
-    Mongo.update_one(
-      :mongo,
-      @board_collection,
-      %{"kanban_id" => changes.kanban_id},
-      %{"$set" => Map.delete(changes, :kanban_id)}
-    )
+    query =
+      if expected_board_version == 0 do
+        %{
+          "$or" => [
+            %{"kanban_id" => kanban_id, "board_version" => 0},
+            %{"kanban_id" => kanban_id, "board_version" => %{"$exists" => false}}
+          ]
+        }
+      else
+        %{"kanban_id" => kanban_id, "board_version" => expected_board_version}
+      end
+
+    set_data = %{
+      columns: normalized_columns(columns),
+      board_version: next_board_version
+    }
+
+    case Mongo.find_one_and_update(
+           :mongo,
+           @board_collection,
+           query,
+           %{"$set" => set_data},
+           return_document: :after
+         ) do
+      {:ok, %Mongo.FindAndModifyResult{value: nil}} ->
+        {:error, :version_conflict}
+
+      {:ok, %Mongo.FindAndModifyResult{value: updated_board}} when is_map(updated_board) ->
+        {:ok, board_changes(updated_board)}
+
+      {:error, _reason} ->
+        {:error, :failed_to_persist_board}
+    end
   end
 
   def delete_board(kanban_id) do
@@ -120,23 +147,32 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanRepository do
 
   defp board_changes(args) do
     kanban_id = Map.get(args, :kanban_id) || Map.get(args, "kanban_id")
-
-    columns =
-      Map.get(args, :columns) ||
-        Map.get(args, "columns") ||
-        []
+    columns = Map.get(args, :columns) || Map.get(args, "columns") || []
 
     %{
       kanban_id: kanban_id,
-      columns:
-        Enum.map(columns, fn column ->
-          %{
-            column_id: Map.get(column, :column_id) || Map.get(column, "column_id"),
-            title: Map.get(column, :title) || Map.get(column, "title"),
-            task_ids: Map.get(column, :task_ids) || Map.get(column, "task_ids") || []
-          }
-        end)
+      columns: normalized_columns(columns),
+      board_version: get_board_version(args)
     }
+  end
+
+  defp normalized_columns(columns) do
+    Enum.map(columns, fn column ->
+      %{
+        column_id: Map.get(column, :column_id) || Map.get(column, "column_id"),
+        title: Map.get(column, :title) || Map.get(column, "title"),
+        task_ids: Map.get(column, :task_ids) || Map.get(column, "task_ids") || []
+      }
+    end)
+  end
+
+  defp get_board_version(args) do
+    value = Map.get(args, :board_version) || Map.get(args, "board_version")
+
+    case value do
+      version when is_integer(version) and version >= 0 -> version
+      _ -> 0
+    end
   end
 
   defp task_changes(args) do

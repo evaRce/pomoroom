@@ -6,14 +6,15 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanBoardSchema do
 
   schema "kanban_boards" do
     field :kanban_id, :string
+    field :board_version, :integer, default: 0
     embeds_many :columns, Column, on_replace: :delete
   end
 
   def changeset(board, attrs) do
     board
-    |> cast(attrs, [:kanban_id])
+    |> cast(attrs, [:kanban_id, :board_version])
     |> cast_embed(:columns, with: &Column.changeset/2)
-    |> validate_required([:kanban_id])
+    |> validate_required([:kanban_id, :board_version])
   end
 
   def kanban_board_changeset(attrs) do
