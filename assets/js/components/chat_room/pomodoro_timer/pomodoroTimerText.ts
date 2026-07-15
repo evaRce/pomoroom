@@ -17,6 +17,7 @@ const pomodoroTimerText = {
     "La configuración cambió en otra sesión. Recarga la configuración y vuelve a intentar.",
   cycle: "Ciclo",
   cyclesCompleted: (count: number) => `${count} ${count === 1 ? "ciclo completado" : "ciclos completados"} hoy`,
+  sessionTime: "Tiempo de sesión",
   errors: {
     shortBreakDuration: "Debe ser menor que el descanso largo",
     longBreakDuration: "Debe ser mayor que el descanso corto",

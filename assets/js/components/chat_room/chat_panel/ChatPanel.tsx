@@ -97,6 +97,9 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
       return Math.max(Math.ceil(durationMs / 1000), 0);
     })();
     const lastUpdated = payloadState.lastUpdated ?? payloadState.last_updated ?? serverNow;
+    const sessionElapsedMs = payloadState.sessionElapsedMs ?? payloadState.session_elapsed_ms ?? 0;
+    const sessionStartedAt =
+      payloadState.sessionStartedAt ?? payloadState.session_started_at ?? null;
 
     return {
       timeLeft: resolvedTimeLeft,
@@ -115,6 +118,8 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
       pausedAt,
       durationMs,
       serverClockOffsetMs,
+      sessionElapsedMs,
+      sessionStartedAt,
     };
   };
 
@@ -131,6 +136,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
       state.paused_at ?? state.pausedAt ?? "",
       state.last_updated ?? state.lastUpdated ?? "",
       state.time_left ?? state.timeLeft ?? "",
+      state.session_started_at ?? state.sessionStartedAt ?? "",
       payload?.config?.work_duration ?? "",
       payload?.config?.short_break_duration ?? "",
       payload?.config?.long_break_duration ?? "",

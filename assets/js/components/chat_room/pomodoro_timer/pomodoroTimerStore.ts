@@ -15,6 +15,8 @@ export type TimerState = {
   pausedAt: number | null;
   durationMs: number;
   serverClockOffsetMs: number;
+  sessionElapsedMs: number;
+  sessionStartedAt: number | null;
 };
 
 type TimerListener = (timer: TimerState | undefined) => void;
@@ -273,6 +275,8 @@ export function createInitialTimerState(settings: TimerSettings): TimerState {
     pausedAt: null,
     durationMs: modeSnapshots.work * 1000,
     serverClockOffsetMs: 0,
+    sessionElapsedMs: 0,
+    sessionStartedAt: null,
   };
 }
 

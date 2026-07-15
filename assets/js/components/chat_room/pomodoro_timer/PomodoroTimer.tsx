@@ -50,6 +50,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [nowMs, setNowMs] = useState(Date.now());
+  const [sessionElapsedSeconds, setSessionElapsedSeconds] = useState(0);
 
   // Refs
   const hasSyncedInitialTimerRef = useRef(false);
@@ -113,6 +114,10 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
       nextModeSnapshots[nextMode as keyof typeof nextModeSnapshots] * 1000;
     const nextStartedAt = payloadState.startedAt ?? payloadState.started_at ?? null;
     const nextPausedAt = payloadState.pausedAt ?? payloadState.paused_at ?? null;
+    const nextSessionElapsedMs =
+      payloadState.sessionElapsedMs ?? payloadState.session_elapsed_ms ?? 0;
+    const nextSessionStartedAt =
+      payloadState.sessionStartedAt ?? payloadState.session_started_at ?? null;
     const resolvedTimeLeft = (() => {
       if (Boolean(payloadState.isRunning ?? payloadState.is_running) && nextStartedAt) {
         return Math.max(Math.ceil((nextDurationMs - (adjustedNowMs - nextStartedAt)) / 1000), 0);
@@ -143,6 +148,8 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
       pausedAt: nextPausedAt,
       durationMs: nextDurationMs,
       serverClockOffsetMs,
+      sessionElapsedMs: nextSessionElapsedMs,
+      sessionStartedAt: nextSessionStartedAt,
     });
 
     setMode(nextMode);
@@ -183,6 +190,18 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
 
     return Math.max(Math.ceil(durationMs / 1000), 0);
   }, [getDuration]);
+
+  const calculateSessionElapsedSeconds = useCallback((timer: TimerState | null, currentNowMs: number) => {
+    if (!timer) return 0;
+
+    const adjustedNowMs = currentNowMs - (timer.serverClockOffsetMs || 0);
+    const runningSegmentMs =
+      timer.isRunning && timer.sessionStartedAt
+        ? Math.max(adjustedNowMs - timer.sessionStartedAt, 0)
+        : 0;
+
+    return Math.floor((timer.sessionElapsedMs + runningSegmentMs) / 1000);
+  }, []);
 
 
   const validate = (newSettings: TimerSettings) => {
@@ -226,6 +245,14 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     }
 
     return e;
+  };
+
+  const formatSessionDuration = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    return `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   const getModeInfo = () => {
@@ -384,7 +411,8 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     if (!timerSnapshot) return;
 
     setTimeLeft(calculateRemainingSeconds(timerSnapshot, nowMs));
-  }, [timerSnapshot, nowMs, calculateRemainingSeconds]);
+    setSessionElapsedSeconds(calculateSessionElapsedSeconds(timerSnapshot, nowMs));
+  }, [timerSnapshot, nowMs, calculateRemainingSeconds, calculateSessionElapsedSeconds]);
 
   useEffect(() => {
     if (!chatId || !chatType) return;
@@ -554,14 +582,14 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full bg-gray-50 p-6">
+    <div className="flex flex-col items-center justify-center h-full w-full min-h-0 overflow-y-auto bg-gray-50 p-4 sm:p-6">
       {/* Mode selector */}
-      <div className="flex items-center gap-2 mb-8">
+      <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mb-6 sm:mb-8">
         <Button
           variant="ghost"
           size="sm"
           className={cn(
-            "h-9 text-xs font-medium",
+            "h-8 sm:h-9 text-xs font-medium",
             isRunning && "cursor-not-allowed opacity-50",
             mode === "work"
               ? "bg-sky-100 text-sky-600 hover:bg-sky-200 border border-sky-400"
@@ -577,7 +605,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
           variant="ghost"
           size="sm"
           className={cn(
-            "h-9 text-xs font-medium",
+            "h-8 sm:h-9 text-xs font-medium",
             isRunning && "cursor-not-allowed opacity-50",
             mode === "shortBreak"
               ? "bg-green-100 text-green-700 hover:bg-green-200 border border-green-400"
@@ -593,7 +621,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
           variant="ghost"
           size="sm"
           className={cn(
-            "h-9 text-xs font-medium",
+            "h-8 sm:h-9 text-xs font-medium",
             isRunning && "cursor-not-allowed opacity-50",
             mode === "longBreak"
               ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border border-yellow-400"
@@ -608,8 +636,8 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
       </div>
 
       {/* Timer display */}
-      <div className="relative flex items-center justify-center mb-8">
-        <svg className="w-64 h-64 -rotate-90" viewBox="0 0 200 200">
+      <div className="relative flex items-center justify-center mb-6 sm:mb-8">
+        <svg className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 -rotate-90" viewBox="0 0 200 200">
           <circle
             cx="100"
             cy="100"
@@ -642,27 +670,27 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
           />
         </svg>
 
-        <div className="absolute flex flex-col items-center">
-          <div className={cn("flex items-center gap-2 mb-2", modeInfo.color)}>
-            <ModeIcon className="h-5 w-5" />
-            <span className="text-sm font-medium">{modeInfo.label}</span>
+        <div className="absolute flex flex-col items-center px-2">
+          <div className={cn("flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2", modeInfo.color)}>
+            <ModeIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="text-xs sm:text-sm font-medium">{modeInfo.label}</span>
           </div>
-          <span className="text-6xl font-bold text-foreground font-mono tracking-tight">
+          <span className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground font-mono tracking-tight">
             {formatDuration(timeLeft)}
           </span>
-          <span className="text-sm text-slate-500 mt-2">
+          <span className="text-xs sm:text-sm text-slate-500 mt-1.5 sm:mt-2">
             {pomodoroTimerText.cycle} {cyclesCompleted + 1}
           </span>
         </div>
       </div>
 
       {/* Controls */}
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
         <Button
           variant="outline"
           size="icon"
           className={cn(
-            "h-12 w-12 rounded-full",
+            "h-10 w-10 sm:h-12 sm:w-12 rounded-full",
             mode === "work"
               ? "hover:bg-sky-200"
               : mode === "shortBreak"
@@ -672,12 +700,12 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
           onClick={handleReset}
           aria-label="Reset timer"
         >
-          <RotateCcw className="h-5 w-5" />
+          <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
         </Button>
         <Button
           size="icon"
           className={cn(
-            "h-16 w-16 rounded-full",
+            "h-14 w-14 sm:h-16 sm:w-16 rounded-full",
             mode === "work"
               ? "bg-sky-300 hover:bg-sky-200"
               : mode === "shortBreak"
@@ -688,9 +716,9 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
           aria-label={isRunning ? "Pause timer" : "Start timer"}
         >
           {isRunning ? (
-            <Pause className="h-12 w-12" />
+            <Pause className="h-10 w-10 sm:h-12 sm:w-12" />
           ) : (
-            <Play className="h-12 w-12" />
+            <Play className="h-10 w-10 sm:h-12 sm:w-12" />
           )}
         </Button>
 
@@ -708,43 +736,53 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
         />
       </div>
 
-      {/* Completed cycles */}
-      <div className="flex items-center gap-2 mt-4">
-        {Array.from({ length: settings.cyclesBeforeLongBreak }).map((_, i) => {
-          const remainder = cyclesCompleted % settings.cyclesBeforeLongBreak;
-          const filledCount =
-            remainder === 0
-              ? cyclesCompleted > 0 && !hasPendingWorkHalfCycle
-                ? settings.cyclesBeforeLongBreak
-                : 0
-              : remainder;
+      {/* Stats: session time + completed cycles */}
+      <div className="grid grid-cols-[auto_auto_auto] items-center justify-center gap-x-4 sm:gap-x-8 gap-y-0.5">
+        <span className="self-start text-xs sm:text-sm text-slate-500 text-center justify-self-center">
+          {pomodoroTimerText.sessionTime}
+        </span>
+        <div className="row-span-2 h-full w-px bg-slate-200 justify-self-center" />
+        <p className="self-start text-xs sm:text-sm text-slate-500 text-center justify-self-center">
+          {pomodoroTimerText.cyclesCompleted(cyclesCompleted)}
+        </p>
 
-          const isFull = i < filledCount;
-          const isHalf = hasPendingWorkHalfCycle && i === filledCount;
+        <span className="text-base sm:text-lg font-mono font-semibold text-slate-600 justify-self-center">
+          {formatSessionDuration(sessionElapsedSeconds)}
+        </span>
+        <div className="flex items-center gap-1.5 sm:gap-2 justify-self-center">
+          {Array.from({ length: settings.cyclesBeforeLongBreak }).map((_, i) => {
+            const remainder = cyclesCompleted % settings.cyclesBeforeLongBreak;
+            const filledCount =
+              remainder === 0
+                ? cyclesCompleted > 0 && !hasPendingWorkHalfCycle
+                  ? settings.cyclesBeforeLongBreak
+                  : 0
+                : remainder;
 
-          return (
-            <div
-              key={i}
-              className={cn(
-                "relative h-3 w-3 rounded-full bg-gray-300 overflow-hidden",
-                "transition-colors"
-              )}
-            >
-              {(isFull || isHalf) && (
-                <div
-                  className={cn(
-                    "absolute inset-y-0 left-0 bg-gray-500",
-                    isFull ? "w-full" : "w-1/2"
-                  )}
-                />
-              )}
-            </div>
-          );
-        })}
+            const isFull = i < filledCount;
+            const isHalf = hasPendingWorkHalfCycle && i === filledCount;
+
+            return (
+              <div
+                key={i}
+                className={cn(
+                  "relative h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-slate-300 overflow-hidden",
+                  "transition-colors"
+                )}
+              >
+                {(isFull || isHalf) && (
+                  <div
+                    className={cn(
+                      "absolute inset-y-0 left-0 bg-slate-600",
+                      isFull ? "w-full" : "w-1/2"
+                    )}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
-      <p className="text-xs text-slate-500 mt-2">
-        {pomodoroTimerText.cyclesCompleted(cyclesCompleted)}
-      </p>
     </div>
   );
 }

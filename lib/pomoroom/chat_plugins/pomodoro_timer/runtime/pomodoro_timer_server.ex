@@ -55,7 +55,9 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
         config_version: 0,
         timer_ref: nil,
         started_at: nil,
-        paused_at: nil
+        paused_at: nil,
+        session_elapsed_ms: 0,
+        session_started_at: nil
       }
       |> apply_persisted_state()
 
@@ -110,6 +112,7 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
           |> Map.put(:last_updated, now)
           |> Map.put(:started_at, started_at)
           |> Map.put(:paused_at, nil)
+          |> start_session_segment(now)
           |> schedule_tick()
 
         broadcast_state(next_state, :start_timer)
@@ -137,6 +140,7 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
           |> Map.put(:started_at, state.started_at || now)
           |> Map.put(:last_completed_mode, nil)
           |> Map.put(:last_updated, now)
+          |> finalize_session_segment(now)
 
         broadcast_state(next_state, :pause_timer)
         {:reply, {:ok, format_payload(next_state)}, next_state}
@@ -268,6 +272,8 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
     |> Map.put(:has_pending_work_half_cycle, false)
     |> Map.put(:last_completed_mode, nil)
     |> Map.put(:last_updated, now_ms())
+    |> Map.put(:session_elapsed_ms, 0)
+    |> Map.put(:session_started_at, nil)
   end
 
   defp set_mode_state(state, requested_mode) do
@@ -288,16 +294,19 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
   end
 
   defp advance_tick(state) do
+    now = now_ms()
     next_time_left = max(state.time_left - 1, 0)
 
     if next_time_left == 0 do
-      advance_completed_timer(state)
+      advance_completed_timer(state, now)
     else
-      %{state | time_left: next_time_left, last_updated: now_ms()}
+      %{state | time_left: next_time_left, last_updated: now}
     end
   end
 
-  defp advance_completed_timer(state) do
+  defp advance_completed_timer(state, now) do
+    state = finalize_session_segment(state, now)
+
     case state.mode do
       "work" ->
         next_mode =
@@ -314,7 +323,7 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
             is_running: false,
             has_pending_work_half_cycle: true,
             last_completed_mode: "work",
-            last_updated: now_ms()
+            last_updated: now
         }
 
       _break_mode ->
@@ -326,9 +335,25 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
             cycles_completed: state.cycles_completed + 1,
             has_pending_work_half_cycle: false,
             last_completed_mode: state.mode,
-            last_updated: now_ms()
+            last_updated: now
         }
     end
+  end
+
+  defp finalize_session_segment(state, now) do
+    case state.session_started_at do
+      nil ->
+        state
+
+      started_at ->
+        state
+        |> Map.put(:session_elapsed_ms, state.session_elapsed_ms + max(now - started_at, 0))
+        |> Map.put(:session_started_at, nil)
+    end
+  end
+
+  defp start_session_segment(state, now) do
+    Map.put(state, :session_started_at, now)
   end
 
   defp mode_duration(config, "work"), do: config.work_duration * 60
@@ -401,7 +426,9 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
         last_updated: state.last_updated,
         started_at: state.started_at,
         paused_at: state.paused_at,
-        duration_ms: duration_ms
+        duration_ms: duration_ms,
+        session_elapsed_ms: state.session_elapsed_ms,
+        session_started_at: state.session_started_at
       }
     }
   end
