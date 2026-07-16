@@ -230,14 +230,11 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
               column ->
                 task_id = KanbanTaskSchema.generate_task_id()
                 task_ids = task_ids_from_column(column)
-                order_in_column = length(task_ids)
 
                 task = %{
                   task_id: task_id,
                   kanban_id: kanban_id,
-                  column_id: column_id,
-                  title: title,
-                  order_in_column: order_in_column
+                  title: title
                 }
 
                 case KanbanRepository.create_task(task) do
@@ -395,14 +392,8 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
                  ) do
               {:ok, updated_board} ->
                 case KanbanRepository.delete_task(task_id) do
-                  {:ok, _result} ->
-                    case sync_board_tasks(updated_board) do
-                      :ok -> {:ok, materialize_board(updated_board)}
-                      {:error, reason} -> {:error, reason}
-                    end
-
-                  {:error, reason} ->
-                    {:error, reason}
+                  {:ok, _result} -> {:ok, materialize_board(updated_board)}
+                  {:error, reason} -> {:error, reason}
                 end
 
               {:error, reason} ->
@@ -514,32 +505,7 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
                    board.board_version
                  ) do
               {:ok, updated_board} ->
-                case update_column_tasks_order(from_column_id, updated_from_ids) do
-                  :ok ->
-                    case update_column_tasks_order(to_column_id, inserted_to_ids) do
-                      :ok ->
-                        updated_task =
-                          Map.put(task, :column_id, to_column_id)
-                          |> Map.put(
-                            :order_in_column,
-                            task_position(inserted_to_ids, task.task_id)
-                          )
-
-                        case KanbanRepository.update_task(updated_task) do
-                          {:ok, _task_result} ->
-                            {:ok, sanitize_for_client(materialize_board(updated_board))}
-
-                          {:error, reason} ->
-                            {:error, reason}
-                        end
-
-                      {:error, reason} ->
-                        {:error, reason}
-                    end
-
-                  {:error, reason} ->
-                    {:error, reason}
-                end
+                {:ok, sanitize_for_client(materialize_board(updated_board))}
 
               {:error, reason} ->
                 {:error, reason}
@@ -574,26 +540,7 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
                    board.board_version
                  ) do
               {:ok, updated_board} ->
-                case update_column_tasks_order(column_id, reordered_task_ids) do
-                  :ok ->
-                    updated_task =
-                      Map.put(task, :column_id, column_id)
-                      |> Map.put(
-                        :order_in_column,
-                        task_position(reordered_task_ids, task.task_id)
-                      )
-
-                    case KanbanRepository.update_task(updated_task) do
-                      {:ok, _task_result} ->
-                        {:ok, sanitize_for_client(materialize_board(updated_board))}
-
-                      {:error, reason} ->
-                        {:error, reason}
-                    end
-
-                  {:error, reason} ->
-                    {:error, reason}
-                end
+                {:ok, sanitize_for_client(materialize_board(updated_board))}
 
               {:error, reason} ->
                 {:error, reason}
@@ -603,29 +550,6 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
             {:error, :not_found}
         end
     end
-  end
-
-  defp update_column_tasks_order(column_id, task_ids) do
-    {:ok, tasks} = KanbanRepository.get_tasks_by_ids(task_ids)
-    tasks_map = map_tasks_by_id(tasks)
-
-    Enum.reduce_while(Enum.with_index(task_ids), :ok, fn {current_task_id, position}, :ok ->
-      case Map.get(tasks_map, current_task_id) do
-        nil ->
-          {:halt, {:error, :task_not_found}}
-
-        task ->
-          updated_task =
-            task
-            |> Map.put(:column_id, column_id)
-            |> Map.put(:order_in_column, position)
-
-          case KanbanRepository.update_task(updated_task) do
-            {:ok, _} -> {:cont, :ok}
-            {:error, reason} -> {:halt, {:error, reason}}
-          end
-      end
-    end)
   end
 
   defp process_id(chat_id, chat_type) do
@@ -649,13 +573,6 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
   defp clamp_position(position, _length) when position < 0, do: 0
   defp clamp_position(position, length) when position > length, do: length
   defp clamp_position(position, _length), do: position
-
-  defp task_position(task_ids, task_id) do
-    case Enum.find_index(task_ids, fn id -> id == task_id end) do
-      nil -> 0
-      position -> position
-    end
-  end
 
   defp board_columns(board) do
     Map.get(board, :columns) || Map.get(board, "columns") || []
@@ -698,54 +615,11 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
 
   defp columns_without_task(board, task) do
     Enum.map(board_columns(board), fn column ->
-      case column_id_from_column(column) == task.column_id do
-        true ->
-          updated_ids =
-            task_ids_from_column(column)
-            |> Enum.reject(fn current_task_id -> current_task_id == task.task_id end)
+      updated_ids =
+        task_ids_from_column(column)
+        |> Enum.reject(fn current_task_id -> current_task_id == task.task_id end)
 
-          Map.put(column, :task_ids, updated_ids)
-
-        false ->
-          column
-      end
-    end)
-  end
-
-  defp sync_board_tasks(board) do
-    task_ids = task_ids_from_board(board)
-    {:ok, tasks} = KanbanRepository.get_tasks_by_ids(task_ids)
-    tasks_map = map_tasks_by_id(tasks)
-
-    Enum.reduce_while(board_columns(board), :ok, fn column, :ok ->
-      column_id = column_id_from_column(column)
-
-      result =
-        Enum.reduce_while(Enum.with_index(task_ids_from_column(column)), :ok, fn {task_id,
-                                                                                  position},
-                                                                                 :ok ->
-          case Map.get(tasks_map, task_id) do
-            nil ->
-              {:halt, {:error, :task_not_found}}
-
-            task ->
-              updated_task =
-                %{
-                  task
-                  | column_id: column_id,
-                    order_in_column: position
-                }
-              case KanbanRepository.update_task(updated_task) do
-                {:ok, _} -> {:cont, :ok}
-                {:error, reason} -> {:halt, {:error, reason}}
-              end
-          end
-        end)
-
-      case result do
-        :ok -> {:cont, :ok}
-        {:error, reason} -> {:halt, {:error, reason}}
-      end
+      Map.put(column, :task_ids, updated_ids)
     end)
   end
 

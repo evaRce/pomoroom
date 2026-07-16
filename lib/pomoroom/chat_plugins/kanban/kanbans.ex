@@ -8,7 +8,7 @@ defmodule Pomoroom.ChatPlugins.Kanban.Kanbans do
 
   defdelegate changeset(args), to: KanbanTaskSchema
   defdelegate kanban_task_changeset(args), to: KanbanTaskSchema
-  defdelegate kanban_task_changeset(task_id, kanban_id, column_id, title, order_in_column), to: KanbanTaskSchema
+  defdelegate kanban_task_changeset(task_id, kanban_id, title), to: KanbanTaskSchema
   defdelegate generate_task_id(), to: KanbanTaskSchema
 
   defdelegate create_kanban_board(kanban_id), to: KanbanService

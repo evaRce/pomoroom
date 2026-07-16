@@ -5,9 +5,7 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanTaskSchema do
   schema "kanban_tasks" do
     field :task_id, :string
     field :kanban_id, :string
-    field :column_id, :string
     field :title, :string
-    field :order_in_column, :integer
   end
 
   def changeset(args) do
@@ -15,9 +13,7 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanTaskSchema do
     |> cast(args, [
       :task_id,
       :kanban_id,
-      :column_id,
-      :title,
-      :order_in_column
+      :title
     ])
   end
 
@@ -26,28 +22,22 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanTaskSchema do
     |> validate_required([
       :task_id,
       :kanban_id,
-      :column_id,
-      :title,
-      :order_in_column
+      :title
     ])
   end
 
-  def kanban_task_changeset(task_id, kanban_id, column_id, title, order_in_column) do
+  def kanban_task_changeset(task_id, kanban_id, title) do
     task = %{
       task_id: task_id,
       kanban_id: kanban_id,
-      column_id: column_id,
-      title: title,
-      order_in_column: order_in_column
+      title: title
     }
 
     changeset(task)
     |> validate_required([
       :task_id,
       :kanban_id,
-      :column_id,
-      :title,
-      :order_in_column
+      :title
     ])
   end
 
