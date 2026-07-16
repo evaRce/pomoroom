@@ -1,119 +1,93 @@
 <.flash_group flash={@flash} />
-<div class="min-h-screen overflow-y-hidden" style="scrollbar-width: thin;">
-  <header class="flex h-[10vh] min-h-[70px] items-center justify-center max-h-md px-4 sm:px-10  font-[sans-serif] tracking-wide relative z-50 bg-blue-300">
-    <div class="flex items-center justify-between w-full px-3">
+<div class="min-h-screen bg-gray-50">
+  <header class="flex h-[10vh] min-h-[70px] items-center px-4 sm:px-10 font-[sans-serif] tracking-wide relative z-50 bg-white shadow-sm">
+    <div class="flex items-center justify-between w-full">
       <a href="home" class="inline-block align-middle">
-        <span class="lg:text-3xl text-2xl text-black font-mono inline-block align-middle">
-          POMOROOM
+        <span class="lg:text-3xl text-2xl font-mono inline-block align-middle">
+          <span class="text-purple-600 font-bold">Pomo</span><span class="text-black font-bold">room</span>
         </span>
       </a>
-    </div>
-    <div class="flex space-x-3">
-      <button class="whitespace-nowrap rounded-full font-bold text-white border-2 border-transparent transition-all duration-700 bg-blue-500 hover:bg-transparent hover:text-white hover:border-blue-500">
-        <a href="login" class="flex lg:px-5 px-2 py-2 rounded-full">
+      <div class="flex items-center space-x-5">
+        <button
+          type="button"
+          class="flex items-center gap-1 px-3 h-9 rounded-full text-gray-600 hover:bg-gray-100 hover:text-purple-600 transition-colors"
+          aria-label="Cambiar idioma"
+        >
+          <.icon name="hero-globe-alt" class="h-5 w-5" />
+          <span class="text-sm font-semibold">ES</span>
+        </button>
+        <a href="login" class="font-semibold text-gray-700 hover:text-purple-600 transition-colors">
           Iniciar sesión
         </a>
-      </button>
-      <button class="whitespace-nowrap rounded-full font-bold text-white border-2 border-transparent transition-all duration-700 bg-blue-500 hover:bg-transparent hover:text-white hover:border-blue-500">
-        <a href="signup" class="flex lg:px-5 px-2 py-2 rounded-full">
+        <a
+          href="signup"
+          class="whitespace-nowrap rounded-full font-bold text-white border-2 border-transparent transition-all duration-300 bg-purple-600 hover:bg-purple-700 px-5 py-2"
+        >
           Registrarse
         </a>
-      </button>
+      </div>
     </div>
   </header>
 
-  <main class="flex flex-col h-[89vh] w-full justify-center items-center">
-    <section class="text-center max-w-[83vw] my-5">
-      <h1 class="lg:text-5xl text-4xl font-mono text-blue-600 mt-5">
-        Organiza tu tiempo de manera eficiente
+  <main class="flex flex-col items-center px-4 sm:px-10 py-16">
+    <section class="text-center max-w-3xl">
+      <h1 class="lg:text-6xl text-4xl font-mono font-extrabold mt-5">
+        <span class="text-purple-600">Pomo</span><span class="text-black">room</span>
       </h1>
-      <!-- Mensaje dinámico -->
-      <p class="lg:text-xl font-mono text-gray-700 max-w-[90vw] lg:max-w-[60vw] mx-auto">
-        POMOROOM es tu espacio para estudiar y trabajar con enfoque, ya sea
+      <p class="lg:text-3xl text-2xl font-sans font-bold text-black mt-4">
+        Conecta. Colabora. Crea.
+      </p>
+      <p class="lg:text-lg text-base font-sans text-gray-500 mt-4">
+        Una plataforma de mensajería moderna con herramientas de productividad
+      </p>
+      <p class="lg:text-base text-sm font-sans italic text-gray-400 mt-2">
+        POMOROOM es tu espacio para estudiar y/o trabajar con enfoque, ya sea
         <span id="soloVariant">solo</span>
         o en grupo.
       </p>
     </section>
-    <!-- Grid de dos columnas con dimensiones iguales -->
-    <div
-      class="grid grid-cols-1 lg:grid-cols-2 gap-7 w-full max-w-[83vw] lg:h-[40vh] h-[45vh] lg:px-0 my-5 overflow-y-auto lg:overflow-hidden"
-      style="scrollbar-width: thin;"
-    >
-      <!-- 1er elemento: Carrusel de mensajes -->
-      <div class="relative flex items-center justify-center lg:h-[38vh] h-[40vh] bg-blue-400/30 rounded-xl w-full text-center text-lg">
-        <!-- Contador de imágenes -->
-        <div class="absolute right-5 top-5 z-10 rounded-full bg-gray-600 px-2 text-center text-sm text-white">
-          <span id="messageIndexId">1</span>/<span id="totalMessagesId"></span>
-        </div>
-        <p id="messageCarousel" class="font-mono m-12  text-black">
-          Crea o únete a salas de estudio para trabajar con tus amigos y compañeros de clase.
-        </p>
-        <!-- Botón para mensaje anterior -->
-        <button
-          type="button"
-          class="absolute top-0 left-0 z-30 flex items-center justify-center h-full px-2 cursor-pointer group focus:outline-none"
-          id="prevMsgBtn"
-        >
-          <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-800/30 group-hover:bg-blue-800/60 group-focus:outline-none">
-            <svg
-              class="w-5 h-5 text-white dark:text-gray-800"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 6 10"
-            >
-              <path
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5 1 1 5l4 4"
-              />
-            </svg>
-            <span class="sr-only">Previous</span>
-          </span>
-        </button>
-        <!-- Botón para mensaje siguiente -->
-        <button
-          type="button"
-          class="absolute top-0 right-0 z-30 flex items-center justify-center h-full px-2 cursor-pointer group focus:outline-none"
-          id="nextMsgBtn"
-        >
-          <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-800/30 group-hover:bg-blue-800/60 group-focus:outline-none">
-            <svg
-              class="w-5 h-5 text-white dark:text-gray-800"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 6 10"
-            >
-              <path
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="m1 9 4-4-4-4"
-              />
-            </svg>
-            <span class="sr-only">Next</span>
-          </span>
-        </button>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 w-full max-w-5xl mt-12">
+      <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-6">
+        <.icon name="hero-chat-bubble-left-right" class="h-8 w-8 text-purple-600" />
+        <h3 class="font-sans font-bold text-black mt-3">Chats Privados</h3>
+        <p class="font-sans text-sm text-gray-500 mt-1">Conversaciones seguras 1 a 1</p>
       </div>
-      <!-- 2do elemento: Carrusel de imágenes -->
-      <div class="relative mx-auto max-w-lg rounded-lg lg:h-[38vh] h-[40vh] w-full flex items-center justify-center bg-blue-400/30">
-        <!-- Contador de imágenes -->
+      <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-6">
+        <.icon name="hero-user-group" class="h-8 w-8 text-purple-600" />
+        <h3 class="font-sans font-bold text-black mt-3">Chats Grupales</h3>
+        <p class="font-sans text-sm text-gray-500 mt-1">Colabora con tu equipo</p>
+      </div>
+      <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-6">
+        <.icon name="hero-video-camera" class="h-8 w-8 text-purple-600" />
+        <h3 class="font-sans font-bold text-black mt-3">Voz y Video</h3>
+        <p class="font-sans text-sm text-gray-500 mt-1">Llamadas WebRTC de alta calidad</p>
+      </div>
+      <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-6">
+        <.icon name="hero-puzzle-piece" class="h-8 w-8 text-purple-600" />
+        <h3 class="font-sans font-bold text-black mt-3">Plugins</h3>
+        <p class="font-sans text-sm text-gray-500 mt-1">Temporizador Pomodoro y tableros Kanban</p>
+      </div>
+    </div>
+
+    <section class="w-full max-w-5xl mt-16">
+      <h2 class="text-center font-sans font-bold text-2xl text-black mb-6">
+        Así se ve Pomoroom
+      </h2>
+      <div
+        class="relative w-full rounded-xl h-[70vh] min-h-[500px] flex items-center justify-center bg-white shadow-sm border border-gray-100"
+      >
         <div class="absolute right-5 top-5 z-10 rounded-full bg-gray-600 px-2 text-center text-sm text-white">
           <span id="currentImageIndex">1</span>/<span id="totalImages"></span>
         </div>
-        <!-- Botón para ir hacia la imagen anterior -->
         <button
           type="button"
           class="absolute top-0 left-0 z-30 flex items-center justify-center h-full px-2 cursor-pointer group focus:outline-none"
           id="prevBtn"
         >
-          <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-800/30 group-hover:bg-blue-800/60 group-focus:outline-none">
+          <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-purple-600/20 group-hover:bg-purple-600/40 group-focus:outline-none">
             <svg
-              class="w-5 h-5 text-white dark:text-gray-800"
+              class="w-5 h-5 text-purple-700"
               aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -130,15 +104,14 @@
             <span class="sr-only">Previous</span>
           </span>
         </button>
-        <!-- Botón para ir hacia la imagen siguiente -->
         <button
           type="button"
           class="absolute top-0 right-0 z-30 flex items-center justify-center h-full px-2 cursor-pointer group focus:outline-none"
           id="nextBtn"
         >
-          <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-800/30 group-hover:bg-blue-800/60 group-focus:outline-none">
+          <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-purple-600/20 group-hover:bg-purple-600/40 group-focus:outline-none">
             <svg
-              class="w-5 h-5 text-white dark:text-gray-800"
+              class="w-5 h-5 text-purple-700"
               aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -155,49 +128,18 @@
             <span class="sr-only">Next</span>
           </span>
         </button>
-        <!-- Contenedor de imágenes -->
-        <div class="relative h-64 w-full">
+        <div class="relative h-full w-full p-4">
           <img
             id="carouselImage"
             src="/images/wireframes/login1.png"
-            alt="Imagen del Carrusel"
-            class="rounded-sm w-full h-full object-cover"
+            alt="Captura de Pomoroom"
+            class="rounded-lg w-full h-full object-contain"
           />
         </div>
       </div>
-    </div>
+    </section>
 
     <script>
-      // Carrusel de mensajes
-      const messages = [
-        "Crea o únete a salas de estudio para trabajar con tus compas de clase.",
-        "Utiliza nuestros temporizadores Pomodoro para organizar sesiones de trabajo efectivas.",
-        "Usa la pizarra para explayar tus ideas."
-      ];
-      let messageIndex = 0;
-      const messageCarousel = document.getElementById('messageCarousel');
-      const messageIndexDisplay = document.getElementById('messageIndexId');
-      const totalMessagesDisplay = document.getElementById('totalMessagesId');
-
-      totalMessagesDisplay.textContent = messages.length;
-
-      function updateMessage() {
-        messageCarousel.textContent = messages[messageIndex];
-        messageIndexDisplay.textContent = messageIndex + 1;
-      }
-
-      document.getElementById('prevMsgBtn').addEventListener('click', () => {
-        messageIndex = (messageIndex > 0) ? messageIndex - 1 : messages.length - 1;
-        messageCarousel.textContent = messages[messageIndex];
-        updateMessage();
-      });
-
-      document.getElementById('nextMsgBtn').addEventListener('click', () => {
-        messageIndex = (messageIndex < messages.length - 1) ? messageIndex + 1 : 0;
-        messageCarousel.textContent = messages[messageIndex];
-        updateMessage();
-      });
-
       // Carrusel de imágenes
       const images = [
         "/images/wireframes/login1.png",
@@ -227,15 +169,10 @@
         updateImage();
       });
 
-      function updateCarousels() {
+      setInterval(() => {
         currentImageIndex = (currentImageIndex + 1) % images.length;
-        messageIndex = (messageIndex + 1) % messages.length;
         updateImage();
-        updateMessage();
-      }
-
-      // Configura el intervalo para actualizar ambos carruseles cada 8 segundos
-      setInterval(updateCarousels, 8000);
+      }, 8000);
 
       // Cambiar la palabra 'solo' dinámicamente
       const variants = ['solo', 'sola', 'sole'];
