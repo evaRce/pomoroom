@@ -13,22 +13,17 @@ services:
   livekit:
     image: livekit/livekit-server:latest
     container_name: pomoroom-livekit
+    network_mode: host
     command: --config /etc/livekit.yaml --dev --bind 0.0.0.0
     volumes:
       - ./priv/livekit/livekit.yaml:/etc/livekit.yaml:ro
-    ports:
-      - "7880:7880"
-      - "7881:7881"
-      - "7882:7882/udp"
-      - "3478:3478/udp"
 
   livekit-tls:
     image: nginx:alpine
     container_name: pomoroom-livekit-tls
+    network_mode: host
     depends_on:
       - livekit
-    ports:
-      - "7443:7443"
     volumes:
       - ./priv/livekit/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./priv/cert:/certs:ro
