@@ -260,6 +260,9 @@ export default function CallScreen({
   const screenShareTrackRefs = useTracks([Track.Source.ScreenShare]);
   const screenShareTrackRef = screenShareTrackRefs[0];
   const isSomeoneElseSharing = screenShareTrackRefs.some((t) => !t.participant.isLocal);
+  const [screenShareSupported] = useState(
+    () => typeof navigator !== "undefined" && !!navigator.mediaDevices?.getDisplayMedia,
+  );
   const [duration, setDuration] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -436,7 +439,9 @@ export default function CallScreen({
             )
           }
           onClick={() =>
-            localParticipant.setScreenShareEnabled(!isScreenShareEnabled, { audio: true })
+            localParticipant
+              .setScreenShareEnabled(!isScreenShareEnabled, { audio: true })
+              .catch(() => message.error(callText.screen.screenShareFailed))
           }
           title={screenShareToggleTitle}
         />
@@ -542,7 +547,7 @@ export default function CallScreen({
         <FloatingControls visible={controlsVisible} hoverProps={controlsHoverProps}>
           {micButton}
           {cameraButton}
-          {screenShareButton}
+          {screenShareSupported && screenShareButton}
           {hangupButton}
         </FloatingControls>
       </div>

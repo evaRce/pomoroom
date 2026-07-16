@@ -29,6 +29,7 @@ const callText = {
       "Otro usuario está compartiendo pantalla actualmente. Debe dejar de compartir para que puedas hacerlo tú",
     screenShareConflict:
       "Otro participante ha empezado a compartir pantalla justo antes que tú. Se ha detenido tu recurso compartido.",
+    screenShareFailed: "No se pudo compartir la pantalla. Inténtalo de nuevo.",
     endCall: "Finalizar llamada",
     enterFullscreen: "Pantalla completa",
     exitFullscreen: "Salir de pantalla completa",
