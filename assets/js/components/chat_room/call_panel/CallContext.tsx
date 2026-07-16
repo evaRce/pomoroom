@@ -55,6 +55,7 @@ export function CallSessionProvider({ children }: { children: React.ReactNode })
       setConnectingChatId(null);
     };
     const handleDisconnected = (reason?: DisconnectReason) => {
+      lastConnectAttemptedTokenRef.current = null;
       setConnectedAt(null);
       setConnectingChatId(null);
       setMinimized(false);
