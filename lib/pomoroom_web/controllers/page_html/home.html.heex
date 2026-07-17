@@ -1,27 +1,30 @@
 <.flash_group flash={@flash} />
 <div class="min-h-screen bg-gray-50">
-  <header class="flex h-[10vh] min-h-[70px] items-center px-4 sm:px-10 font-[sans-serif] tracking-wide relative z-50 bg-white shadow-sm">
-    <div class="flex items-center justify-between w-full">
-      <a href="home" class="inline-block align-middle">
-        <span class="lg:text-3xl text-2xl font-mono inline-block align-middle">
+  <header class="hidden sm:flex h-[10vh] min-h-[70px] items-center px-3 sm:px-10 font-[sans-serif] tracking-wide relative z-50 bg-white shadow-sm">
+    <div class="flex items-center justify-between w-full min-w-0 gap-2">
+      <a href="home" class="inline-block align-middle shrink-0">
+        <span class="text-2xl lg:text-3xl font-mono inline-block align-middle">
           <span class="text-purple-600 font-bold">Pomo</span><span class="text-black font-bold">room</span>
         </span>
       </a>
-      <div class="flex items-center space-x-5">
+      <div class="flex items-center gap-3 lg:gap-5 shrink-0">
         <button
           type="button"
-          class="flex items-center gap-1 px-3 h-9 rounded-full text-gray-600 hover:bg-gray-100 hover:text-purple-600 transition-colors"
+          class="flex items-center gap-1 px-3 h-9 lg:h-11 rounded-full text-gray-600 hover:bg-gray-100 hover:text-purple-600 transition-colors"
           aria-label="Cambiar idioma"
         >
-          <.icon name="hero-globe-alt" class="h-5 w-5" />
-          <span class="text-sm font-semibold">ES</span>
+          <.icon name="hero-globe-alt" class="h-5 w-5 lg:h-6 lg:w-6" />
+          <span class="text-sm lg:text-base font-semibold">ES</span>
         </button>
-        <a href="login" class="font-semibold text-gray-700 hover:text-purple-600 transition-colors">
+        <a
+          href="login"
+          class="whitespace-nowrap rounded-full border-2 border-purple-600 px-5 py-2 lg:px-7 lg:py-3 lg:text-lg font-semibold text-gray-700 transition-all duration-300 hover:bg-purple-600 hover:text-white"
+        >
           Iniciar sesión
         </a>
         <a
           href="signup"
-          class="whitespace-nowrap rounded-full font-bold text-white border-2 border-transparent transition-all duration-300 bg-purple-600 hover:bg-purple-700 px-5 py-2"
+          class="whitespace-nowrap rounded-full font-bold text-white border-2 border-transparent transition-all duration-300 bg-purple-600 hover:bg-purple-700 px-5 py-2 lg:px-7 lg:py-3 lg:text-lg"
         >
           Registrarse
         </a>
@@ -29,65 +32,80 @@
     </div>
   </header>
 
-  <main class="flex flex-col items-center px-4 sm:px-10 py-16">
+  <main class="flex flex-col items-center px-4 sm:px-10 pt-24 pb-16 sm:py-16">
     <section class="text-center max-w-3xl">
-      <h1 class="lg:text-6xl text-4xl font-mono font-extrabold mt-5">
+      <h1 class="text-5xl sm:text-6xl lg:text-7xl font-mono font-extrabold mt-8 sm:mt-6 lg:mt-5">
         <span class="text-purple-600">Pomo</span><span class="text-black">room</span>
       </h1>
-      <p class="lg:text-3xl text-2xl font-sans font-bold text-black mt-4">
+      <p class="text-3xl sm:text-4xl lg:text-5xl font-sans font-bold text-black mt-8 sm:mt-6 lg:mt-5">
         Conecta. Colabora. Crea.
       </p>
-      <p class="lg:text-lg text-base font-sans text-gray-500 mt-4">
+      <p class="text-lg sm:text-xl lg:text-2xl font-sans text-gray-500 mt-6 sm:mt-5 lg:mt-4">
         Una plataforma de mensajería moderna con herramientas de productividad
       </p>
-      <p class="lg:text-base text-sm font-sans italic text-gray-400 mt-2">
+      <p class="text-base sm:text-lg lg:text-lg font-sans italic text-gray-400 mt-3 sm:mt-3 lg:mt-2">
         POMOROOM es tu espacio para estudiar y/o trabajar con enfoque, ya sea
         <span id="soloVariant">solo</span>
         o en grupo.
       </p>
+
+      <div class="flex sm:hidden flex-col gap-4 w-full max-w-xs mx-auto mt-12">
+        <a
+          href="signup"
+          class="w-full text-center text-lg rounded-full font-bold text-white border-2 border-transparent transition-all duration-300 bg-purple-600 hover:bg-purple-700 px-6 py-3"
+        >
+          Registrarse
+        </a>
+        <a
+          href="login"
+          class="w-full text-center text-lg rounded-full border-2 border-purple-600 font-semibold text-gray-700 transition-all duration-300 hover:bg-purple-600 hover:text-white px-6 py-3"
+        >
+          Iniciar sesión
+        </a>
+      </div>
     </section>
 
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 w-full max-w-5xl mt-12">
-      <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-6">
-        <.icon name="hero-chat-bubble-left-right" class="h-8 w-8 text-purple-600" />
-        <h3 class="font-sans font-bold text-black mt-3">Chats Privados</h3>
-        <p class="font-sans text-sm text-gray-500 mt-1">Conversaciones seguras 1 a 1</p>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 lg:gap-8 w-full max-w-5xl lg:max-w-6xl mt-16 sm:mt-12">
+      <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-6 sm:px-5 sm:py-7 lg:px-6 lg:py-8">
+        <.icon name="hero-chat-bubble-left-right" class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600" />
+        <h3 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3">Chats Privados</h3>
+        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1">Conversaciones seguras 1 a 1</p>
       </div>
-      <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-6">
-        <.icon name="hero-user-group" class="h-8 w-8 text-purple-600" />
-        <h3 class="font-sans font-bold text-black mt-3">Chats Grupales</h3>
-        <p class="font-sans text-sm text-gray-500 mt-1">Colabora con tu equipo</p>
+      <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-6 sm:px-5 sm:py-7 lg:px-6 lg:py-8">
+        <.icon name="hero-user-group" class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600" />
+        <h3 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3">Chats Grupales</h3>
+        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1">Colabora con tu equipo</p>
       </div>
-      <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-6">
-        <.icon name="hero-video-camera" class="h-8 w-8 text-purple-600" />
-        <h3 class="font-sans font-bold text-black mt-3">Voz y Video</h3>
-        <p class="font-sans text-sm text-gray-500 mt-1">Llamadas WebRTC de alta calidad</p>
+      <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-6 sm:px-5 sm:py-7 lg:px-6 lg:py-8">
+        <.icon name="hero-video-camera" class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600" />
+        <h3 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3">Voz y Video</h3>
+        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1">Llamadas WebRTC</p>
       </div>
-      <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-6">
-        <.icon name="hero-puzzle-piece" class="h-8 w-8 text-purple-600" />
-        <h3 class="font-sans font-bold text-black mt-3">Plugins</h3>
-        <p class="font-sans text-sm text-gray-500 mt-1">Temporizador Pomodoro y tableros Kanban</p>
+      <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-6 sm:px-5 sm:py-7 lg:px-6 lg:py-8">
+        <.icon name="hero-puzzle-piece" class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600" />
+        <h3 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3">Plugins</h3>
+        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1">Temporizador Pomodoro y tablero Kanban</p>
       </div>
     </div>
 
-    <section class="w-full max-w-5xl mt-16">
-      <h2 class="text-center font-sans font-bold text-2xl text-black mb-6">
+    <section class="w-full max-w-5xl lg:max-w-6xl mt-16 sm:mt-20 lg:mt-24">
+      <h2 class="text-center font-sans font-bold text-2xl sm:text-3xl lg:text-4xl text-black mb-6 sm:mb-8">
         Así se ve Pomoroom
       </h2>
       <div
-        class="relative w-full rounded-xl h-[70vh] min-h-[500px] flex items-center justify-center bg-white shadow-sm border border-gray-100"
+        class="relative w-full rounded-xl aspect-video max-h-[75vh] flex items-center justify-center bg-white shadow-sm border border-gray-100"
       >
-        <div class="absolute right-5 top-5 z-10 rounded-full bg-gray-600 px-2 text-center text-sm text-white">
+        <div class="absolute right-2 top-2 sm:right-5 sm:top-5 z-10 rounded-full bg-gray-600 px-2 sm:px-3 lg:px-4 text-center text-xs sm:text-sm lg:text-base text-white">
           <span id="currentImageIndex">1</span>/<span id="totalImages"></span>
         </div>
         <button
           type="button"
-          class="absolute top-0 left-0 z-30 flex items-center justify-center h-full px-2 cursor-pointer group focus:outline-none"
+          class="absolute top-0 left-0 z-30 flex items-center justify-center h-full px-2 sm:px-4 cursor-pointer group focus:outline-none"
           id="prevBtn"
         >
-          <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-purple-600/20 group-hover:bg-purple-600/40 group-focus:outline-none">
+          <span class="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full bg-purple-600/20 group-hover:bg-purple-600/40 group-focus:outline-none">
             <svg
-              class="w-5 h-5 text-purple-700"
+              class="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-purple-700"
               aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -106,12 +124,12 @@
         </button>
         <button
           type="button"
-          class="absolute top-0 right-0 z-30 flex items-center justify-center h-full px-2 cursor-pointer group focus:outline-none"
+          class="absolute top-0 right-0 z-30 flex items-center justify-center h-full px-2 sm:px-4 cursor-pointer group focus:outline-none"
           id="nextBtn"
         >
-          <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-purple-600/20 group-hover:bg-purple-600/40 group-focus:outline-none">
+          <span class="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full bg-purple-600/20 group-hover:bg-purple-600/40 group-focus:outline-none">
             <svg
-              class="w-5 h-5 text-purple-700"
+              class="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-purple-700"
               aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -128,7 +146,7 @@
             <span class="sr-only">Next</span>
           </span>
         </button>
-        <div class="relative h-full w-full p-4">
+        <div class="relative h-full w-full p-2 sm:p-4 lg:p-6">
           <img
             id="carouselImage"
             src="/images/wireframes/login1.png"
