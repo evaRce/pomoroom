@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { Button, Modal, message } from "antd";
 import EmojiPicker from "emoji-picker-react";
 import {
-  PictureOutlined,
   SendOutlined,
   SmileOutlined,
 } from "@ant-design/icons";
@@ -147,9 +146,6 @@ export default function ChatFooter() {
         </div>
       ) : (
         <form className="flex w-full gap-3" onSubmit={handleSendMessage}>
-          <div className="flex items-center gap-2">
-            <Button className="bg-gray-100" icon={<PictureOutlined />} />
-          </div>
           <div className="flex items-center w-full justify-center">
             <input
               className="input bg-gray-100 h-8 w-full focus:outline-none rounded-r-none"

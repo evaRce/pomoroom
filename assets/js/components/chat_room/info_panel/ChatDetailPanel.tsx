@@ -136,19 +136,6 @@ export default function ChatDetailPanel() {
             <h2 className="text-2xl mt-2">{chatData.chat_name}</h2>
           </div>
         )}
-        <div className="mb-2">
-          <h4>Archivos, documentos, etc</h4>
-        </div>
-        <div
-          className="grid h-[26vh] w-full overflow-y-auto justify-items-center grid-cols-3 gap-2"
-          style={{ scrollbarWidth: "thin" }}
-        >
-          {[...Array(4)].map((_, index) => (
-            <div key={index}>
-              <div className="cursor-pointer bg-gray-300 hover:bg-gray-400 aspect-square w-full"></div>
-            </div>
-          ))}
-        </div>
         {chatData?.is_group && (
           <div className="my-4">
             <span>{members.length} Miembros</span>
