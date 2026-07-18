@@ -360,7 +360,7 @@ export default function ChatHeader({
   }, [chatData]);
 
   const showUserDetails = () => {
-    if (isGroupChat && isGroupMemberRemoved) {
+    if (!isGroupChat || isGroupMemberRemoved) {
       return;
     }
 
@@ -555,17 +555,19 @@ export default function ChatHeader({
               disabled={isGroupChat && isGroupMemberRemoved}
             />
 
-            <Button
-              type="text"
-              className={`!h-9 !w-9 !rounded-lg ${isVisibleDetail
-                ? "!bg-blue-50 !text-blue-600"
-                : "text-gray-600 hover:!bg-gray-100 hover:!text-gray-900"
-                }`}
-              icon={<Info className="h-5 w-5" />}
-              onClick={showUserDetails}
-              title="Detalles del contacto"
-              disabled={isGroupChat && isGroupMemberRemoved}
-            />
+            {isGroupChat && (
+              <Button
+                type="text"
+                className={`!h-9 !w-9 !rounded-lg ${isVisibleDetail
+                  ? "!bg-blue-50 !text-blue-600"
+                  : "text-gray-600 hover:!bg-gray-100 hover:!text-gray-900"
+                  }`}
+                icon={<Info className="h-5 w-5" />}
+                onClick={showUserDetails}
+                title="Detalles del grupo"
+                disabled={isGroupMemberRemoved}
+              />
+            )}
           </div>
 
           <Dropdown
@@ -613,19 +615,21 @@ export default function ChatHeader({
                   Plugins
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMobileActionsOpen(false);
-                    showUserDetails();
-                  }}
-                  disabled={isGroupChat && isGroupMemberRemoved}
-                  className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400 disabled:hover:bg-transparent ${isVisibleDetail ? "text-blue-600" : "text-gray-700"
-                    }`}
-                >
-                  <Info className="h-4 w-4 shrink-0" />
-                  {isGroupChat ? "Detalles del grupo" : "Detalles del contacto"}
-                </button>
+                {isGroupChat && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileActionsOpen(false);
+                      showUserDetails();
+                    }}
+                    disabled={isGroupMemberRemoved}
+                    className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400 disabled:hover:bg-transparent ${isVisibleDetail ? "text-blue-600" : "text-gray-700"
+                      }`}
+                  >
+                    <Info className="h-4 w-4 shrink-0" />
+                    Detalles del grupo
+                  </button>
+                )}
               </div>
             )}
             className="sm:hidden"
