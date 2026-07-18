@@ -6,7 +6,8 @@ import {
 import {
   DndContext,
   DragOverlay,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   closestCenter,
   pointerWithin,
   rectIntersection,
@@ -287,9 +288,15 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
   }, [kanbanBoardErrorEvent]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: {
         distance: 6,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 8,
       },
     })
   );
@@ -620,10 +627,10 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
     >
       <div className="flex h-full min-w-0 w-full bg-gray-50">
         <div
-          className="kanban-horizontal-scroll min-w-0 flex-1 overflow-x-auto overflow-y-hidden"
+          className="flex min-h-0 min-w-0 flex-1 overflow-x-auto overflow-y-hidden"
           style={{ scrollbarWidth: "thin" }}
         >
-          <div className="flex w-max min-w-full gap-4 p-4">
+          <div className="flex h-full w-max min-w-full gap-4 p-4">
             {columns.map((column) => (
               <KanbanColumn
                 key={column.id}
