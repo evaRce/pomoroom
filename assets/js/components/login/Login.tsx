@@ -36,7 +36,7 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center p-8"
+      className="relative min-h-dvh flex flex-col items-center justify-center overflow-y-auto p-4 sm:p-8"
       style={{
         backgroundImage: `url(/images/background2/background-${imageNumber}.svg)`,
         backgroundRepeat: "no-repeat",
@@ -44,22 +44,25 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
         backgroundColor: "rgba(255, 255, 255, 0.5)",
         backgroundBlendMode: "overlay",
       }}
-    > 
+    >
       <a href="/">
-        <Button 
-          className="absolute top-8 left-8 shadow bg-white" 
-          icon={<HomeOutlined />} 
-          size="large" 
-          title="Página de inicio" 
+        <Button
+          className="absolute top-4 left-4 sm:top-8 sm:left-8 shadow bg-white"
+          icon={<HomeOutlined />}
+          size="large"
+          title="Página de inicio"
         />
       </a>
-      <div className="max-w-md w-full mt-16">
-        <div className="p-5 rounded-2xl bg-white shadow">
-          <p className="text-gray-800 text-center text-2xl font-bold">
+      <div className="max-w-md md:max-w-lg lg:max-w-xl w-full my-4">
+        <div className="p-4 sm:p-8 rounded-2xl bg-white shadow">
+          <p className="text-center text-lg lg:text-xl sm:text-2xl font-bold mb-6">
+            <span className="text-purple-600">Pomo</span><span className="text-black">room</span>
+          </p>
+          <p className="text-gray-800 text-center text-2xl md:text-2xl lg:text-3xl font-bold">
             ¡Nos alegra verte otra vez!
-            <p className="text-gray-800 text-center text-xl font-bold">
-              Ingresa tus datos para comenzar.
-            </p>
+          </p>
+          <p className="text-gray-800 text-center text-sm md:text-lg lg:text-xl font-bold -mt-1">
+            Ingresa tus datos para comenzar.
           </p>
           <Form
               form={form}
@@ -108,7 +111,7 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
               <Form.Item>
                 <Button
                   htmlType="submit"
-                  className="text-white text-sm font-semibold transitiona-all duration-700 bg-blue-500 "
+                  className="!h-11 !border-2 text-white text-base font-semibold transitiona-all duration-700 bg-purple-500 !border-purple-500 hover:!bg-purple-400 hover:!border-purple-300 hover:!text-white focus:!bg-purple-400 focus:!border-purple-300 focus:!text-white active:!bg-purple-400 active:!border-purple-300 active:!text-white"
                   block
                 >
                   Iniciar sesión
