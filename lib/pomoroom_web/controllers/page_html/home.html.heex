@@ -1,4 +1,5 @@
 <.flash_group flash={@flash} />
+<% texts = PomoroomWeb.PageHTML.HomeTexts.texts() %>
 <style>
   /* Nivel de transparencia del fondo: sube/baja el 0.95 (0 = fondo a toda intensidad, 1 = invisible) */
   /* Nivel de zoom del fondo: sube/baja el 130% (100% = sin recortar, más alto = más zoom) */
@@ -44,29 +45,29 @@
     <div class="flex items-center justify-between w-full min-w-0 gap-2">
       <a href="home" class="inline-block align-middle shrink-0">
         <span class="text-2xl lg:text-3xl font-mono inline-block align-middle">
-          <span class="text-purple-600 font-bold">Pomo</span><span class="text-black font-bold">room</span>
+          <span class="text-purple-600 font-bold"><%= String.slice(texts.hero.title_pomoroom, 0, 4) %></span><span class="text-black font-bold"><%= String.slice(texts.hero.title_pomoroom, 4..-1//1) %></span>
         </span>
       </a>
       <div class="flex items-center gap-3 lg:gap-5 shrink-0">
         <button
           type="button"
           class="flex items-center gap-1 px-3 h-9 lg:h-11 rounded-full text-gray-600 hover:bg-gray-100 hover:text-purple-600 transition-colors"
-          aria-label="Cambiar idioma"
+          aria-label={texts.nav.language_aria}
         >
           <.icon name="hero-globe-alt" class="h-5 w-5 lg:h-6 lg:w-6" />
-          <span class="text-sm lg:text-base font-semibold">ES</span>
+          <span class="text-sm lg:text-base font-semibold"><%= texts.nav.language %></span>
         </button>
         <a
           href="login"
           class="whitespace-nowrap rounded-full border-2 border-purple-600 px-5 py-2 lg:px-7 lg:py-3 lg:text-lg font-semibold text-gray-700 transition-all duration-300 hover:bg-purple-600 hover:text-white"
         >
-          Iniciar sesión
+          <%= texts.nav.login %>
         </a>
         <a
           href="signup"
           class="whitespace-nowrap rounded-full font-bold text-white border-2 border-transparent transition-all duration-300 bg-purple-600 hover:bg-purple-700 px-5 py-2 lg:px-7 lg:py-3 lg:text-lg"
         >
-          Registrarse
+          <%= texts.nav.signup %>
         </a>
       </div>
     </div>
@@ -75,18 +76,18 @@
   <main class="flex flex-col items-center px-4 sm:px-10 pt-24 pb-16 sm:py-16">
     <section class="text-center max-w-3xl">
       <h1 class="text-on-bg-strong text-5xl sm:text-6xl lg:text-7xl font-mono font-extrabold mt-8 sm:mt-6 lg:mt-5">
-        <span class="text-purple-600">Pomo</span><span class="text-black">room</span>
+        <span class="text-purple-600"><%= String.slice(texts.hero.title_pomoroom, 0, 4) %></span><span class="text-black"><%= String.slice(texts.hero.title_pomoroom, 4..-1//1) %></span>
       </h1>
       <p class="text-on-bg-strong text-3xl sm:text-4xl lg:text-5xl font-sans font-bold text-black mt-8 sm:mt-6 lg:mt-5">
-        Conecta. Colabora. Crea.
+        <%= texts.hero.tagline %>
       </p>
       <p class="text-on-bg-strong-sm text-lg sm:text-xl lg:text-2xl font-sans font-medium text-gray-700 mt-6 sm:mt-5 lg:mt-4">
-        Una plataforma de mensajería moderna con herramientas de productividad
+        <%= texts.hero.description %>
       </p>
       <p class="text-on-bg-strong-sm text-base sm:text-lg lg:text-lg font-sans italic text-gray-600 mt-3 sm:mt-3 lg:mt-2">
-        POMOROOM es tu espacio para estudiar y/o trabajar con enfoque, ya sea
-        <span id="soloVariant">solo</span>
-        o en grupo.
+        <%= texts.hero.subtext_prefix %>
+        <span id="soloVariant"><%= Enum.at(texts.hero.solo_variants, 0) %></span>
+        <%= texts.hero.subtext_suffix %>
       </p>
 
       <div class="flex sm:hidden flex-col gap-4 w-full max-w-xs mx-auto mt-12">
@@ -94,13 +95,13 @@
           href="signup"
           class="w-full text-center text-lg rounded-full font-bold text-white border-2 border-transparent transition-all duration-300 bg-purple-600 hover:bg-purple-700 px-6 py-3"
         >
-          Registrarse
+          <%= texts.nav.signup %>
         </a>
         <a
           href="login"
           class="w-full text-center text-lg rounded-full border-2 border-purple-600 bg-white font-semibold text-gray-700 transition-all duration-300 hover:bg-purple-600 hover:text-white px-6 py-3"
         >
-          Iniciar sesión
+          <%= texts.nav.login %>
         </a>
       </div>
     </section>
@@ -108,29 +109,29 @@
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 lg:gap-8 w-full max-w-5xl lg:max-w-6xl mt-16 sm:mt-12">
       <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 pt-5 pb-2 sm:px-5 sm:pt-6 sm:pb-3 lg:px-6 lg:pt-7 lg:pb-4">
         <.icon name="hero-chat-bubble-left-right" class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600" />
-        <h3 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3">Chats Privados</h3>
-        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1">Conversaciones seguras 1 a 1</p>
+        <h3 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3"><%= texts.features.chats_private.title %></h3>
+        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1"><%= texts.features.chats_private.description %></p>
       </div>
       <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 pt-5 pb-2 sm:px-5 sm:pt-6 sm:pb-3 lg:px-6 lg:pt-7 lg:pb-4">
         <.icon name="hero-user-group" class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600" />
-        <h3 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3">Chats Grupales</h3>
-        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1">Colabora con tu equipo</p>
+        <h3 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3"><%= texts.features.chats_group.title %></h3>
+        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1"><%= texts.features.chats_group.description %></p>
       </div>
       <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 pt-5 pb-2 sm:px-5 sm:pt-6 sm:pb-3 lg:px-6 lg:pt-7 lg:pb-4">
         <.icon name="hero-video-camera" class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600" />
-        <h3 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3">Voz y Video</h3>
-        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1">Llamadas WebRTC</p>
+        <h3 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3"><%= texts.features.calls.title %></h3>
+        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1"><%= texts.features.calls.description %></p>
       </div>
       <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 pt-5 pb-2 sm:px-5 sm:pt-6 sm:pb-3 lg:px-6 lg:pt-7 lg:pb-4">
         <.icon name="hero-puzzle-piece" class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600" />
-        <h3 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3">Plugins</h3>
-        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1">Temporizador Pomodoro y tablero Kanban</p>
+        <h3 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3"><%= texts.features.plugins.title %></h3>
+        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1"><%= texts.features.plugins.description %></p>
       </div>
     </div>
 
     <section class="w-full max-w-5xl lg:max-w-6xl mt-16 sm:mt-20 lg:mt-24">
       <h2 class="text-on-bg text-center font-sans font-bold text-2xl sm:text-3xl lg:text-4xl text-black mb-6 sm:mb-8">
-        Así se ve Pomoroom
+        <%= texts.showcase.title %>
       </h2>
       <div
         class="relative w-full rounded-xl aspect-video max-h-[75vh] flex items-center justify-center bg-white shadow-sm border border-gray-100"
@@ -159,7 +160,7 @@
                 d="M5 1 1 5l4 4"
               />
             </svg>
-            <span class="sr-only">Previous</span>
+            <span class="sr-only"><%= texts.showcase.prev_label %></span>
           </span>
         </button>
         <button
@@ -183,18 +184,18 @@
                 d="m1 9 4-4-4-4"
               />
             </svg>
-            <span class="sr-only">Next</span>
+            <span class="sr-only"><%= texts.showcase.next_label %></span>
           </span>
         </button>
         <div class="relative h-full w-full p-2 sm:p-4 lg:p-6">
           <img
             id="carouselImage"
             src="/images/wireframes/login1.png"
-            alt="Captura de Pomoroom"
+            alt={texts.showcase.image_alt}
             class="rounded-lg w-full h-full object-contain cursor-zoom-in"
             tabindex="0"
             role="button"
-            aria-label="Ampliar imagen"
+            aria-label={texts.showcase.zoom_label}
           />
         </div>
       </div>
@@ -208,7 +209,7 @@
         type="button"
         id="closeZoomBtn"
         class="absolute right-4 top-4 sm:right-8 sm:top-8 z-10 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 focus:outline-none"
-        aria-label="Cerrar"
+        aria-label={texts.showcase.close_label}
       >
         <svg class="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18" />
@@ -218,7 +219,7 @@
       <img
         id="zoomedImage"
         src=""
-        alt="Captura de Pomoroom ampliada"
+        alt={texts.showcase.image_alt_zoomed}
         class="max-h-full max-w-full rounded-lg object-contain cursor-zoom-out"
       />
     </div>
@@ -301,7 +302,7 @@
       });
 
       // Cambiar la palabra 'solo' dinámicamente
-      const variants = ['solo', 'sola', 'sole'];
+      const variants = <%= raw(Jason.encode!(texts.hero.solo_variants)) %>;
       let soloIndex = 0;
 
       setInterval(() => {
