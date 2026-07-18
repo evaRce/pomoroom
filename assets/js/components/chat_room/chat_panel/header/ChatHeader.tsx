@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useSyncExternalStore } from "react";
-import { Avatar, Button } from "antd";
-import { ArrowLeft, Info, Puzzle, UserPlus } from "lucide-react";
+import { Avatar, Button, Dropdown } from "antd";
+import { ArrowLeft, Info, Loader2, MoreVertical, Phone, PhoneOff, Puzzle, UserPlus } from "lucide-react";
 import { useEventContext, useEvent } from "../../EventContext";
 import AddMembersModal from "./AddMembersModal";
 import CallButton from "../../call_panel/CallButton";
+import { useCallContext } from "../../call_panel/CallContext";
+import callText from "../../call_panel/callText";
 import PluginMarketPlace, { AvailablePlugin, InstalledPlugin } from "../PluginMarketPlace";
 import { getTimer, subscribeTimer, type TimerState } from "../../pomodoro_timer/pomodoroTimerStore";
 
@@ -45,9 +47,40 @@ export default function ChatHeader({
   const [isPluginMarketplaceOpen, setIsPluginMarketplaceOpen] = useState(false);
   const [installedPlugins, setInstalledPlugins] = useState<InstalledPlugin[]>([]);
   const [pendingPluginId, setPendingPluginId] = useState<string | null>(null);
+  const [isMobileActionsOpen, setIsMobileActionsOpen] = useState(false);
   const isGroupChat = Boolean(chatData?.group_data);
   const currentChatId = chatData?.chat_id || chatData?.group_data?.chat_id || "";
   const currentGroupName = chatData?.group_data?.name || "";
+
+  const { activeCallChatId, connectingChatId, setMinimized, joinCall } = useCallContext();
+  const isThisChatInCall = !!activeCallChatId && activeCallChatId === currentChatId;
+  const isThisChatConnecting = !activeCallChatId && connectingChatId === currentChatId;
+  const isCallBusyElsewhere =
+    (!!activeCallChatId && activeCallChatId !== currentChatId) ||
+    (!!connectingChatId && connectingChatId !== currentChatId);
+
+  const handleMobileCallClick = () => {
+    setIsMobileActionsOpen(false);
+
+    if (isThisChatInCall) {
+      setMinimized(false);
+      return;
+    }
+
+    if (isCallBusyElsewhere || isThisChatConnecting) return;
+
+    joinCall(currentChatId, chatName, isGroupChat);
+  };
+
+  const mobileCallLabel = isThisChatInCall
+    ? callText.button.showRoom
+    : isCallBusyElsewhere
+      ? callText.button.anotherCallActive
+      : isThisChatConnecting
+        ? callText.button.connecting
+        : callText.button.joinRoom;
+
+  const MobileCallIcon = isCallBusyElsewhere ? PhoneOff : isThisChatConnecting ? Loader2 : Phone;
 
   useEffect(() => {
     let cancelled = false;
@@ -493,7 +526,7 @@ export default function ChatHeader({
             )}
           </div>
 
-          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <div className="hidden shrink-0 items-center gap-2 sm:flex">
             {chatData?.group_data && checkAdmin.is_admin && !isGroupMemberRemoved && (
               <Button
                 type="text"
@@ -529,6 +562,76 @@ export default function ChatHeader({
               disabled={isGroupChat && isGroupMemberRemoved}
             />
           </div>
+
+          <Dropdown
+            trigger={["click"]}
+            open={isMobileActionsOpen}
+            onOpenChange={setIsMobileActionsOpen}
+            dropdownRender={() => (
+              <div className="w-56 rounded-lg border border-gray-200 bg-white p-1 shadow-lg">
+                {chatData?.group_data && checkAdmin.is_admin && !isGroupMemberRemoved && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileActionsOpen(false);
+                      openAddMembersModal();
+                    }}
+                    className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <UserPlus className="h-4 w-4 shrink-0" />
+                    Añadir miembros
+                  </button>
+                )}
+
+                {(!isGroupChat || !isGroupMemberRemoved) && (
+                  <button
+                    type="button"
+                    onClick={handleMobileCallClick}
+                    disabled={isCallBusyElsewhere || isThisChatConnecting}
+                    className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400 disabled:hover:bg-transparent"
+                  >
+                    <MobileCallIcon className={`h-4 w-4 shrink-0 ${isThisChatConnecting ? "animate-spin" : ""}`} />
+                    {mobileCallLabel}
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMobileActionsOpen(false);
+                    openPluginMarketplace();
+                  }}
+                  disabled={isGroupChat && isGroupMemberRemoved}
+                  className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400 disabled:hover:bg-transparent"
+                >
+                  <Puzzle className="h-4 w-4 shrink-0" />
+                  Plugins
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMobileActionsOpen(false);
+                    showUserDetails();
+                  }}
+                  disabled={isGroupChat && isGroupMemberRemoved}
+                  className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400 disabled:hover:bg-transparent ${isVisibleDetail ? "text-blue-600" : "text-gray-700"
+                    }`}
+                >
+                  <Info className="h-4 w-4 shrink-0" />
+                  {isGroupChat ? "Detalles del grupo" : "Detalles del contacto"}
+                </button>
+              </div>
+            )}
+            className="sm:hidden"
+          >
+            <Button
+              type="text"
+              className="!h-9 !w-9 !rounded-lg shrink-0 text-gray-600 hover:!bg-gray-100"
+              icon={<MoreVertical className="h-5 w-5" />}
+              title="Más opciones"
+            />
+          </Dropdown>
         </div>
       )}
 
