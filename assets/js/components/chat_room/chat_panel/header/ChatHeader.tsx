@@ -486,16 +486,18 @@ export default function ChatHeader({
             </div>
 
             {installedPlugins.length > 0 && (
-              <div className="flex items-center gap-2 overflow-x-auto">
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => togglePluginTab(null)}
-                  className={`h-8 rounded-md border px-3 text-xs font-medium transition-all ${activePluginId === null
+                  title="Chat"
+                  className={`inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-md border px-2 sm:px-3 text-xs font-medium transition-all ${activePluginId === null
                     ? "border-sky-200 bg-sky-100 text-sky-800"
                     : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
                     }`}
                 >
-                  💬 Chat
+                  <span className="shrink-0">💬</span>
+                  <span>Chat</span>
                 </button>
                 {installedPlugins.map((plugin) => (
                   <button
@@ -503,13 +505,16 @@ export default function ChatHeader({
                     key={plugin.type}
                     onClick={() => togglePluginTab(plugin.type)}
                     title={plugin.name}
-                    className={`inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-md border px-3 text-xs font-medium transition-all ${activePluginId === plugin.type
+                    className={`inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-md border px-2 sm:px-3 text-xs font-medium transition-all ${activePluginId === plugin.type
                       ? "border-sky-200 bg-sky-100 text-sky-800"
                       : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
                       }`}
                   >
                     <span className="shrink-0">{plugin.icon}</span>
-                    {plugin.name}
+                    <span className="sm:hidden">
+                      {plugin.type.charAt(0).toUpperCase() + plugin.type.slice(1)}
+                    </span>
+                    <span className="hidden sm:inline">{plugin.name}</span>
                     {plugin.type === "pomodoro" && pomodoroTimer?.isRunning && (
                       <span
                         className={`ml-1 inline-block h-2 w-2 shrink-0 rounded-full ${pomodoroTimer.mode === "work"
