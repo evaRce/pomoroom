@@ -31,7 +31,7 @@ export default function RequestReceived({ imageNumber }) {
         alt="background"
         className="object-cover w-full h-full opacity-45"
       />
-      <div className="flex flex-col absolute justify-center items-center bg-white p-4 rounded-lg">
+      <div className="flex flex-col absolute justify-center items-center bg-white p-4 rounded-lg max-w-[80vw] sm:max-w-none text-center">
         <Text className="text-base sm:text-base md:text-lg lg:text-xl">
           {requestData ? (
             <>

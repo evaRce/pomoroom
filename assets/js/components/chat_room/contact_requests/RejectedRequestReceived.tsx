@@ -27,7 +27,7 @@ export default function RejectedRequestReceived({ imageNumber }) {
         alt="background"
         className="object-cover w-full h-full opacity-45"
       />
-      <div className="flex flex-col absolute justify-center items-center bg-white p-4 rounded-lg">
+      <div className="flex flex-col absolute justify-center items-center bg-white p-4 rounded-lg max-w-[80vw] sm:max-w-none text-center">
         <Text className="text-base sm:text-base md:text-lg lg:text-xl" style={{ color: 'red' }}>
           Tu solicitud de amistad ha sido rechazada por {requestData ? <strong>{requestData.to_user}</strong> : '....'}
         </Text>
