@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Button, Modal, Dropdown } from "antd";
-import { UserAddOutlined, MoreOutlined } from '@ant-design/icons';
+import { UserAddOutlined, UsergroupAddOutlined, MoreOutlined } from '@ant-design/icons';
 import { useEventContext, useEvent } from "../EventContext";
 import AddContactOrGroup from "./AddContactOrGroup";
 
 export default function CurrentUserCard() {
 	const [userLogin, setUserLogin] = useState(null);
 	const [showModal, setShowModal] = useState(false);
+	const [entryType, setEntryType] = useState("contact");
 	const { addEvent } = useEventContext();
 	const [dropdownVisible, setDropdownVisible] = useState(false);
 	const userInfoEvent = useEvent("show_user_info");
@@ -17,7 +18,8 @@ export default function CurrentUserCard() {
 		}
 	}, [userInfoEvent]);
 
-	const showAddEntryModal = () => {
+	const showAddEntryModal = (type) => {
+		setEntryType(type);
 		setShowModal(true);
 	};
 
@@ -29,13 +31,25 @@ export default function CurrentUserCard() {
 		e.domEvent.stopPropagation(); // Prevent container selection
 		if (key === "logout") {
 			addEvent("logout", true);
-			setDropdownVisible(false);
-			return;
+		} else if (key === "add_contact") {
+			showAddEntryModal("contact");
+		} else if (key === "create_group") {
+			showAddEntryModal("group");
 		}
 		setDropdownVisible(false);
 	};
 
 	const items = [
+		{
+			label: "Añadir contacto",
+			key: "add_contact",
+			icon: <UserAddOutlined />,
+		},
+		{
+			label: "Crear grupo",
+			key: "create_group",
+			icon: <UsergroupAddOutlined />,
+		},
 		{
 			label: "Cerrar sesión",
 			key: "logout",
@@ -75,24 +89,23 @@ export default function CurrentUserCard() {
 	};
 
 	return (
-		<div className="flex w-[20vw] shrink-0 justify-between sm:items-center py-4 px-2 gap-2">
+		<div className="flex w-full min-w-0 shrink-0 justify-between sm:items-center py-3 px-2 gap-2 bg-gray-100 border-t border-gray-200">
 			{userLogin && (
-				<div className="flex relative rounded-lg items-center space-x-2 mb-1">
+				<div className="flex w-full min-w-0 relative rounded-lg items-center gap-2">
 					<div className="flex-shrink-0">
 						<img
-							className="h-10 w-10 rounded-full bg-gray-100/25"
+							className="h-10 w-10 rounded-full bg-white"
 							src={userLogin.image_profile}
 							alt="default"
 							title={userLogin.nickname}
 						/>
 					</div>
 
-					<div className="flex w-[18vw] items-center justify-between">
-						<span className="hidden md:block lg:block overflow-ellipsis overflow-hidden whitespace-nowrap truncate  w-[2vw] md:w-[4vw] xl:w-[7vw]" title={userLogin.nickname}>
+					<div className="flex flex-1 min-w-0 items-center justify-between gap-2">
+						<span className="block overflow-ellipsis overflow-hidden whitespace-nowrap truncate min-w-0 flex-1" title={userLogin.nickname}>
 							{userLogin.nickname}
 						</span>
-						<div className="flex gap-1">
-							<Button icon={<UserAddOutlined />} onClick={showAddEntryModal} title="Añadir contacto/grupo" />
+						<div className="flex gap-3 shrink-0">
 							<Dropdown
 								menu={menuProps}
 								trigger={["click"]}
@@ -100,6 +113,7 @@ export default function CurrentUserCard() {
 								onOpenChange={handleDropdownVisibility}
 							>
 								<Button
+									className="bg-white"
 									icon={<MoreOutlined />}
 									onClick={handleButtonClick}
 									title="Otros"
@@ -109,7 +123,7 @@ export default function CurrentUserCard() {
 					</div>
 				</div>)
 			}
-			<AddContactOrGroup sendDataToParent={handleDataFromChild} receiveDataFromParent={showModal} />
+			<AddContactOrGroup sendDataToParent={handleDataFromChild} receiveDataFromParent={showModal} entryType={entryType} />
 		</div>
 	);
 }

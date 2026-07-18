@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Button, Form, Input, Radio, message, Spin } from "antd";
+import { Modal, Button, Form, Input, message, Spin } from "antd";
 import { useEventContext, useEvent } from "../EventContext";
 
-export default function AddContactOrGroup({ sendDataToParent, receiveDataFromParent }) {
+export default function AddContactOrGroup({ sendDataToParent, receiveDataFromParent, entryType }) {
   const [form] = Form.useForm();
   const [inputStr, setInputStr] = useState("");
-  const [entryType, setEntryType] = useState("contact");
   const { addEvent, removeEvent } = useEventContext();
   const [loading, setLoading] = useState(false);
   const errorAddingContactEvent = useEvent("error_adding_contact");
@@ -33,13 +32,8 @@ export default function AddContactOrGroup({ sendDataToParent, receiveDataFromPar
   const handleCancel = () => {
     sendDataToParent(false);
     form.resetFields();
-    setEntryType("contact");
     setLoading(false);
     setInputStr("");
-  };
-
-  const handleChangeEntryType = (e) => {
-    setEntryType(e.target.value);
   };
 
   useEffect(() => {
@@ -110,12 +104,6 @@ export default function AddContactOrGroup({ sendDataToParent, receiveDataFromPar
       ]}
     >
       <Form form={form} onFinish={sendNewEntry}>
-        <Form.Item>
-          <Radio.Group onChange={handleChangeEntryType} value={entryType}>
-            <Radio value="contact">Contacto</Radio>
-            <Radio value="group">Grupo</Radio>
-          </Radio.Group>
-        </Form.Item>
         <Form.Item
           name="newContactName"
           rules={[{ required: true, message: 'Introduce un nombre!' }]}
@@ -124,7 +112,7 @@ export default function AddContactOrGroup({ sendDataToParent, receiveDataFromPar
             type="text"
             onChange={e => setInputStr(e.target.value)}
             value={inputStr}
-            placeholder={entryType === "contact" ? "Añade a tu proxim@ amig@" : "Añade tu proxima sala"}
+            placeholder={entryType === "contact" ? "Añade tu próximo contacto" : "Añade tu próxima sala"}
           />
         </Form.Item>
       </Form>
