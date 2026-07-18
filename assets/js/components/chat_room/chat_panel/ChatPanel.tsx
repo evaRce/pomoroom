@@ -21,11 +21,12 @@ import {
 
 interface ChatPanelProps {
   isVisibleDetail: boolean;
+  onBack?: () => void;
 }
 
 const TOP_SCROLL_THRESHOLD_PX = 12;
 
-export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
+export default function ChatPanel({ isVisibleDetail, onBack }: ChatPanelProps) {
   const { addEvent, removeEvent } = useEventContext() as any;
   const { activeCallChatId, activeCallRoomName, connectedAt, isMinimized, setMinimized, setViewingChatId, leaveCall } =
     useCallContext();
@@ -410,6 +411,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
           isVisibleDetail={isVisibleDetail}
           activePluginId={activePluginId}
           onTogglePluginTab={handleTogglePluginTab}
+          onBack={onBack}
         />
 
         {/* Content area - either plugin or chat messages */}

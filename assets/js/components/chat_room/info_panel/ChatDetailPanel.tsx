@@ -116,17 +116,17 @@ export default function ChatDetailPanel() {
 
   return (
     <div
-      className="overflow-y-auto lg:pr-8 lg:flex-shrink-0 xl:pr-0 xl:block bg-gray-100 p-3"
+      className="overflow-y-auto shrink-0 w-full h-dvh sm:h-auto sm:w-72 sm:max-w-[28vw] lg:w-80 xl:w-96 bg-gray-100 p-3"
       style={{ scrollbarWidth: "thin" }}
     >
-      <div className="min-w-[28vw]">
+      <div className="min-w-0">
         <Button
           className="top-0 left-0 bg-white"
           icon={<CloseOutlined />}
           onClick={hideUserDetails}
         />
         {chatData && (
-          <div className="text-center w-[27vw] mb-10">
+          <div className="text-center w-full mb-10">
             <Avatar
               src={chatData.image}
               size={150}
@@ -140,12 +140,12 @@ export default function ChatDetailPanel() {
           <h4>Archivos, documentos, etc</h4>
         </div>
         <div
-          className="grid h-[26vh] w-[27vw] overflow-y-auto justify-items-center grid-cols-3 gap-2"
+          className="grid h-[26vh] w-full overflow-y-auto justify-items-center grid-cols-3 gap-2"
           style={{ scrollbarWidth: "thin" }}
         >
           {[...Array(4)].map((_, index) => (
             <div key={index}>
-              <div className="cursor-pointer bg-gray-300 hover:bg-gray-400 h-[12vh] w-[8vw]"></div>
+              <div className="cursor-pointer bg-gray-300 hover:bg-gray-400 aspect-square w-full"></div>
             </div>
           ))}
         </div>
@@ -156,7 +156,7 @@ export default function ChatDetailPanel() {
         )}
         {chatData?.is_group && (
           <div
-            className="h-[40vh] w-[27vw] overflow-y-auto relative"
+            className="h-[40vh] w-full overflow-y-auto relative"
             style={{ scrollbarWidth: "thin" }}
           >
             <List

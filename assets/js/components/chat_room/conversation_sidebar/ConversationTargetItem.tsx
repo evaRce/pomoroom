@@ -21,6 +21,7 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
       }
       onSelect();
     }
+    addEvent("mobile_open_chat", true);
   };
 
   const getBackgroundContact = () => {
@@ -106,29 +107,29 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
 
   return (
     <div
-      className={`relative rounded-lg p-2 flex items-center space-x-3 hover:border-gray-400 focus-within:ring-2 mb-1 hover:bg-gray-400 ${getBackgroundContact()}`}
+      className={`relative rounded-lg p-3 sm:p-1.5 lg:p-2 flex items-center gap-3 sm:gap-2 lg:gap-3 hover:border-gray-400 focus-within:ring-2 mb-1 hover:bg-gray-400 ${getBackgroundContact()}`}
       onClick={handleChat}
     >
       <div className="flex-shrink-0 rounded-full">
         <img
-          className="h-10 w-10 rounded-full bg-white"
+          className="h-12 w-12 sm:h-8 sm:w-8 lg:h-10 lg:w-10 rounded-full bg-white"
           src={contact.image}
           alt={contact.name}
         />
       </div>
-      <div className="flex-1 min-w-20">
+      <div className="flex-1 min-w-0">
         <a className="focus:outline-none" onClick={handleChat}>
           <div className="flex items-center justify-between">
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <span
-                className="flex-1 min-w-0 text-sm truncate pb-0"
+                className="flex-1 min-w-0 text-base sm:text-xs lg:text-sm truncate pb-0"
                 title={contact.name}
               >
                 {contact.name}
               </span>
               {hasPendingNotification && lastPomodoroEventVisual && (
                 <span
-                  className={`flex shrink-0 items-center gap-1 px-2 py-1 rounded-full border text-xs ${lastPomodoroEventVisual.className}`}
+                  className={`flex shrink-0 items-center gap-1 px-2 py-1 sm:px-1.5 sm:py-0.5 lg:px-2 lg:py-1 rounded-full border text-xs sm:text-[10px] lg:text-xs ${lastPomodoroEventVisual.className}`}
                   title={lastPomodoroEventVisual.label}
                 >
                   <span className="shrink-0">
@@ -142,7 +143,7 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
               )}
             </div>
             {(contact.status_request === "pending" || contact.status_request === "rejected") && (
-              <span className={`text-white font-bold text-xs rounded-full px-2 py-1 ${getBackgroundStatus()}`}>
+              <span className={`text-white font-bold text-xs sm:text-[10px] lg:text-xs rounded-full px-2 py-1 sm:px-1.5 sm:py-0.5 lg:px-2 lg:py-1 ${getBackgroundStatus()}`}>
                 {contact.status_request}
               </span>
             )}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useSyncExternalStore } from "react";
 import { Avatar, Button } from "antd";
-import { Info, Puzzle, UserPlus } from "lucide-react";
+import { ArrowLeft, Info, Puzzle, UserPlus } from "lucide-react";
 import { useEventContext, useEvent } from "../../EventContext";
 import AddMembersModal from "./AddMembersModal";
 import CallButton from "../../call_panel/CallButton";
@@ -12,6 +12,7 @@ interface ChatHeaderProps {
   isVisibleDetail: boolean;
   activePluginId: string | null;
   onTogglePluginTab: (pluginId: string | null) => void;
+  onBack?: () => void;
 }
 
 export default function ChatHeader({
@@ -19,6 +20,7 @@ export default function ChatHeader({
   isVisibleDetail,
   activePluginId,
   onTogglePluginTab,
+  onBack,
 }: ChatHeaderProps) {
   const { addEvent, removeEvent } = useEventContext() as any;
   const [pluginDisplayMap, setPluginDisplayMap] = useState<Record<string, { name: string; icon: string }>>({});
@@ -418,25 +420,37 @@ export default function ChatHeader({
   return (
     <header className="shrink-0 border-b border-gray-200 bg-white shadow-sm">
       {chatData && (
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex flex-col gap-2 min-w-0 flex-1">
-            <button
-              type="button"
-              onClick={showUserDetails}
-              className="flex items-center gap-3 text-left"
-            >
-              <Avatar
-                size={40}
-                src={chatImage}
-                className="bg-white text-blue-700 font-semibold"
+        <div className="flex items-center justify-between gap-2 px-2 py-2 sm:px-4 sm:py-3">
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <div className="flex min-w-0 items-center gap-1">
+              {onBack && (
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="sm:hidden -ml-1 shrink-0 rounded-lg p-1.5 text-gray-600 hover:bg-gray-100"
+                  title="Volver"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={showUserDetails}
+                className="flex min-w-0 flex-1 items-center gap-3 text-left"
               >
-                {chatName?.charAt(0)?.toUpperCase()}
-              </Avatar>
+                <Avatar
+                  size={40}
+                  src={chatImage}
+                  className="shrink-0 bg-white text-blue-700 font-semibold"
+                >
+                  {chatName?.charAt(0)?.toUpperCase()}
+                </Avatar>
 
-              <div className="flex items-start">
-                <span className="text-sm font-semibold text-gray-900 truncate">{chatName}</span>
-              </div>
-            </button>
+                <div className="flex min-w-0 flex-1 items-start">
+                  <span className="truncate text-sm font-semibold text-gray-900">{chatName}</span>
+                </div>
+              </button>
+            </div>
 
             {installedPlugins.length > 0 && (
               <div className="flex items-center gap-2 overflow-x-auto">
@@ -479,7 +493,7 @@ export default function ChatHeader({
             )}
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
             {chatData?.group_data && checkAdmin.is_admin && !isGroupMemberRemoved && (
               <Button
                 type="text"

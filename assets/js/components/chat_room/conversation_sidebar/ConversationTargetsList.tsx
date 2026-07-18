@@ -317,10 +317,10 @@ export default function ConversationTargetsList() {
   const visibleContacts = filteredContacts.slice(0, visibleCount);
 
   return (
-    <div className="flex flex-col h-full min-h-0 w-[20vw]">
-      <div className="flex items-center w-[20vw] bg-gray-100 shrink-0">
+    <div className="flex flex-col flex-1 min-h-0 w-full min-w-0">
+      <div className="flex items-center w-full bg-gray-100 shrink-0">
         <Input
-          className="my-2 ml-2 mr-1 lg:w-[18vw] w-[16vw]"
+          className="my-2 ml-2 mr-1 sm:my-1.5 sm:ml-1.5 lg:my-2 lg:ml-2 flex-1 min-w-0"
           type="text"
           placeholder="Buscar a mis panas"
           value={searchTerm}
@@ -328,16 +328,16 @@ export default function ConversationTargetsList() {
         />
         {searchTerm ? (
           <Button
-            className="bg-red-300 mr-2"
+            className="bg-red-300 mr-2 sm:mr-1.5 lg:mr-2 shrink-0"
             icon={<CloseOutlined />}
             onClick={clearSearch}
           />
         ) : (
-          <Button className="bg-sky-400 mr-2" icon={<SearchOutlined />} />
+          <Button className="bg-sky-400 mr-2 sm:mr-1.5 lg:mr-2 shrink-0" icon={<SearchOutlined />} />
         )}
       </div>
       <div
-        className="flex-1 min-h-0 overflow-auto w-[20vw] p-1"
+        className="flex-1 min-h-0 overflow-auto overscroll-contain w-full p-1"
         style={{ scrollbarWidth: "thin" }}
         onScroll={handleListScroll}
       >
@@ -349,7 +349,7 @@ export default function ConversationTargetsList() {
               onSelect={() => handleSelectedContact(contact.name)}
               onDelete={() => deleteContact(contact)}
             />
-            <div className="border-t-2 mb-1"></div>
+            <div className="border-t mb-1 lg:border-t-2"></div>
           </Fragment>
         ))}
       </div>
