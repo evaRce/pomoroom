@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Button, Form, Input, Statistic} from "antd";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { HomeOutlined } from '@ant-design/icons';
+import loginText from "./loginText";
 
 export interface LoginProps {
   searchUser(email: string, password: string): any;
@@ -50,19 +51,19 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
           className="absolute top-4 left-4 sm:top-8 sm:left-8 shadow bg-white"
           icon={<HomeOutlined />}
           size="large"
-          title="Página de inicio"
+          title={loginText.homeButtonTitle}
         />
       </a>
       <div className="max-w-md md:max-w-lg lg:max-w-xl w-full my-4">
         <div className="p-4 sm:p-8 rounded-2xl bg-white shadow">
           <p className="text-center text-lg lg:text-xl sm:text-2xl font-bold mb-6">
-            <span className="text-purple-600">Pomo</span><span className="text-black">room</span>
+            <span className="text-purple-600">{loginText.brand.pomo}</span><span className="text-black">{loginText.brand.room}</span>
           </p>
           <p className="text-gray-800 text-center text-2xl md:text-2xl lg:text-3xl font-bold">
-            ¡Nos alegra verte otra vez!
+            {loginText.welcome}
           </p>
           <p className="text-gray-800 text-center text-sm md:text-lg lg:text-xl font-bold -mt-1">
-            Ingresa tus datos para comenzar.
+            {loginText.subtitle}
           </p>
           <Form
               form={form}
@@ -73,12 +74,12 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
               className="mt-5 space-y-4"
             >
               <Form.Item
-                label="Email"
+                label={loginText.form.emailLabel}
                 name="email"
                 rules={[
                   {
                     required: true,
-                    message: "¡Por favor ingrese su correo electrónico!",
+                    message: loginText.form.emailRequired,
                   },
                 ]}
               >
@@ -88,12 +89,12 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
                 />
               </Form.Item>
               <Form.Item
-                label="Contraseña"
+                label={loginText.form.passwordLabel}
                 name="password"
                 rules={[
                   {
                     required: true,
-                    message: "¡Por favor ingrese su contraseña!",
+                    message: loginText.form.passwordRequired,
                   },
                 ]}
               >
@@ -105,7 +106,7 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
                 <a
                   className="text-blue-600 underline font-semibold"
                 >
-                  Olvidaste tu contraseña?
+                  {loginText.form.forgotPassword}
                 </a>
               </Form.Item>
               <Form.Item>
@@ -114,15 +115,15 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
                   className="!h-11 !border-2 text-white text-base font-semibold transitiona-all duration-700 bg-purple-500 !border-purple-500 hover:!bg-purple-400 hover:!border-purple-300 hover:!text-white focus:!bg-purple-400 focus:!border-purple-300 focus:!text-white active:!bg-purple-400 active:!border-purple-300 active:!text-white"
                   block
                 >
-                  Iniciar sesión
+                  {loginText.form.submit}
                 </Button>
                 <p className="text-gray-800 text-sm !mt-5 mb-0 text-center">
-                  ¿No tienes una cuenta?
+                  {loginText.form.noAccount}
                   <a
                     href="signup"
                     className="text-blue-600 underline ml-1 whitespace-nowrap font-semibold"
                   >
-                    Registrate aquí
+                    {loginText.form.signupLink}
                   </a>
                 </p>
               </Form.Item>
