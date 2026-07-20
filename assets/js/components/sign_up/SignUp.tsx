@@ -2,13 +2,19 @@ import React, { useEffect, useState } from "react";
 import { Button, Form, Input } from "antd";
 import { LockOutlined, UserOutlined, RobotOutlined, HomeOutlined } from "@ant-design/icons";
 
+export interface SignUpErrors {
+  email?: string;
+  nickname?: string;
+  error?: string;
+}
+
 export interface SignUpProps {
   submitUser(
     newUsername: string,
     newPassword: string,
     newNickname: string
-  ): any;
-  errors: object;
+  ): void;
+  errors: SignUpErrors;
 }
 
 export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
@@ -17,16 +23,21 @@ export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
   const nicknameRegex = new RegExp(/^\w[\w.]{2,18}\w$/);
 	const [imageNumber, setImageNumber] = useState(1);
 
-  const onFinish = (userData: any) => {
+  const onFinish = (userData: {
+    email: string;
+    password: string;
+    confirmPassword: string;
+    nickname: string;
+  }) => {
     submitUser(userData.email, userData.confirmPassword, userData.nickname);
   };
 
   useEffect(() => {
     if (errors) {
       form.setFields(
-        Object.keys(errors).map((key) => ({
+        (Object.keys(errors) as Array<keyof SignUpErrors>).map((key) => ({
           name: key,
-          errors: [errors[key]],
+          errors: [errors[key] as string],
         }))
       );
     }
