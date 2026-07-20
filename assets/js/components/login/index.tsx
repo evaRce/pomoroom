@@ -1,9 +1,17 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { Login, LoginProps } from "./Login";
+import { Login, LoginErrors, LoginProps } from "./Login";
+
+interface LoginHook {
+	el: HTMLElement;
+	handleEvent(event: string, callback: (payload: { errors: LoginErrors }) => void): void;
+	pushEventTo(el: HTMLElement, event: string, payload?: object): void;
+	searchUser(email: string, password: string): void;
+	opts(error_login_user?: LoginErrors): LoginProps;
+}
 
 export default {
-	mounted() {
+	mounted(this: LoginHook) {
 		const loginDomNode = document.getElementById('login') as Element;
 		const rootElement2 = createRoot(loginDomNode);
 
@@ -19,11 +27,11 @@ export default {
 		rootElement2.unmount()
 	},
 
-	searchUser(email_, password_) {
+	searchUser(this: LoginHook, email_: string, password_: string) {
 		this.pushEventTo(this.el, "action.log_user", {email: email_, password: password_})
 	},
-  
-	opts(error_login_user = {}): LoginProps {
+
+	opts(this: LoginHook, error_login_user: LoginErrors = {}): LoginProps {
 		return {
 			searchUser: this.searchUser.bind(this),
 			errors: error_login_user

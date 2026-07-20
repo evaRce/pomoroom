@@ -3,9 +3,14 @@ import { Button, Form, Input, Statistic} from "antd";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { HomeOutlined } from '@ant-design/icons';
 
+export interface LoginErrors {
+  email?: string;
+  password?: string;
+}
+
 export interface LoginProps {
-  searchUser(email: string, password: string): any;
-  errors: object;
+  searchUser(email: string, password: string): void;
+  errors: LoginErrors;
 }
 
 export const Login: React.FC<LoginProps> = (props: LoginProps) => {
@@ -13,7 +18,7 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
   const [form] = Form.useForm();
   const [imageNumber, setImageNumber] = useState(1);
 
-  const onFinish = (newValues: any) => {
+  const onFinish = (newValues: { email: string; password: string }) => {
     searchUser(newValues.email, newValues.password);
   };
 
