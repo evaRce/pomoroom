@@ -23,7 +23,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
   def handle_update_status_request(status, to_user_name, from_user_name, user_nickname, socket) do
     case status do
       "accepted" ->
-        case FriendRequests.accept_friend_request(to_user_name, from_user_name) do
+        case FriendRequests.accept_friend_request(to_user_name, from_user_name, user_nickname) do
           {:ok, request} ->
             case PrivateChats.get(request.to_user, request.from_user) do
               {:ok, private_chat} ->
@@ -52,7 +52,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
             {:noreply, socket}
         end
       "rejected" ->
-        case FriendRequests.reject_friend_request(to_user_name, from_user_name) do
+        case FriendRequests.reject_friend_request(to_user_name, from_user_name, user_nickname) do
           {:ok, request} ->
             payload =
               if request.to_user == user_nickname do
