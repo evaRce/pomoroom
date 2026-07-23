@@ -19,6 +19,7 @@ defmodule Pomoroom.Application do
       {DNSCluster, query: Application.get_env(:pomoroom, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Pomoroom.PubSub},
       PomoroomWeb.Presence,
+      {PomoroomWeb.RateLimiter, clean_period: :timer.minutes(10)},
       # Start the Finch HTTP client for sending emails
       {Finch, name: Pomoroom.Finch},
       Pomoroom.LiveKit.RoomCache,
