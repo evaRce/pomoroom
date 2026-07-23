@@ -53,12 +53,16 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
     end
   end
 
-  def accept_friend_request(to_user, from_user) do
+  def accept_friend_request(to_user, from_user, logged_user_nickname) do
     case get_request_any_direction(to_user, from_user) do
       {:ok, %{status: "pending"} = request} ->
-        FriendRequestRepository.update_request_status(request.to_user, request.from_user, "accepted")
-        PrivateChats.ensure_exists(request.to_user, request.from_user)
-        {:ok, %{request | status: "accepted"}}
+        if request.to_user == logged_user_nickname do
+          FriendRequestRepository.update_request_status(request.to_user, request.from_user, "accepted")
+          PrivateChats.ensure_exists(request.to_user, request.from_user)
+          {:ok, %{request | status: "accepted"}}
+        else
+          {:error, %{error: "No autorizado para aceptar esta solicitud de amistad"}}
+        end
 
       {:ok, _request} ->
         {:error, %{error: "Petición de amistad ya aceptada"}}
@@ -80,27 +84,18 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
     end
   end
 
-  def reject_friend_request(to_user, from_user) do
-    case get(to_user, from_user) do
+  def reject_friend_request(to_user, from_user, logged_user_nickname) do
+    case get_request_any_direction(to_user, from_user) do
       {:ok, %{status: "pending"} = request} ->
-        FriendRequestRepository.update_request_status(to_user, from_user, "rejected")
-        {:ok, %{request | status: "rejected"}}
+        if request.to_user == logged_user_nickname do
+          FriendRequestRepository.update_request_status(request.to_user, request.from_user, "rejected")
+          {:ok, %{request | status: "rejected"}}
+        else
+          {:error, %{error: "No autorizado para rechazar esta solicitud de amistad"}}
+        end
 
       {:ok, _request} ->
         {:error, %{error: "Petición de amistad ya rechazada"}}
-
-      {:error, :not_found} ->
-        case get(from_user, to_user) do
-          {:ok, %{status: "pending"} = request} ->
-            FriendRequestRepository.update_request_status(from_user, to_user, "rejected")
-            {:ok, %{request | status: "rejected"}}
-
-          {:ok, _request} ->
-            {:error, %{error: "Petición de amistad ya rechazada"}}
-
-          {:error, reason} ->
-            {:error, reason}
-        end
 
       {:error, reason} ->
         {:error, reason}
