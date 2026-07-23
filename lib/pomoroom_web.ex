@@ -17,7 +17,7 @@ defmodule PomoroomWeb do
   those modules here.
   """
 
-  def static_paths, do: ~w(assets fonts images sounds favicon.ico robots.txt)
+  def static_paths, do: ~w(assets fonts images sounds favicon.ico pomoroom_logo.ico robots.txt)
 
   def router do
     quote do
