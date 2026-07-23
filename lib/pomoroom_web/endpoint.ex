@@ -1,9 +1,9 @@
 defmodule PomoroomWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :pomoroom
 
-  # The session will be stored in the cookie and signed,
-  # this means its contents can be read but not tampered with.
-  # Set :encryption_salt if you would also like to encrypt it.
+  # The session data is kept server-side in an ETS table (see
+  # PhoenixLiveSession); the cookie only carries a random session id,
+  # so there is no session content in the cookie to sign or encrypt.
   @session_options [
     store: PhoenixLiveSession,
     pub_sub: Pomoroom.PubSub,
