@@ -124,6 +124,8 @@ export default function ChatDetailPanel() {
           className="top-0 left-0 bg-white"
           icon={<CloseOutlined />}
           onClick={hideUserDetails}
+          title="Cerrar detalles"
+          aria-label="Cerrar detalles"
         />
         {chatData && (
           <div className="text-center w-[27vw] mb-10">

@@ -487,6 +487,7 @@ export default function ChatHeader({
                 icon={<UserPlus className="h-5 w-5" />}
                 onClick={openAddMembersModal}
                 title="Añadir miembros"
+                aria-label="Añadir miembros"
               />
             )}
 
@@ -500,6 +501,7 @@ export default function ChatHeader({
               icon={<Puzzle className="h-5 w-5" />}
               onClick={openPluginMarketplace}
               title="Plugins"
+              aria-label="Plugins"
               disabled={isGroupChat && isGroupMemberRemoved}
             />
 
@@ -512,6 +514,7 @@ export default function ChatHeader({
               icon={<Info className="h-5 w-5" />}
               onClick={showUserDetails}
               title="Detalles del contacto"
+              aria-label="Detalles del contacto"
               disabled={isGroupChat && isGroupMemberRemoved}
             />
           </div>

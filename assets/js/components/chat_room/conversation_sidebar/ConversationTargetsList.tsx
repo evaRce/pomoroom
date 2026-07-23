@@ -331,9 +331,16 @@ export default function ConversationTargetsList() {
             className="bg-red-300 mr-2"
             icon={<CloseOutlined />}
             onClick={clearSearch}
+            title="Limpiar búsqueda"
+            aria-label="Limpiar búsqueda"
           />
         ) : (
-          <Button className="bg-sky-400 mr-2" icon={<SearchOutlined />} />
+          <Button
+            className="bg-sky-400 mr-2"
+            icon={<SearchOutlined />}
+            title="Buscar"
+            aria-label="Buscar"
+          />
         )}
       </div>
       <div

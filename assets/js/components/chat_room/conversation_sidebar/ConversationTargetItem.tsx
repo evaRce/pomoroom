@@ -157,6 +157,8 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
                   className="hover:bg-gray-700 ml-1"
                   icon={<DownOutlined />}
                   onClick={handleButtonClick}
+                  title="Más opciones"
+                  aria-label="Más opciones"
                 />
               </Dropdown>
             )}

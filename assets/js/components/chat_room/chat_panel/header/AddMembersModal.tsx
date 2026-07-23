@@ -71,12 +71,16 @@ export default function AddMembersModal({
             className="bg-red-300"
             icon={<CloseOutlined />}
             onClick={clearSearch}
+            title="Limpiar búsqueda"
+            aria-label="Limpiar búsqueda"
           />
         ) : (
           <Button
             className="bg-sky-400"
             icon={<SearchOutlined />}
             onClick={handleSearch}
+            title="Buscar"
+            aria-label="Buscar"
           />
         )}
       </div>

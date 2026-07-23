@@ -68,6 +68,7 @@ export default function MinimizedCallBar() {
           localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled);
         }}
         title={isMicrophoneEnabled ? callText.screen.muteMic : callText.screen.unmuteMic}
+        aria-label={isMicrophoneEnabled ? callText.screen.muteMic : callText.screen.unmuteMic}
       />
       <Button
         shape="circle"
@@ -80,6 +81,7 @@ export default function MinimizedCallBar() {
           leaveCall();
         }}
         title={callText.screen.endCall}
+        aria-label={callText.screen.endCall}
       />
     </div>
   );

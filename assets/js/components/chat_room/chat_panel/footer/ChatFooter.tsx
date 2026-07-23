@@ -148,7 +148,7 @@ export default function ChatFooter() {
       ) : (
         <form className="flex w-full gap-3" onSubmit={handleSendMessage}>
           <div className="flex items-center gap-2">
-            <Button className="bg-gray-100" icon={<PictureOutlined />} />
+            <Button className="bg-gray-100" icon={<PictureOutlined />} title="Adjuntar imagen" aria-label="Adjuntar imagen" />
           </div>
           <div className="flex items-center w-full justify-center">
             <input
@@ -170,11 +170,15 @@ export default function ChatFooter() {
                 className="bg-gray-100 rounded-none"
                 onClick={() => setShowPicker(true)}
                 icon={<SmileOutlined />}
+                title="Elegir emoji"
+                aria-label="Elegir emoji"
               />
               <Button
                 className="bg-sky-400 rounded-l-none rounded-r-lg"
                 icon={<SendOutlined />}
                 onClick={(e) => handleSendMessage(e)}
+                title="Enviar mensaje"
+                aria-label="Enviar mensaje"
               />
             </div>
           </div>

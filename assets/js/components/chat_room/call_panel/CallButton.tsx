@@ -51,6 +51,7 @@ export default function CallButton({ chatId, chatName, isGroupChat }: CallButton
         )
       }
       title={title}
+      aria-label={title}
       onClick={handleClick}
     />
   );

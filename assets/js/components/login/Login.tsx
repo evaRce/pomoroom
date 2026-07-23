@@ -48,9 +48,10 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
       <a href="/">
         <Button 
           className="absolute top-8 left-8 shadow bg-white" 
-          icon={<HomeOutlined />} 
-          size="large" 
-          title="Página de inicio" 
+          icon={<HomeOutlined />}
+          size="large"
+          title="Página de inicio"
+          aria-label="Página de inicio"
         />
       </a>
       <div className="max-w-md w-full mt-16">

@@ -51,9 +51,10 @@ export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
       <a href="/">
         <Button 
           className="absolute top-8 left-8 shadow bg-white" 
-          icon={<HomeOutlined />} 
-          size="large" 
-          title="Página de inicio" 
+          icon={<HomeOutlined />}
+          size="large"
+          title="Página de inicio"
+          aria-label="Página de inicio"
         />
       </a>
       <div className="max-w-md w-full">

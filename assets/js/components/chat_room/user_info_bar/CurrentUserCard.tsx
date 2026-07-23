@@ -92,7 +92,7 @@ export default function CurrentUserCard() {
 							{userLogin.nickname}
 						</span>
 						<div className="flex gap-1">
-							<Button icon={<UserAddOutlined />} onClick={showAddEntryModal} title="Añadir contacto/grupo" />
+							<Button icon={<UserAddOutlined />} onClick={showAddEntryModal} title="Añadir contacto/grupo" aria-label="Añadir contacto/grupo" />
 							<Dropdown
 								menu={menuProps}
 								trigger={["click"]}
@@ -103,6 +103,7 @@ export default function CurrentUserCard() {
 									icon={<MoreOutlined />}
 									onClick={handleButtonClick}
 									title="Otros"
+									aria-label="Otros"
 								/>
 							</Dropdown>
 						</div>

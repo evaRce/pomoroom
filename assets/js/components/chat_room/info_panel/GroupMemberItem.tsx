@@ -82,6 +82,8 @@ export default function GroupMemberItem({
             <Button
               icon={<DownOutlined />}
               onClick={() => setDropdownVisible(!dropdownVisible)}
+              title="Más opciones"
+              aria-label="Más opciones"
             />
           </Dropdown>
         )}
