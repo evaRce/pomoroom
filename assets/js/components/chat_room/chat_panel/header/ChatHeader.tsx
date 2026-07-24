@@ -1,11 +1,26 @@
 import React, { useEffect, useState, useSyncExternalStore } from "react";
-import { Avatar, Button } from "antd";
+import { Avatar, Button, message } from "antd";
 import { Info, Puzzle, UserPlus } from "lucide-react";
 import { useEventContext, useEvent } from "../../EventContext";
 import AddMembersModal from "./AddMembersModal";
 import CallButton from "../../call_panel/CallButton";
 import PluginMarketPlace, { AvailablePlugin, InstalledPlugin } from "../PluginMarketPlace";
 import { getTimer, subscribeTimer, type TimerState } from "../../pomodoro_timer/pomodoroTimerStore";
+
+const PLUGIN_ERROR_MESSAGES: Record<string, string> = {
+  unauthorized: "No tienes acceso a este chat.",
+  plugin_already_installed: "Este plugin ya está instalado.",
+  plugin_not_installed: "Este plugin no está instalado.",
+  unsupported_plugin: "Este plugin no está soportado.",
+  chat_not_found: "El chat no existe.",
+};
+
+function getPluginErrorMessage(reason: unknown): string {
+  if (typeof reason === "string" && PLUGIN_ERROR_MESSAGES[reason]) {
+    return PLUGIN_ERROR_MESSAGES[reason];
+  }
+  return "No se ha podido completar la operación con el plugin.";
+}
 
 interface ChatHeaderProps {
   userLogin: any;
@@ -196,6 +211,7 @@ export default function ChatHeader({
       return;
     }
 
+    message.error(getPluginErrorMessage(chatPluginInstallFailedEvent.reason));
     setPendingPluginId(null);
     removeEvent("chat_plugin_install_failed");
   }, [chatPluginInstallFailedEvent, currentChatId]);
@@ -235,6 +251,7 @@ export default function ChatHeader({
       return;
     }
 
+    message.error(getPluginErrorMessage(chatPluginUninstallFailedEvent.reason));
     setPendingPluginId(null);
     removeEvent("chat_plugin_uninstall_failed");
   }, [chatPluginUninstallFailedEvent, currentChatId]);

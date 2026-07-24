@@ -79,8 +79,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Contacts do
         PubSub.unsubscribe(Pomoroom.PubSub, "chat:#{private_chat.chat_id}")
         {:noreply, socket}
 
-      {:error, _reason} ->
-        {:noreply, socket}
+      {:error, reason} ->
+        payload = %{event_name: "error_deleting_contact", event_data: reason}
+        {:noreply, push_event(socket, "react", payload)}
     end
   end
 end
