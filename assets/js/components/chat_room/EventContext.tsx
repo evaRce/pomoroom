@@ -15,7 +15,7 @@ const EventContext = createContext<EventContextType>({
   removeEvent: () => { },
 });
 
-export const EventProvider = ({ children }) => {
+export const EventProvider = ({ children }: { children: React.ReactNode }) => {
   const [eventsData, setEventsData] = useState<EventsDataMap>({});
 
   // Accepts a plain value or a functional updater (prev => newValue).

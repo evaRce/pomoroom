@@ -272,7 +272,7 @@ export default function ChatHeader({
 
     if (groupMemberRemovedEvent && isRemovedEventForCurrentChat) {
       setIsGroupMemberRemoved(true);
-      toggleDetailVisibilityAction(addEvent, false, true, groupMemberRemovedEvent.group_name);
+      toggleDetailVisibilityAction(addEvent, false, true, groupMemberRemovedEvent.group_name ?? currentGroupName);
     }
   }, [groupMemberRemovedEvent, currentChatId, currentGroupName]);
 

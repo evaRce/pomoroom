@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function BackGround({ imageNumber }) {
+export default function BackGround({ imageNumber }: { imageNumber: number }) {
   return (
     <div className="flex flex-col flex-grow w-full border-l border-r justify-center items-center">
       <img
