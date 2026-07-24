@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import { useEvent } from "../components/chat_room/EventContext";
-import { clearAllTimers, clearRequestedConfigs } from "../components/chat_room/pomodoro_timer/pomodoroTimerStore";
-import { clearAllPomodoroNotifications } from "../components/chat_room/pomodoro_timer/pomodoroNotificationStore";
+import { useEvent } from "../../components/chat_room/EventContext";
+import { clearAllTimers, clearRequestedConfigs } from "../../components/chat_room/pomodoro_timer/pomodoroTimerStore";
+import { clearAllPomodoroNotifications } from "../../components/chat_room/pomodoro_timer/pomodoroNotificationStore";
 
 type UseContactsAndGroupsOutgoingActionsParams = {
   removeEvent: (eventName: string) => void;

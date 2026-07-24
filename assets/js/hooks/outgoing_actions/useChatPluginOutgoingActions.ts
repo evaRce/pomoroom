@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useEvent } from "../components/chat_room/EventContext";
+import { useEvent } from "../../components/chat_room/EventContext";
 
 type UseChatPluginOutgoingActionsParams = {
   removeEvent: (eventName: string) => void;
