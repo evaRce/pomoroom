@@ -41,7 +41,7 @@ export default function ChatHeader({
   activePluginId,
   onTogglePluginTab,
 }: ChatHeaderProps) {
-  const { addEvent, removeEvent } = useEventContext() as any;
+  const { addEvent, removeEvent } = useEventContext();
   const [pluginDisplayMap, setPluginDisplayMap] = useState<Record<string, { name: string; icon: string }>>({});
 
   const openPrivateChatEvent = useEvent("open_private_chat");

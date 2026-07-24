@@ -59,6 +59,43 @@ export interface EventBusPayloads {
   kanban_task_reordered: { board: KanbanServerBoard };
   kanban_task_renamed: { board: KanbanServerBoard };
   kanban_task_deleted: { board: KanbanServerBoard };
+
+  // Messages and chat session
+  send_message: { message: string; to_group_name: string } | { message: string; to_user: string };
+  load_older_messages: { chat_id: string; before_inserted_at: string; before_db_id: string };
+  open_private_chat: ChatSessionData;
+  open_group_chat: ChatSessionData;
+  active_chat_context: ChatSessionData;
+  show_list_messages: ChatSessionData & { user_avatar_map?: Record<string, string>; has_more?: boolean };
+  show_older_messages: { messages?: any[]; has_more?: boolean };
+  show_message_to_send: { message: any };
+}
+
+export interface ChatUserRef {
+  nickname: string;
+  image_profile?: string;
+  [key: string]: any;
+}
+
+export interface ChatGroupData {
+  name: string;
+  chat_id?: string;
+  image?: string;
+  members?: any[];
+  admin?: string[];
+  [key: string]: any;
+}
+
+export interface ChatSessionData {
+  chat_id?: string;
+  messages?: any[];
+  removed_at?: string | null;
+  is_admin?: boolean;
+  plugins?: any[];
+  group_data?: ChatGroupData;
+  from_user_data?: ChatUserRef;
+  to_user_data?: ChatUserRef;
+  [key: string]: any;
 }
 
 export type KanbanChatType = "group" | "private";
@@ -124,6 +161,10 @@ export interface OutgoingActionPayloads {
   "action.reorder_kanban_task": EventBusPayloads["reorder_kanban_task"];
   "action.rename_kanban_task": EventBusPayloads["rename_kanban_task"];
   "action.delete_kanban_task": EventBusPayloads["delete_kanban_task"];
+
+  // Messages
+  "action.send_message": EventBusPayloads["send_message"];
+  "action.load_older_messages": EventBusPayloads["load_older_messages"];
 }
 
 export type OutgoingActionPayload<K extends string> = K extends keyof OutgoingActionPayloads

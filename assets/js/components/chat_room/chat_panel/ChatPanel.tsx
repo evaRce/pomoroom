@@ -27,7 +27,7 @@ interface ChatPanelProps {
 const TOP_SCROLL_THRESHOLD_PX = 12;
 
 export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
-  const { addEvent, removeEvent } = useEventContext() as any;
+  const { addEvent, removeEvent } = useEventContext();
   const { activeCallChatId, activeCallRoomName, connectedAt, isMinimized, setMinimized, setViewingChatId, leaveCall } =
     useCallContext();
 
