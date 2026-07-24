@@ -98,14 +98,16 @@ export default function AddMembersModal({
           bordered
           dataSource={filteredContacts}
           renderItem={(item) => (
-            <GroupMemberItem
-              contact={item.contact_data}
-              onSelect={() => inviteToGroup(item.contact_data)}
-              isInModal={true}
-              onSetAdmin={null}
-              onDelete={null}
-              imAdmin={false}
-            />
+            !item.contact_data ? null : (
+              <GroupMemberItem
+                contact={item.contact_data}
+                onSelect={() => inviteToGroup(item.contact_data)}
+                isInModal={true}
+                onSetAdmin={null}
+                onDelete={null}
+                imAdmin={false}
+              />
+            )
           )}
         />
       </div>
