@@ -7,6 +7,7 @@ import {
   SmileOutlined,
 } from "@ant-design/icons";
 import { useEventContext, useEvent } from "../../EventContext";
+import { sendMessageToGroup, sendMessageToUser } from "../../../../services/messageService";
 
 export default function ChatFooter() {
   const [inputStr, setInputStr] = useState("");
@@ -123,15 +124,9 @@ export default function ChatFooter() {
     }
 
     if (currentData?.group_data) {
-      addEvent("send_message", {
-        message: inputStr,
-        to_group_name: currentData?.group_data?.name,
-      });
+      sendMessageToGroup(addEvent, inputStr, currentData?.group_data?.name);
     } else if (currentData?.to_user_data) {
-      addEvent("send_message", {
-        message: inputStr,
-        to_user: currentData.to_user_data.nickname,
-      });
+      sendMessageToUser(addEvent, inputStr, currentData.to_user_data.nickname);
     }
 
     setInputStr("");

@@ -24,7 +24,6 @@ export function useOutgoingLiveViewActions({
 }: UseOutgoingLiveViewActionsParams) {
   const contactToDelete = useEvent("delete_contact");
   const selectedPrivateChat = useEvent("selected_private_chat");
-  const sendMessage = useEvent("send_message");
   const sendFriendRequest = useEvent("send_friend_request");
   const statusFriendRequest = useEvent("update_status_request");
   const visibility = useEvent("toggle_detail_visibility");
@@ -36,7 +35,6 @@ export function useOutgoingLiveViewActions({
   const deleteMember = useEvent("delete_member");
   const setAdmin = useEvent("set_admin");
   const joinRoom = useEvent("join_room");
-  const loadOlderMessages = useEvent("load_older_messages");
   const installChatPlugin = useEvent("install_chat_plugin");
   const uninstallChatPlugin = useEvent("uninstall_chat_plugin");
   const refreshConversations = useEvent("refresh_conversations");
@@ -62,11 +60,6 @@ export function useOutgoingLiveViewActions({
       setInfoChatSelected(selectedPrivateChat);
       pushEventToLiveView("action.selected_private_chat", selectedPrivateChat);
       removeEvent("selected_private_chat");
-    }
-    if (sendMessage) {
-      console.debug("[useOutgoingLiveViewActions] forwarding send_message", sendMessage);
-      pushEventToLiveView("action.send_message", sendMessage);
-      removeEvent("send_message");
     }
     if (sendFriendRequest) {
       pushEventToLiveView("action.send_friend_request", sendFriendRequest);
@@ -130,10 +123,6 @@ export function useOutgoingLiveViewActions({
       pushEventToLiveView("action.join_room", joinRoom);
       removeEvent("join_room");
     }
-    if (loadOlderMessages) {
-      pushEventToLiveView("action.load_older_messages", loadOlderMessages);
-      removeEvent("load_older_messages");
-    }
     if (installChatPlugin) {
       pushEventToLiveView("action.install_chat_plugin", installChatPlugin);
       removeEvent("install_chat_plugin");
@@ -172,7 +161,6 @@ export function useOutgoingLiveViewActions({
   }, [
     contactToDelete,
     selectedPrivateChat,
-    sendMessage,
     sendFriendRequest,
     statusFriendRequest,
     visibility,
@@ -184,7 +172,6 @@ export function useOutgoingLiveViewActions({
     deleteMember,
     setAdmin,
     joinRoom,
-    loadOlderMessages,
     installChatPlugin,
     uninstallChatPlugin,
     refreshConversations,

@@ -8,6 +8,7 @@ import { PomodoroTimer } from "../pomodoro_timer/PomodoroTimer";
 import { KanbanBoard } from "../kanban_board_panel/KanbanBoard";
 import CallScreen from "../call_panel/CallScreen";
 import { useCallContext } from "../call_panel/CallContext";
+import { loadOlderMessages as loadOlderMessagesAction } from "../../../services/messageService";
 import {
   createTimer,
   hasTimer,
@@ -330,11 +331,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
     }
 
     setIsLoadingOlder(true);
-    addEvent("load_older_messages", {
-      chat_id: currentChatId,
-      before_inserted_at: oldestInsertedAt,
-      before_db_id: oldestDbId,
-    });
+    loadOlderMessagesAction(addEvent, currentChatId, oldestInsertedAt, oldestDbId);
   };
 
   const handleMessagesScroll = (event: any) => {

@@ -12,6 +12,7 @@ import { CallSessionProvider } from "./call_panel/CallContext";
 import { useOutgoingLiveViewActions } from "../../hooks/useLiveViewActions";
 import { usePomodoroOutgoingActions } from "../../hooks/usePomodoroOutgoingActions";
 import { useKanbanOutgoingActions } from "../../hooks/useKanbanOutgoingActions";
+import { useMessageOutgoingActions } from "../../hooks/useMessageOutgoingActions";
 import { useUserContactsAndGroupsEvents } from "../../hooks/useUserContactsAndGroupsEvents";
 import { useChatSessionEvents } from "../../hooks/useChatSessionEvents";
 import { useFriendRequestEvents } from "../../hooks/useFriendRequestEvents";
@@ -60,6 +61,11 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
   });
 
   useKanbanOutgoingActions({
+    removeEvent,
+    pushEventToLiveView,
+  });
+
+  useMessageOutgoingActions({
     removeEvent,
     pushEventToLiveView,
   });
