@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useEventContext, useEvent } from "../EventContext";
 import { Button, Typography } from 'antd';
+import { FriendRequestRef } from "../../../types/events";
 
 const { Text } = Typography;
 
-export default function RejectedRequestSend({ imageNumber }) {
+export default function RejectedRequestSend({ imageNumber }: { imageNumber: number }) {
   const { addEvent, removeEvent } = useEventContext();
-  const [requestData, setRequestData] = useState(null);
+  const [requestData, setRequestData] = useState<FriendRequestRef | null>(null);
   const rejectedRequestSendEvent = useEvent("open_rejected_request_send");
 
   useEffect(() => {
@@ -17,6 +18,7 @@ export default function RejectedRequestSend({ imageNumber }) {
   }, [rejectedRequestSendEvent]);
 
   const handleRejectedRequest = () => {
+    if (!requestData) return;
     addEvent("delete_rejected_contact", requestData.from_user);
   };
 
