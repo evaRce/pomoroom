@@ -1,9 +1,10 @@
 import { useEffect } from "react";
+import { AddEvent } from "../types/events";
 
 type UseFriendRequestEventsParams = {
   eventName: string;
   eventData: any;
-  addEvent: (eventName: string, eventData: any) => void;
+  addEvent: AddEvent;
   userNickname: string;
   setIsVisibleDetail: (value: boolean) => void;
   setComponent: (value: string) => void;

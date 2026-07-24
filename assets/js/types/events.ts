@@ -100,6 +100,33 @@ export interface EventBusPayloads {
   chat_plugin_install_failed: { chat_id: string; reason: string };
   chat_plugin_uninstalled: { chat_id: string; plugin: ChatPluginRef };
   chat_plugin_uninstall_failed: { chat_id: string; reason: string };
+
+  // Friend requests
+  open_chat_request_send: FriendRequestRef;
+  open_chat_request_received: FriendRequestRef;
+  open_rejected_request_send: FriendRequestRef;
+  open_rejected_request_received: FriendRequestRef;
+  delete_rejected_contact: string;
+  update_contact_status_to_accepted: { request: FriendRequestRef; new_status: string };
+  update_contact_status_to_rejected: { request: FriendRequestRef; new_status: string };
+  deselect_contact: { from_user: string; to_user: string };
+
+  // Group membership
+  show_my_contacts: ConversationEntry[];
+  show_members: { members: any[] };
+  members_snapshot: { members: any[] };
+  check_admin: { is_admin: boolean };
+  show_detail: { chat_name: string; image: string; is_group: boolean; chat_id: string; group_name: string };
+  group_admin_updated: { chat_id?: string; group_name?: string; is_admin?: boolean };
+  group_member_removed: { chat_id?: string; group_name?: string; removed_at?: string };
+  group_member_added: { chat_id?: string; group_name?: string; is_admin?: boolean; message?: string };
+}
+
+export interface FriendRequestRef {
+  from_user: string;
+  to_user: string;
+  status?: string;
+  [key: string]: any;
 }
 
 export interface PomodoroConfigPayload {

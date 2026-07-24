@@ -1,11 +1,12 @@
 import { useEffect, useRef } from "react";
 import { refreshConversationsAction } from "../services/contactService";
+import { AddEvent, RemoveEvent } from "../types/events";
 
 type UseGroupMembershipEventsParams = {
   eventName: string;
   eventData: any;
-  addEvent: (eventName: string, eventData: any) => void;
-  removeEvent: (eventName: string) => void;
+  addEvent: AddEvent;
+  removeEvent: RemoveEvent;
 };
 
 export function useGroupMembershipEvents({
