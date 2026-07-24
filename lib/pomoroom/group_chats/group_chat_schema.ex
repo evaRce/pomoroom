@@ -2,6 +2,8 @@ defmodule Pomoroom.GroupChats.GroupChatSchema do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @max_name_length 50
+
   schema "group_chats" do
     field :chat_id, :string
     field :name, :string
@@ -27,6 +29,7 @@ defmodule Pomoroom.GroupChats.GroupChatSchema do
       :inserted_at,
       :updated_at
     ])
+    |> validate_length(:name, min: 1, max: @max_name_length)
   end
 
   def group_chat_changeset(args) do

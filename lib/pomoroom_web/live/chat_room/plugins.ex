@@ -46,8 +46,18 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
             {:noreply, push_event(socket, "react", payload)}
         end
 
-      {:error, _reason} ->
-        {:noreply, socket}
+      {:error, reason} ->
+        payload = %{
+          event_name: "chat_plugin_install_failed",
+          event_data: %{
+            chat_id: chat_id,
+            chat_type: chat_type,
+            plugin_type: plugin_type,
+            reason: reason_payload(reason)
+          }
+        }
+
+        {:noreply, push_event(socket, "react", payload)}
     end
   end
 
@@ -87,8 +97,18 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
             {:noreply, push_event(socket, "react", payload)}
         end
 
-      {:error, _reason} ->
-        {:noreply, socket}
+      {:error, reason} ->
+        payload = %{
+          event_name: "chat_plugin_uninstall_failed",
+          event_data: %{
+            chat_id: chat_id,
+            chat_type: chat_type,
+            plugin_id: plugin_id,
+            reason: reason_payload(reason)
+          }
+        }
+
+        {:noreply, push_event(socket, "react", payload)}
     end
   end
 

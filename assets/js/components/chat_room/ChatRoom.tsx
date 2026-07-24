@@ -15,6 +15,7 @@ import { useChatSessionEvents } from "../../hooks/useChatSessionEvents";
 import { useFriendRequestEvents } from "../../hooks/useFriendRequestEvents";
 import { useCallSignalingEvents } from "../../hooks/useCallSignalEvents";
 import { useGroupMembershipEvents } from "../../hooks/useGroupMemberEvents";
+import { useErrorNotificationEvents } from "../../hooks/useErrorNotificationEvents";
 export interface ChatRoomProps {
   eventName: string;
   eventData: any;
@@ -87,6 +88,11 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
     eventName,
     eventData,
     addEvent,
+  });
+
+  useErrorNotificationEvents({
+    eventName,
+    eventData,
   });
 
   return (

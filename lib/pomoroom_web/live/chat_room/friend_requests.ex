@@ -51,8 +51,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
               {:error, _reason} ->
                 {:noreply, socket}
             end
-          {:error, _reason} ->
-            {:noreply, socket}
+          {:error, reason} ->
+            payload = %{event_name: "error_accepting_friend_request", event_data: reason}
+            {:noreply, push_event(socket, "react", payload)}
         end
       "rejected" ->
         case FriendRequests.reject_friend_request(to_user_name, from_user_name, user_nickname) do

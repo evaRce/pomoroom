@@ -58,8 +58,14 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
       {:ok, %{status: "pending"} = request} ->
         if request.to_user == logged_user_nickname do
           FriendRequestRepository.update_request_status(request.to_user, request.from_user, "accepted")
-          PrivateChats.ensure_exists(request.to_user, request.from_user)
-          {:ok, %{request | status: "accepted"}}
+
+          case PrivateChats.ensure_exists(request.to_user, request.from_user) do
+            {:ok, _private_chat} ->
+              {:ok, %{request | status: "accepted"}}
+
+            {:error, reason} ->
+              {:error, reason}
+          end
         else
           {:error, %{error: "No autorizado para aceptar esta solicitud de amistad"}}
         end

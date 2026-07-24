@@ -1,4 +1,5 @@
 defmodule Pomoroom.Messages.MessageService do
+  alias Pomoroom.ChangesetErrors
   alias Pomoroom.Messages.{MessageSchema, MessageRepository}
   import Ecto.Changeset
 
@@ -17,7 +18,7 @@ defmodule Pomoroom.Messages.MessageService do
           {:error, parse_duplicate_key_error(errmsg)}
       end
     else
-      {:error, msg_changeset.errors}
+      {:error, ChangesetErrors.to_map(msg_changeset)}
     end
   end
 

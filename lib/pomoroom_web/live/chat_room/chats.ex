@@ -64,8 +64,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
             {:noreply, socket}
         end
 
-      {:error, _reason} ->
-        {:noreply, socket}
+      {:error, reason} ->
+        payload = %{event_name: "error_opening_private_chat", event_data: reason}
+        {:noreply, push_event(socket, "react", payload)}
     end
   end
 

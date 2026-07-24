@@ -1,4 +1,5 @@
 defmodule Pomoroom.PrivateChats.PrivateChatService do
+  alias Pomoroom.ChangesetErrors
   alias Pomoroom.Chats
   alias Pomoroom.FriendRequests
   alias Pomoroom.Messages
@@ -23,7 +24,7 @@ defmodule Pomoroom.PrivateChats.PrivateChatService do
         end
 
       false ->
-        {:error, %{error: "Hay un campo invalido"}}
+        {:error, ChangesetErrors.to_map(private_chat_changeset)}
     end
   end
 
