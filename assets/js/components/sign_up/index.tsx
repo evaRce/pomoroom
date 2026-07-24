@@ -1,6 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { SignUp, SignUpProps} from "./SignUp";
+import { saveUser } from "../../services/userService";
 
 
 export default{
@@ -21,7 +22,7 @@ export default{
 	},
 
 	submitUser(email_, password_, nickname_) {
-		this.pushEventTo(this.el, "action.save_user", { email: email_, password: password_, nickname: nickname_ })
+		saveUser(this, email_, password_, nickname_)
 	},
 
 	opts(error_save_user = {}): SignUpProps {

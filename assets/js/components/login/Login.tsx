@@ -2,10 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Button, Form, Input, Statistic} from "antd";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { HomeOutlined } from '@ant-design/icons';
+import { FormErrors } from "../../types/liveview";
+import { getRandomBackgroundImageNumber } from "../../utils/randomBackgroundImage";
 
 export interface LoginProps {
   searchUser(email: string, password: string): any;
-  errors: object;
+  errors: FormErrors;
 }
 
 export const Login: React.FC<LoginProps> = (props: LoginProps) => {
@@ -30,8 +32,7 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
   }, [errors, form]);
 
   useEffect(() => {
-    const randomImageNumber = Math.floor(Math.random() * 5) + 1;
-    setImageNumber(randomImageNumber);
+    setImageNumber(getRandomBackgroundImageNumber());
   }, []);
 
   return (

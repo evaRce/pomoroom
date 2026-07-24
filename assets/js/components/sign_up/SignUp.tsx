@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Button, Form, Input } from "antd";
 import { LockOutlined, UserOutlined, RobotOutlined, HomeOutlined } from "@ant-design/icons";
+import { FormErrors } from "../../types/liveview";
+import { getRandomBackgroundImageNumber } from "../../utils/randomBackgroundImage";
 
 export interface SignUpProps {
   submitUser(
@@ -8,7 +10,7 @@ export interface SignUpProps {
     newPassword: string,
     newNickname: string
   ): any;
-  errors: object;
+  errors: FormErrors;
 }
 
 export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
@@ -33,8 +35,7 @@ export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
   }, [errors, form]);
 
 	useEffect(() => {
-    const randomImageNumber = Math.floor(Math.random() * 5) + 1;
-    setImageNumber(randomImageNumber);
+    setImageNumber(getRandomBackgroundImageNumber());
   }, []);
 
   return (

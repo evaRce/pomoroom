@@ -1,6 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { Login, LoginProps } from "./Login";
+import { loginUser } from "../../services/userService";
 
 export default {
 	mounted() {
@@ -20,7 +21,7 @@ export default {
 	},
 
 	searchUser(email_, password_) {
-		this.pushEventTo(this.el, "action.log_user", {email: email_, password: password_})
+		loginUser(this, email_, password_)
 	},
   
 	opts(error_login_user = {}): LoginProps {
