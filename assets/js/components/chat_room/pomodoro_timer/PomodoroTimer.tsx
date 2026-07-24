@@ -42,7 +42,7 @@ interface PomodoroTimerProps {
 }
 
 export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
-  const { addEvent, removeEvent } = useEventContext() as any;
+  const { addEvent, removeEvent } = useEventContext();
   const [settings, setSettings] = useState<TimerSettings | null>(null);
   const [timerSnapshot, setTimerSnapshot] = useState<TimerState | null>(null);
   const [mode, setMode] = useState<TimerMode>("work");

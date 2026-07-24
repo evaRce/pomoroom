@@ -1,5 +1,4 @@
-type AddEvent = (eventName: string, eventData: any) => void;
-type ChatType = "group" | "private";
+import { AddEvent, ChatType } from "../types/events";
 
 export function installChatPluginAction(
   addEvent: AddEvent,

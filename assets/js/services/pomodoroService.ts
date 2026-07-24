@@ -1,11 +1,4 @@
-type AddEvent = (eventName: string, eventData: any) => void;
-
-interface PomodoroConfigPayload {
-  work_duration: number;
-  short_break_duration: number;
-  long_break_duration: number;
-  cycles_before_long_break: number;
-}
+import { AddEvent, PomodoroConfigPayload } from "../types/events";
 
 export function requestPomodoroStateAction(
   addEvent: AddEvent,

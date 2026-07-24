@@ -1,4 +1,4 @@
-import { AddEvent, KanbanChatType as ChatType } from "../types/events";
+import { AddEvent, ChatType } from "../types/events";
 
 export function requestKanbanBoardAction(
   addEvent: AddEvent,
