@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 import { useEvent } from "../../components/chat_room/EventContext";
+import { PushEventToLiveView, RemoveEvent } from "../../types/events";
 
 type UseKanbanOutgoingActionsParams = {
-  removeEvent: (eventName: string) => void;
-  pushEventToLiveView: (event: string, payload: object) => any;
+  removeEvent: RemoveEvent;
+  pushEventToLiveView: PushEventToLiveView;
 };
 
 export function useKanbanOutgoingActions({

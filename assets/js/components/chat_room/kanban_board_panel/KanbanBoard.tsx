@@ -96,7 +96,7 @@ function getInsertionIndex(
 }
 
 export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
-  const { addEvent, removeEvent } = useEventContext() as any;
+  const { addEvent, removeEvent } = useEventContext();
   const [columns, setColumns] = useState<Column[]>([]);
   const [newTaskInputs, setNewTaskInputs] = useState<Record<ColumnId, string>>({});
   const [showAddInput, setShowAddInput] = useState<Record<ColumnId, boolean>>({});

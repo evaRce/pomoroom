@@ -1,5 +1,4 @@
-type AddEvent = (eventName: string, eventData: any) => void;
-type ChatType = "group" | "private";
+import { AddEvent, KanbanChatType as ChatType } from "../types/events";
 
 export function requestKanbanBoardAction(
   addEvent: AddEvent,
