@@ -6,7 +6,7 @@ import { FormErrors } from "../../types/liveview";
 import { getRandomBackgroundImageNumber } from "../../utils/randomBackgroundImage";
 
 export interface LoginProps {
-  searchUser(email: string, password: string): any;
+  searchUser(email: string, password: string): void;
   errors: FormErrors;
 }
 
@@ -15,7 +15,7 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
   const [form] = Form.useForm();
   const [imageNumber, setImageNumber] = useState(1);
 
-  const onFinish = (newValues: any) => {
+  const onFinish = (newValues: { email: string; password: string }) => {
     searchUser(newValues.email, newValues.password);
   };
 
