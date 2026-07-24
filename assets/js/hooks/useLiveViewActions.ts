@@ -35,8 +35,6 @@ export function useOutgoingLiveViewActions({
   const deleteMember = useEvent("delete_member");
   const setAdmin = useEvent("set_admin");
   const joinRoom = useEvent("join_room");
-  const installChatPlugin = useEvent("install_chat_plugin");
-  const uninstallChatPlugin = useEvent("uninstall_chat_plugin");
   const refreshConversations = useEvent("refresh_conversations");
   const groupDeleted = useEvent("group_deleted");
   const logout = useEvent("logout");
@@ -123,14 +121,6 @@ export function useOutgoingLiveViewActions({
       pushEventToLiveView("action.join_room", joinRoom);
       removeEvent("join_room");
     }
-    if (installChatPlugin) {
-      pushEventToLiveView("action.install_chat_plugin", installChatPlugin);
-      removeEvent("install_chat_plugin");
-    }
-    if (uninstallChatPlugin) {
-      pushEventToLiveView("action.uninstall_chat_plugin", uninstallChatPlugin);
-      removeEvent("uninstall_chat_plugin");
-    }
     if (refreshConversations) {
       pushEventToLiveView("action.get_list_contact", {});
       removeEvent("refresh_conversations");
@@ -172,8 +162,6 @@ export function useOutgoingLiveViewActions({
     deleteMember,
     setAdmin,
     joinRoom,
-    installChatPlugin,
-    uninstallChatPlugin,
     refreshConversations,
     groupDeleted,
     logout,

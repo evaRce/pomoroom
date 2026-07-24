@@ -13,6 +13,7 @@ import { useOutgoingLiveViewActions } from "../../hooks/useLiveViewActions";
 import { usePomodoroOutgoingActions } from "../../hooks/usePomodoroOutgoingActions";
 import { useKanbanOutgoingActions } from "../../hooks/useKanbanOutgoingActions";
 import { useMessageOutgoingActions } from "../../hooks/useMessageOutgoingActions";
+import { useChatPluginOutgoingActions } from "../../hooks/useChatPluginOutgoingActions";
 import { useUserContactsAndGroupsEvents } from "../../hooks/useUserContactsAndGroupsEvents";
 import { useChatSessionEvents } from "../../hooks/useChatSessionEvents";
 import { useFriendRequestEvents } from "../../hooks/useFriendRequestEvents";
@@ -66,6 +67,11 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
   });
 
   useMessageOutgoingActions({
+    removeEvent,
+    pushEventToLiveView,
+  });
+
+  useChatPluginOutgoingActions({
     removeEvent,
     pushEventToLiveView,
   });

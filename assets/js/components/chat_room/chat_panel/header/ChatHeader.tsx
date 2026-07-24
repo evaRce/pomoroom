@@ -6,6 +6,10 @@ import AddMembersModal from "./AddMembersModal";
 import CallButton from "../../call_panel/CallButton";
 import PluginMarketPlace, { AvailablePlugin, InstalledPlugin } from "../PluginMarketPlace";
 import { getTimer, subscribeTimer, type TimerState } from "../../pomodoro_timer/pomodoroTimerStore";
+import {
+  installChatPlugin as installChatPluginAction,
+  uninstallChatPlugin as uninstallChatPluginAction,
+} from "../../../../services/chatPluginService";
 
 const PLUGIN_ERROR_MESSAGES: Record<string, string> = {
   unauthorized: "No tienes acceso a este chat.",
@@ -403,11 +407,7 @@ export default function ChatHeader({
     }
 
     setPendingPluginId(plugin.type);
-    addEvent("install_chat_plugin", {
-      chat_id: currentChatId,
-      chat_type: isGroupChat ? "group" : "private",
-      plugin_type: plugin.type,
-    });
+    installChatPluginAction(addEvent, currentChatId, isGroupChat ? "group" : "private", plugin.type);
   };
 
   const handleUninstallPlugin = (pluginId: string) => {
@@ -416,11 +416,7 @@ export default function ChatHeader({
     }
 
     setPendingPluginId(pluginId);
-    addEvent("uninstall_chat_plugin", {
-      chat_id: currentChatId,
-      chat_type: isGroupChat ? "group" : "private",
-      plugin_id: pluginId,
-    });
+    uninstallChatPluginAction(addEvent, currentChatId, isGroupChat ? "group" : "private", pluginId);
   };
 
   const togglePluginTab = (pluginId: string | null) => {
