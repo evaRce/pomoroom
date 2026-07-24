@@ -1,10 +1,23 @@
 import React from "react";
-import { createRoot } from "react-dom/client";
+import { Root, createRoot } from "react-dom/client";
 import { EventProvider } from "./EventContext";
 import { ChatRoom, ChatRoomProps } from "./ChatRoom";
+import { LiveViewHook } from "../../types/liveview";
+import { PushEventToLiveView } from "../../types/events";
 
-export default {
-	mounted(this: any) {
+// Contexto que Phoenix inyecta en `this` al invocar cada callback del hook.
+interface ChatRoomHookThis extends LiveViewHook {
+	pushEventToLiveView: PushEventToLiveView;
+	opts(eventName?: string, eventData?: any): ChatRoomProps;
+}
+
+const ChatRoomHook: {
+	mounted(this: ChatRoomHookThis): void;
+	destroyed(this: ChatRoomHookThis): void;
+	pushEventToLiveView(this: ChatRoomHookThis, event: string, payload: object): any;
+	opts(this: ChatRoomHookThis, eventName?: string, eventData?: any): ChatRoomProps;
+} = {
+	mounted() {
 		const chatDomNode = document.getElementById('chat_container') as Element;
 		const isAuthenticated = chatDomNode?.getAttribute("data-authenticated") === "true";
 
@@ -21,13 +34,13 @@ export default {
 		});
 	},
 
-	destroyed(this: any) {
+	destroyed() {
 		const chatDomNode = document.getElementById('chat_container') as Element;
 		const rootElementChat = createRoot(chatDomNode);
 		rootElementChat.unmount();
 	},
 
-	pushEventToLiveView(this: any, event: any, payload: any) {
+	pushEventToLiveView(event, payload) {
 		this.pushEventTo(this.el, event, payload);
 	},
 
@@ -40,7 +53,9 @@ export default {
 	},
 }
 
-function render(rootElement3: any, opts: ChatRoomProps) {
+export default ChatRoomHook;
+
+function render(rootElement3: Root, opts: ChatRoomProps) {
 	rootElement3.render(
 		<React.StrictMode>
 			<EventProvider>
