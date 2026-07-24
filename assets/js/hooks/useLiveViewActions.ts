@@ -34,7 +34,6 @@ export function useOutgoingLiveViewActions({
   const addContactToGroup = useEvent("add_member");
   const deleteMember = useEvent("delete_member");
   const setAdmin = useEvent("set_admin");
-  const joinRoom = useEvent("join_room");
   const refreshConversations = useEvent("refresh_conversations");
   const groupDeleted = useEvent("group_deleted");
   const logout = useEvent("logout");
@@ -117,10 +116,6 @@ export function useOutgoingLiveViewActions({
       pushEventToLiveView("action.set_admin", setAdmin);
       removeEvent("set_admin");
     }
-    if (joinRoom) {
-      pushEventToLiveView("action.join_room", joinRoom);
-      removeEvent("join_room");
-    }
     if (refreshConversations) {
       pushEventToLiveView("action.get_list_contact", {});
       removeEvent("refresh_conversations");
@@ -161,7 +156,6 @@ export function useOutgoingLiveViewActions({
     addContactToGroup,
     deleteMember,
     setAdmin,
-    joinRoom,
     refreshConversations,
     groupDeleted,
     logout,
