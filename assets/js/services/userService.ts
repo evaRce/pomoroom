@@ -1,6 +1,5 @@
 import { LiveViewHook } from "../types/liveview";
-
-type AddEvent = (eventName: string, eventData: any) => void;
+import { AddEvent } from "../types/events";
 
 export function saveUserAction(
   hook: LiveViewHook,

@@ -1,4 +1,4 @@
-type AddEvent = (eventName: string, eventData: any) => void;
+import { AddEvent } from "../types/events";
 
 export function addGroupAction(addEvent: AddEvent, name: string): void {
   addEvent("add_group", { name });

@@ -2,10 +2,11 @@ import { useEffect } from "react";
 import { useEvent } from "../../components/chat_room/EventContext";
 import { clearAllTimers, clearRequestedConfigs } from "../../components/chat_room/pomodoro_timer/pomodoroTimerStore";
 import { clearAllPomodoroNotifications } from "../../components/chat_room/pomodoro_timer/pomodoroNotificationStore";
+import { PushEventToLiveView, RemoveEvent } from "../../types/events";
 
 type UseContactsAndGroupsOutgoingActionsParams = {
-  removeEvent: (eventName: string) => void;
-  pushEventToLiveView: (event: string, payload: object) => any;
+  removeEvent: RemoveEvent;
+  pushEventToLiveView: PushEventToLiveView;
   infoChatSelected: any;
   isVisibleDetail: boolean;
   setIsVisibleDetail: (value: boolean) => void;

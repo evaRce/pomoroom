@@ -1,12 +1,23 @@
-// Contrato de payloads para los eventos del bus interno (EventContext).
-// Cada entrada aquí es la única fuente de verdad para ese evento: tanto quien
-// lo emite (addEvent) como quien lo consume (useEvent) quedan atados a la
-// misma forma. Los eventos que todavía no están mapeados aquí siguen
-// resolviendo a `any`, para poder migrarlos de forma incremental.
 export interface EventBusPayloads {
   join_room: { chat_id: string };
   call_room_name: { chat_id: string; name: string; is_group: boolean };
   livekit_token: { token: string; ws_url: string; chat_id: string };
+
+  delete_contact: string;
+  selected_private_chat: { contact_name: string };
+  send_friend_request: { to_user: string };
+  update_status_request: { status: string; contact_name: string; from_user_name: string };
+  toggle_detail_visibility: { is_visible: boolean; is_group: boolean; group_name: string };
+  add_group: { name: string };
+  selected_group_chat: { group_name: string };
+  delete_group: string;
+  get_my_contacts: { group_name: string };
+  add_member: { group_name: string; new_member: string };
+  delete_member: { member_name: string; group_name: string };
+  set_admin: { member_name: string; group_name: string; operation: string };
+  refresh_conversations: Record<string, never>;
+  logout: boolean;
+  group_deleted: { chat_id: string; group_name: string };
 }
 
 export type EventBusPayload<K extends string> = K extends keyof EventBusPayloads
@@ -20,11 +31,23 @@ export type AddEvent = <K extends string>(
 
 export type RemoveEvent = (eventName: string) => void;
 
-// Contrato de payloads para las acciones emitidas hacia el servidor LiveView
-// vía pushEventToLiveView. Igual que arriba: las acciones no migradas
-// resuelven a `object` (comportamiento actual) hasta que se tipen.
 export interface OutgoingActionPayloads {
   "action.join_room": { chat_id: string };
+
+  "action.delete_contact": string;
+  "action.selected_private_chat": { contact_name: string };
+  "action.send_friend_request": { to_user: string };
+  "action.update_status_request": { status: string; contact_name: string; from_user_name: string };
+  "action.get_members": { is_visible: boolean; is_group: boolean; group_name: string };
+  "action.add_group": { name: string };
+  "action.selected_group_chat": { group_name: string };
+  "action.delete_group": string;
+  "action.get_my_contacts": { group_name: string };
+  "action.add_member": { group_name: string; new_member: string };
+  "action.delete_member": { member_name: string; group_name: string };
+  "action.set_admin": { member_name: string; group_name: string; operation: string };
+  "action.get_list_contact": Record<string, never>;
+  "action.logout": Record<string, never>;
 }
 
 export type OutgoingActionPayload<K extends string> = K extends keyof OutgoingActionPayloads
