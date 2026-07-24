@@ -22,10 +22,11 @@ import { useCallSignalingEvents } from "../../hooks/useCallSignalEvents";
 import { useGroupMembershipEvents } from "../../hooks/useGroupMemberEvents";
 import { useErrorNotificationEvents } from "../../hooks/useErrorNotificationEvents";
 import { getRandomBackgroundImageNumber } from "../../utils/randomBackgroundImage";
+import { PushEventToLiveView } from "../../types/events";
 export interface ChatRoomProps {
   eventName: string;
   eventData: any;
-  pushEventToLiveView(event: string, payload: object): any;
+  pushEventToLiveView: PushEventToLiveView;
 }
 
 export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {

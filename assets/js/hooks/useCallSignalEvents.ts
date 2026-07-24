@@ -1,9 +1,10 @@
 import { useEffect } from "react";
+import { AddEvent } from "../types/events";
 
 type UseCallSignalingEventsParams = {
   eventName: string;
   eventData: any;
-  addEvent: (eventName: string, eventData: any) => void;
+  addEvent: AddEvent;
 };
 
 export function useCallSignalingEvents({
