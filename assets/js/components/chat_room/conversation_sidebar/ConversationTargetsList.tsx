@@ -10,7 +10,7 @@ const INITIAL_BATCH_SIZE = 15;
 const BATCH_SIZE = 10;
 
 export default function ConversationTargetsList() {
-  const { addEvent, removeEvent } = useEventContext() as any;
+  const { addEvent, removeEvent } = useEventContext();
   const [contacts, setContacts] = useState<any[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");

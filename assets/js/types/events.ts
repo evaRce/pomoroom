@@ -2,7 +2,6 @@ export interface EventBusPayloads {
   join_room: { chat_id: string };
   call_room_name: { chat_id: string; name: string; is_group: boolean };
   livekit_token: { token: string; ws_url: string; chat_id: string };
-
   delete_contact: string;
   selected_private_chat: { contact_name: string };
   send_friend_request: { to_user: string };
@@ -15,9 +14,23 @@ export interface EventBusPayloads {
   add_member: { group_name: string; new_member: string };
   delete_member: { member_name: string; group_name: string };
   set_admin: { member_name: string; group_name: string; operation: string };
-  refresh_conversations: Record<string, never>;
+  refresh_conversations: Record<string, any>;
   logout: boolean;
   group_deleted: { chat_id: string; group_name: string };
+  show_user_info: { nickname: string; [key: string]: any };
+  add_contact_to_list: ConversationEntry;
+  add_group_to_list: ConversationEntry;
+  show_list_contact: ConversationEntry[];
+  error_adding_contact: string;
+}
+
+export interface ConversationEntry {
+  contact_data?: { nickname: string; chat_id?: string; image_profile?: string; [key: string]: any };
+  group_data?: { name: string; chat_id?: string; image?: string; members?: any[]; admin?: string[]; [key: string]: any };
+  request?: { status: string; to_user: string; from_user: string; [key: string]: any };
+  status?: string;
+  chat_id?: string;
+  is_group?: boolean;
 }
 
 export type EventBusPayload<K extends string> = K extends keyof EventBusPayloads
@@ -33,7 +46,6 @@ export type RemoveEvent = (eventName: string) => void;
 
 export interface OutgoingActionPayloads {
   "action.join_room": { chat_id: string };
-
   "action.delete_contact": string;
   "action.selected_private_chat": { contact_name: string };
   "action.send_friend_request": { to_user: string };

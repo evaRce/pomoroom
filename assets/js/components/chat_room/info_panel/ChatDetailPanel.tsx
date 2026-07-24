@@ -10,7 +10,7 @@ import {
 } from "../../../services/groupService";
 
 export default function ChatDetailPanel() {
-  const { addEvent, removeEvent } = useEventContext() as any;
+  const { addEvent, removeEvent } = useEventContext();
   const [chatData, setChatData] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);
   const [checkAdmin, setCheckAdmin] = useState<any>({});
