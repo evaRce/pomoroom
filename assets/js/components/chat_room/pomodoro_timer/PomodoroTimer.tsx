@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 import { message } from "antd";
 import { Button } from "../../../../components-shadcn/ui/button";
-import { cn, formatDuration } from "../../../../lib/utils";
+import { cn } from "../../../../lib/utils";
+import { formatDuration } from "../../../utils/formatDuration";
 import pomodoroTimerText from "./pomodoroTimerText";
 import { useEventContext, useEvent } from "../EventContext";
 import {
@@ -26,6 +27,14 @@ import {
   type TimerState,
 } from "./pomodoroTimerStore";
 import { clearPomodoroNotification } from "./pomodoroNotificationStore";
+import {
+  requestPomodoroState as requestPomodoroStateAction,
+  startPomodoroTimer,
+  pausePomodoroTimer,
+  resetPomodoroTimer,
+  setPomodoroTimerMode,
+  savePomodoroConfig,
+} from "../../../services/pomodoroService";
 
 interface PomodoroTimerProps {
   chatId: string;
@@ -228,38 +237,25 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   const handleStart = () => {
     if (!chatId || !settings) return;
 
-    addEvent("start_pomodoro_timer", {
-      chat_id: chatId,
-      chat_type: chatType,
-    });
+    startPomodoroTimer(addEvent, chatId, chatType);
   };
 
   const handlePause = () => {
     if (!chatId || !settings) return;
 
-    addEvent("pause_pomodoro_timer", {
-      chat_id: chatId,
-      chat_type: chatType,
-    });
+    pausePomodoroTimer(addEvent, chatId, chatType);
   };
 
   const handleReset = () => {
     if (!chatId || !settings) return;
 
-    addEvent("reset_pomodoro_timer", {
-      chat_id: chatId,
-      chat_type: chatType,
-    });
+    resetPomodoroTimer(addEvent, chatId, chatType);
   };
 
   const handleModeChange = (newMode: TimerMode) => {
     if (isRunning || !chatId || !settings) return;
 
-    addEvent("set_pomodoro_timer_mode", {
-      chat_id: chatId,
-      chat_type: chatType,
-      mode: newMode,
-    });
+    setPomodoroTimerMode(addEvent, chatId, chatType, newMode);
   };
 
   const handleChange = (field: keyof TimerSettings, value: string) => {
@@ -286,22 +282,20 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     setSaveState("saving");
     setSaveMessage(null);
 
-    addEvent("update_pomodoro_plugin_config", {
-      timer_id: timerId,
-      chat_id: chatId,
-      chat_type: chatType,
-      expected_config_version: configVersion,
-      config: toPayloadConfig(settings),
-    });
+    savePomodoroConfig(
+      addEvent,
+      timerId,
+      chatId,
+      chatType,
+      configVersion,
+      toPayloadConfig(settings)
+    );
   };
 
   const requestPomodoroState = useCallback(() => {
     if (!chatId || !chatType) return;
 
-    addEvent("get_pomodoro_state", {
-      chat_id: chatId,
-      chat_type: chatType,
-    });
+    requestPomodoroStateAction(addEvent, chatId, chatType);
   }, [addEvent, chatId, chatType]);
 
   const syncTimerState = useCallback((timer: TimerState | undefined) => {

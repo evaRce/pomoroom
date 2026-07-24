@@ -10,12 +10,14 @@ import RejectedRequestReceived from "./contact_requests/RejectedRequestReceived"
 import ConversationSidebar from "./conversation_sidebar/ConversationSidebar";
 import { CallSessionProvider } from "./call_panel/CallContext";
 import { useOutgoingLiveViewActions } from "../../hooks/useLiveViewActions";
+import { usePomodoroOutgoingActions } from "../../hooks/usePomodoroOutgoingActions";
 import { useUserContactsAndGroupsEvents } from "../../hooks/useUserContactsAndGroupsEvents";
 import { useChatSessionEvents } from "../../hooks/useChatSessionEvents";
 import { useFriendRequestEvents } from "../../hooks/useFriendRequestEvents";
 import { useCallSignalingEvents } from "../../hooks/useCallSignalEvents";
 import { useGroupMembershipEvents } from "../../hooks/useGroupMemberEvents";
 import { useErrorNotificationEvents } from "../../hooks/useErrorNotificationEvents";
+import { getRandomBackgroundImageNumber } from "../../utils/randomBackgroundImage";
 export interface ChatRoomProps {
   eventName: string;
   eventData: any;
@@ -33,8 +35,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
   const hasRequestedInitialData = useRef(false);
 
   useEffect(() => {
-    const randomImageNumber = Math.floor(Math.random() * 5) + 1;
-    setImageNumber(randomImageNumber);
+    setImageNumber(getRandomBackgroundImageNumber());
     if (!hasRequestedInitialData.current) {
       pushEventToLiveView("action.get_user_info", {});
       pushEventToLiveView("action.get_list_contact", {});
@@ -50,6 +51,11 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
     setIsVisibleDetail,
     setInfoChatSelected,
     setComponent,
+  });
+
+  usePomodoroOutgoingActions({
+    removeEvent,
+    pushEventToLiveView,
   });
 
   useUserContactsAndGroupsEvents({

@@ -15,7 +15,7 @@ import {
 import { useLocalParticipant, useParticipants, useTracks, VideoTrack } from "@livekit/components-react";
 import { Track } from "livekit-client";
 import type { Participant, TrackPublication, VideoCaptureOptions } from "livekit-client";
-import { formatDuration } from "../../../../lib/utils";
+import { formatDuration } from "../../../utils/formatDuration";
 import callText from "./callText";
 
 interface CallScreenProps {

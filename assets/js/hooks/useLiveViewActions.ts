@@ -39,12 +39,6 @@ export function useOutgoingLiveViewActions({
   const loadOlderMessages = useEvent("load_older_messages");
   const installChatPlugin = useEvent("install_chat_plugin");
   const uninstallChatPlugin = useEvent("uninstall_chat_plugin");
-  const getPomodoroState = useEvent("get_pomodoro_state");
-  const updatePomodoroPluginConfig = useEvent("update_pomodoro_plugin_config");
-  const startPomodoroTimer = useEvent("start_pomodoro_timer");
-  const pausePomodoroTimer = useEvent("pause_pomodoro_timer");
-  const resetPomodoroTimer = useEvent("reset_pomodoro_timer");
-  const setPomodoroTimerMode = useEvent("set_pomodoro_timer_mode");
   const getKanbanBoard = useEvent("get_kanban_board");
   const addKanbanColumn = useEvent("add_kanban_column");
   const removeKanbanColumn = useEvent("remove_kanban_column");
@@ -157,30 +151,6 @@ export function useOutgoingLiveViewActions({
       pushEventToLiveView("action.uninstall_chat_plugin", uninstallChatPlugin);
       removeEvent("uninstall_chat_plugin");
     }
-    if (getPomodoroState) {
-      pushEventToLiveView("action.get_pomodoro_state", getPomodoroState);
-      removeEvent("get_pomodoro_state");
-    }
-    if (updatePomodoroPluginConfig) {
-      pushEventToLiveView("action.update_pomodoro_plugin_config", updatePomodoroPluginConfig);
-      removeEvent("update_pomodoro_plugin_config");
-    }
-    if (startPomodoroTimer) {
-      pushEventToLiveView("action.start_pomodoro_timer", startPomodoroTimer);
-      removeEvent("start_pomodoro_timer");
-    }
-    if (pausePomodoroTimer) {
-      pushEventToLiveView("action.pause_pomodoro_timer", pausePomodoroTimer);
-      removeEvent("pause_pomodoro_timer");
-    }
-    if (resetPomodoroTimer) {
-      pushEventToLiveView("action.reset_pomodoro_timer", resetPomodoroTimer);
-      removeEvent("reset_pomodoro_timer");
-    }
-    if (setPomodoroTimerMode) {
-      pushEventToLiveView("action.set_pomodoro_timer_mode", setPomodoroTimerMode);
-      removeEvent("set_pomodoro_timer_mode");
-    }
     if (getKanbanBoard) {
       pushEventToLiveView("action.get_kanban_board", getKanbanBoard);
       removeEvent("get_kanban_board");
@@ -262,12 +232,6 @@ export function useOutgoingLiveViewActions({
     loadOlderMessages,
     installChatPlugin,
     uninstallChatPlugin,
-    getPomodoroState,
-    updatePomodoroPluginConfig,
-    startPomodoroTimer,
-    pausePomodoroTimer,
-    resetPomodoroTimer,
-    setPomodoroTimerMode,
     getKanbanBoard,
     addKanbanColumn,
     removeKanbanColumn,
