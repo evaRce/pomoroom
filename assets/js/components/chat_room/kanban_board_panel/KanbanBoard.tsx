@@ -16,9 +16,9 @@ import {
 import type { CollisionDetection, DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
 import { Button } from "../../../../components-shadcn/ui/button";
 import { useEventContext, useEvent } from "../EventContext";
-import { KanbanColumn, KanbanTaskLimitWarningModal } from "./KanbanBoardComponents.tsx";
+import { KanbanColumn, KanbanTaskLimitWarningModal } from "./KanbanBoardComponents";
 import { KANBAN_TEXT } from "./kanbanText";
-import type { Column, ColumnId, Task } from "./KanbanBoardComponents.tsx";
+import type { Column, ColumnId, Task } from "./KanbanBoardComponents";
 import {
   requestKanbanBoardAction,
   addKanbanColumnAction,
