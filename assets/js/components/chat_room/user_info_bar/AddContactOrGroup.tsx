@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button, Form, Input, Radio, message, Spin } from "antd";
 import { useEventContext, useEvent } from "../EventContext";
+import { sendFriendRequest as sendFriendRequestAction } from "../../../services/contactService";
+import { addGroup as addGroupAction } from "../../../services/groupService";
 
 export default function AddContactOrGroup({ sendDataToParent, receiveDataFromParent }) {
   const [form] = Form.useForm();
@@ -18,9 +20,9 @@ export default function AddContactOrGroup({ sendDataToParent, receiveDataFromPar
     }
     setLoading(true);
     if (entryType === "contact") {
-      addEvent("send_friend_request", { to_user: inputStr })
+      sendFriendRequestAction(addEvent, inputStr)
     } else if (entryType === "group") {
-      addEvent("add_group", { name: inputStr });
+      addGroupAction(addEvent, inputStr);
     }
     setInputStr("");
     form.resetFields();

@@ -3,6 +3,11 @@ import { Avatar, Button, List } from "antd";
 import { CloseOutlined } from "@ant-design/icons";
 import { useEventContext, useEvent } from "../EventContext";
 import GroupMemberItem from "./GroupMemberItem";
+import { toggleDetailVisibility as toggleDetailVisibilityAction } from "../../../services/contactService";
+import {
+  setGroupAdmin as setGroupAdminAction,
+  deleteMember as deleteMemberAction,
+} from "../../../services/groupService";
 
 export default function ChatDetailPanel() {
   const { addEvent, removeEvent } = useEventContext() as any;
@@ -80,21 +85,18 @@ export default function ChatDetailPanel() {
   }, [groupMemberRemovedEvent, currentChatId, currentGroupName]);
 
   const hideUserDetails = () => {
-    addEvent("toggle_detail_visibility", {
-      is_visible: false,
-      is_group: Boolean(chatData?.is_group),
-      group_name: chatData?.group_name || chatData?.chat_name,
-    });
+    toggleDetailVisibilityAction(
+      addEvent,
+      false,
+      Boolean(chatData?.is_group),
+      chatData?.group_name || chatData?.chat_name
+    );
     removeEvent("check_admin");
     removeEvent("show_detail");
   };
 
   const setAdmin = (memberName: any, operation: any) => {
-    addEvent("set_admin", {
-      member_name: memberName,
-      group_name: chatData.chat_name,
-      operation: operation,
-    });
+    setGroupAdminAction(addEvent, memberName, chatData.chat_name, operation);
   };
 
   const deleteMember = (memberName: any) => {
@@ -102,10 +104,7 @@ export default function ChatDetailPanel() {
       (memberFind: any) => memberFind.nickname === memberName
     );
     if (index !== -1) {
-      addEvent("delete_member", {
-        member_name: memberName,
-        group_name: chatData.chat_name,
-      });
+      deleteMemberAction(addEvent, memberName, chatData.chat_name);
       setMembers((prevMembers) => {
         const newMembers = [...prevMembers];
         newMembers.splice(index, 1);

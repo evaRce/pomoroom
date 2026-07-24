@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { refreshConversations as refreshConversationsAction } from "../services/contactService";
 
 type UseGroupMembershipEventsParams = {
   eventName: string;
@@ -53,7 +54,7 @@ export function useGroupMembershipEvents({
       }
 
       addEvent(eventName, eventData);
-      addEvent("refresh_conversations", {});
+      refreshConversationsAction(addEvent);
     }
   }, [eventName, eventData]);
 
@@ -72,7 +73,7 @@ export function useGroupMembershipEvents({
         addEvent("check_admin", { is_admin: eventData.is_admin });
       }
       removeEvent("group_member_removed");
-      addEvent("refresh_conversations", {});
+      refreshConversationsAction(addEvent);
     }
   }, [eventName, eventData]);
 
@@ -87,7 +88,7 @@ export function useGroupMembershipEvents({
       }
 
       addEvent(eventName, eventData);
-      addEvent("refresh_conversations", {});
+      refreshConversationsAction(addEvent);
     }
   }, [eventName, eventData]);
 
@@ -103,7 +104,7 @@ export function useGroupMembershipEvents({
 
       addEvent("check_admin", { is_admin: Boolean(eventData?.is_admin) });
       addEvent(eventName, eventData);
-      addEvent("refresh_conversations", {});
+      refreshConversationsAction(addEvent);
     }
   }, [eventName, eventData]);
 }

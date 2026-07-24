@@ -5,6 +5,8 @@ import { useLocalParticipant } from "@livekit/components-react";
 import { useCallContext } from "./CallContext";
 import { useEventContext } from "../EventContext";
 import callText from "./callText";
+import { selectPrivateChat as selectPrivateChatAction } from "../../../services/contactService";
+import { selectGroupChat as selectGroupChatAction } from "../../../services/groupService";
 
 export default function MinimizedCallBar() {
   const {
@@ -31,9 +33,9 @@ export default function MinimizedCallBar() {
 
     if (canNavigateToCall) {
       if (activeCallIsGroupChat) {
-        addEvent("selected_group_chat", { group_name: activeCallRoomName });
+        selectGroupChatAction(addEvent, activeCallRoomName);
       } else {
-        addEvent("selected_private_chat", { contact_name: activeCallRoomName });
+        selectPrivateChatAction(addEvent, activeCallRoomName);
       }
       setMinimized(false);
     }

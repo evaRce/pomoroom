@@ -3,6 +3,7 @@ import { Button, Modal, Dropdown } from "antd";
 import { UserAddOutlined, MoreOutlined } from '@ant-design/icons';
 import { useEventContext, useEvent } from "../EventContext";
 import AddContactOrGroup from "./AddContactOrGroup";
+import { logout as logoutAction } from "../../../services/userService";
 
 export default function CurrentUserCard() {
 	const [userLogin, setUserLogin] = useState(null);
@@ -28,7 +29,7 @@ export default function CurrentUserCard() {
 	const handleMenuClick = (e, key) => {
 		e.domEvent.stopPropagation(); // Prevent container selection
 		if (key === "logout") {
-			addEvent("logout", true);
+			logoutAction(addEvent);
 			setDropdownVisible(false);
 			return;
 		}

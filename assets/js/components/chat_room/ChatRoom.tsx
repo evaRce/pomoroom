@@ -9,7 +9,7 @@ import RejectedRequestSend from "./contact_requests/RejectedRequestSend";
 import RejectedRequestReceived from "./contact_requests/RejectedRequestReceived";
 import ConversationSidebar from "./conversation_sidebar/ConversationSidebar";
 import { CallSessionProvider } from "./call_panel/CallContext";
-import { useOutgoingLiveViewActions } from "../../hooks/useLiveViewActions";
+import { useContactsAndGroupsOutgoingActions } from "../../hooks/useContactsAndGroupsOutgoingActions";
 import { usePomodoroOutgoingActions } from "../../hooks/usePomodoroOutgoingActions";
 import { useKanbanOutgoingActions } from "../../hooks/useKanbanOutgoingActions";
 import { useMessageOutgoingActions } from "../../hooks/useMessageOutgoingActions";
@@ -47,7 +47,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
     }
   }, []);
 
-  useOutgoingLiveViewActions({
+  useContactsAndGroupsOutgoingActions({
     removeEvent,
     pushEventToLiveView,
     infoChatSelected,

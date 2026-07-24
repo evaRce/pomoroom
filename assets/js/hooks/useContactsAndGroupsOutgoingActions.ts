@@ -3,7 +3,7 @@ import { useEvent } from "../components/chat_room/EventContext";
 import { clearAllTimers, clearRequestedConfigs } from "../components/chat_room/pomodoro_timer/pomodoroTimerStore";
 import { clearAllPomodoroNotifications } from "../components/chat_room/pomodoro_timer/pomodoroNotificationStore";
 
-type UseOutgoingLiveViewActionsParams = {
+type UseContactsAndGroupsOutgoingActionsParams = {
   removeEvent: (eventName: string) => void;
   pushEventToLiveView: (event: string, payload: object) => any;
   infoChatSelected: any;
@@ -13,7 +13,7 @@ type UseOutgoingLiveViewActionsParams = {
   setComponent: (value: string) => void;
 };
 
-export function useOutgoingLiveViewActions({
+export function useContactsAndGroupsOutgoingActions({
   removeEvent,
   pushEventToLiveView,
   infoChatSelected,
@@ -21,7 +21,7 @@ export function useOutgoingLiveViewActions({
   setIsVisibleDetail,
   setInfoChatSelected,
   setComponent,
-}: UseOutgoingLiveViewActionsParams) {
+}: UseContactsAndGroupsOutgoingActionsParams) {
   const contactToDelete = useEvent("delete_contact");
   const selectedPrivateChat = useEvent("selected_private_chat");
   const sendFriendRequest = useEvent("send_friend_request");

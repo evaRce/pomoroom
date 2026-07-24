@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useEventContext, useEvent } from "../EventContext";
+import { updateFriendRequestStatus as updateFriendRequestStatusAction } from "../../../services/contactService";
 import { Button, Space, Typography } from "antd";
 
 const { Text } = Typography;
@@ -17,11 +18,7 @@ export default function RequestReceived({ imageNumber }) {
   }, [requestReceivedEvent]);
 
   const handleStatus = (newStatus) => {
-    addEvent("update_status_request", {
-      status: newStatus,
-      contact_name: requestData?.to_user,
-      from_user_name: requestData?.from_user,
-    });
+    updateFriendRequestStatusAction(addEvent, newStatus, requestData?.to_user, requestData?.from_user);
   };
 
   return (

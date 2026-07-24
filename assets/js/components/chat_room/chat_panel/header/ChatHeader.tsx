@@ -10,6 +10,8 @@ import {
   installChatPlugin as installChatPluginAction,
   uninstallChatPlugin as uninstallChatPluginAction,
 } from "../../../../services/chatPluginService";
+import { toggleDetailVisibility as toggleDetailVisibilityAction } from "../../../../services/contactService";
+import { requestGroupContacts as requestGroupContactsAction } from "../../../../services/groupService";
 
 const PLUGIN_ERROR_MESSAGES: Record<string, string> = {
   unauthorized: "No tienes acceso a este chat.",
@@ -270,11 +272,7 @@ export default function ChatHeader({
 
     if (groupMemberRemovedEvent && isRemovedEventForCurrentChat) {
       setIsGroupMemberRemoved(true);
-      addEvent("toggle_detail_visibility", {
-        is_visible: false,
-        is_group: true,
-        group_name: groupMemberRemovedEvent.group_name,
-      });
+      toggleDetailVisibilityAction(addEvent, false, true, groupMemberRemovedEvent.group_name);
     }
   }, [groupMemberRemovedEvent, currentChatId, currentGroupName]);
 
@@ -350,11 +348,7 @@ export default function ChatHeader({
       return;
     }
 
-    addEvent("toggle_detail_visibility", {
-      is_visible: !isVisibleDetail,
-      is_group: isGroupChat,
-      group_name: chatName,
-    });
+    toggleDetailVisibilityAction(addEvent, !isVisibleDetail, isGroupChat, chatName);
     addEvent("show_detail", {
       chat_name: chatName,
       image: chatImage,
@@ -389,7 +383,7 @@ export default function ChatHeader({
   };
 
   const openAddMembersModal = () => {
-    addEvent("get_my_contacts", { group_name: chatData.group_data.name });
+    requestGroupContactsAction(addEvent, chatData.group_data.name);
     setIsModalVisible(true);
   };
 

@@ -3,6 +3,7 @@ import { Button, Modal, Input, List } from "antd";
 import { CopyOutlined, SearchOutlined, CloseOutlined } from "@ant-design/icons";
 import { useEventContext, useEvent } from "../../EventContext";
 import GroupMemberItem from "../../info_panel/GroupMemberItem";
+import { addMemberToGroup as addMemberToGroupAction } from "../../../../services/groupService";
 
 export default function AddMembersModal({
   chatData,
@@ -45,10 +46,7 @@ export default function AddMembersModal({
   };
 
   const inviteToGroup = (contactData) => {
-    addEvent("add_member", {
-      group_name: chatData.group_data.name,
-      new_member: contactData.nickname,
-    });
+    addMemberToGroupAction(addEvent, chatData.group_data.name, contactData.nickname);
   };
 
   return (

@@ -3,6 +3,8 @@ import { Button, Input } from "antd";
 import { SearchOutlined, CloseOutlined } from "@ant-design/icons";
 import ConversationTargetItem from "./ConversationTargetItem";
 import { useEventContext, useEvent } from "../EventContext";
+import { deleteContact as deleteContactAction } from "../../../services/contactService";
+import { deleteGroup as deleteGroupAction } from "../../../services/groupService";
 
 const INITIAL_BATCH_SIZE = 15;
 const BATCH_SIZE = 10;
@@ -283,9 +285,9 @@ export default function ConversationTargetsList() {
     );
     if (index !== -1) {
       if (contact.is_group) {
-        addEvent("delete_group", contact.name);
+        deleteGroupAction(addEvent, contact.name);
       } else {
-        addEvent("delete_contact", contact.name);
+        deleteContactAction(addEvent, contact.name);
       }
       setContacts((prevContacts) => {
         const newContacts = [...prevContacts];

@@ -8,6 +8,7 @@ import {
 } from "@ant-design/icons";
 import { useEventContext, useEvent } from "../../EventContext";
 import { sendMessageToGroup, sendMessageToUser } from "../../../../services/messageService";
+import { selectGroupChat as selectGroupChatAction } from "../../../../services/groupService";
 
 export default function ChatFooter() {
   const [inputStr, setInputStr] = useState("");
@@ -101,9 +102,7 @@ export default function ChatFooter() {
       lastProcessedGroupMemberAddedEventSignatureRef.current = addedEventSignature;
       setIsGroupMemberRemoved(false);
       setGroupMemberRemovedMessage("");
-      addEvent("selected_group_chat", {
-        group_name: chatData.group_data?.name || groupMemberAddedEvent.group_name,
-      });
+      selectGroupChatAction(addEvent, chatData.group_data?.name || groupMemberAddedEvent.group_name);
       if (groupMemberAddedEvent.message) {
         message.success(groupMemberAddedEvent.message);
       }
