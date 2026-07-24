@@ -1,30 +1,28 @@
 defmodule Pomoroom.Users.UserService do
   alias Pomoroom.Chats
+  alias Pomoroom.ChangesetErrors
   alias Pomoroom.Users.{UserSchema, UserRepository}
   import Ecto.Changeset
 
   def register_user(args) do
-    user_changeset =
-      args
-      |> UserSchema.changeset()
-      |> set_hash_password()
-      |> set_timestamps()
-      |> set_default_image()
+    changeset = UserSchema.changeset(args)
 
-    case user_changeset.valid? do
-      true ->
-        insert_user = UserRepository.insert(user_changeset.changes)
+    if changeset.valid? do
+      user_changeset =
+        changeset
+        |> set_hash_password()
+        |> set_timestamps()
+        |> set_default_image()
 
-        case insert_user do
-          {:ok, _result} ->
-            {:ok, user_changeset.changes}
+      case UserRepository.insert(user_changeset.changes) do
+        {:ok, _result} ->
+          {:ok, user_changeset.changes}
 
-          {:error, %Mongo.WriteError{write_errors: [%{"code" => 11000, "errmsg" => errmsg}]}} ->
-            {:error, parse_duplicate_key_error(errmsg)}
-        end
-
-      false ->
-        {:error, %{error: "Falta un campo"}}
+        {:error, %Mongo.WriteError{write_errors: [%{"code" => 11000, "errmsg" => errmsg}]}} ->
+          {:error, parse_duplicate_key_error(errmsg)}
+      end
+    else
+      {:error, ChangesetErrors.to_map(changeset)}
     end
   end
 

@@ -14,7 +14,8 @@ defmodule PomoroomWeb.HomeLive.Login do
         "action.log_user",
         %{"email" => email, "password" => password},
         %{assigns: %{client_ip: client_ip}} = socket
-      ) do
+      )
+      when is_binary(email) and is_binary(password) and email != "" and password != "" do
     case PomoroomWeb.RateLimiter.hit("login:#{client_ip}", @scale_ms, @max_attempts) do
       {:deny, _retry_after} ->
         {:noreply,
@@ -25,6 +26,13 @@ defmodule PomoroomWeb.HomeLive.Login do
       {:allow, _count} ->
         do_log_user(email, password, socket)
     end
+  end
+
+  def handle_event("action.log_user", _params, socket) do
+    {:noreply,
+     push_event(socket, "react.error_login_user", %{
+       errors: %{email: "El email o la contraseña no son válidos"}
+     })}
   end
 
   defp do_log_user(email, password, socket) do

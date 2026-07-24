@@ -1,4 +1,5 @@
 defmodule Pomoroom.GroupChats.GroupChatService do
+  alias Pomoroom.ChangesetErrors
   alias Pomoroom.Chats
   alias Pomoroom.GroupChats.{GroupChatRepository, GroupChatSchema}
   alias Pomoroom.Messages
@@ -30,7 +31,7 @@ defmodule Pomoroom.GroupChats.GroupChatService do
         end
 
       false ->
-        {:error, %{error: "Hay un campo invalido"}}
+        {:error, ChangesetErrors.to_map(group_changeset)}
     end
   end
 
