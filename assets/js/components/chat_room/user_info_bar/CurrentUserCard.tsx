@@ -3,7 +3,7 @@ import { Button, Modal, Dropdown } from "antd";
 import { UserAddOutlined, MoreOutlined } from '@ant-design/icons';
 import { useEventContext, useEvent } from "../EventContext";
 import AddContactOrGroup from "./AddContactOrGroup";
-import { logout as logoutAction } from "../../../services/userService";
+import { logoutAction } from "../../../services/userService";
 
 export default function CurrentUserCard() {
 	const [userLogin, setUserLogin] = useState(null);

@@ -1,7 +1,7 @@
 type AddEvent = (eventName: string, eventData: any) => void;
 type ChatType = "group" | "private";
 
-export function requestKanbanBoard(
+export function requestKanbanBoardAction(
   addEvent: AddEvent,
   chatId: string,
   chatType: ChatType
@@ -9,7 +9,7 @@ export function requestKanbanBoard(
   addEvent("get_kanban_board", { chat_id: chatId, chat_type: chatType });
 }
 
-export function addKanbanColumn(
+export function addKanbanColumnAction(
   addEvent: AddEvent,
   chatId: string,
   chatType: ChatType,
@@ -18,7 +18,7 @@ export function addKanbanColumn(
   addEvent("add_kanban_column", { chat_id: chatId, chat_type: chatType, title });
 }
 
-export function renameKanbanColumn(
+export function renameKanbanColumnAction(
   addEvent: AddEvent,
   chatId: string,
   chatType: ChatType,
@@ -33,7 +33,7 @@ export function renameKanbanColumn(
   });
 }
 
-export function removeKanbanColumn(
+export function removeKanbanColumnAction(
   addEvent: AddEvent,
   chatId: string,
   chatType: ChatType,
@@ -46,7 +46,7 @@ export function removeKanbanColumn(
   });
 }
 
-export function addKanbanTask(
+export function addKanbanTaskAction(
   addEvent: AddEvent,
   chatId: string,
   chatType: ChatType,
@@ -61,7 +61,7 @@ export function addKanbanTask(
   });
 }
 
-export function renameKanbanTask(
+export function renameKanbanTaskAction(
   addEvent: AddEvent,
   chatId: string,
   chatType: ChatType,
@@ -76,7 +76,7 @@ export function renameKanbanTask(
   });
 }
 
-export function deleteKanbanTask(
+export function deleteKanbanTaskAction(
   addEvent: AddEvent,
   chatId: string,
   chatType: ChatType,
@@ -89,7 +89,7 @@ export function deleteKanbanTask(
   });
 }
 
-export function reorderKanbanTask(
+export function reorderKanbanTaskAction(
   addEvent: AddEvent,
   chatId: string,
   chatType: ChatType,
@@ -106,7 +106,7 @@ export function reorderKanbanTask(
   });
 }
 
-export function moveKanbanTask(
+export function moveKanbanTaskAction(
   addEvent: AddEvent,
   chatId: string,
   chatType: ChatType,

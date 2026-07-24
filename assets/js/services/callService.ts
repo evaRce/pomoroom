@@ -1,6 +1,6 @@
 type AddEvent = (eventName: string, eventData: any) => void;
 
-export function joinCallRoom(
+export function joinCallRoomAction(
   addEvent: AddEvent,
   chatId: string,
   chatName: string,

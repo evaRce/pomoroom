@@ -5,8 +5,8 @@ import { useLocalParticipant } from "@livekit/components-react";
 import { useCallContext } from "./CallContext";
 import { useEventContext } from "../EventContext";
 import callText from "./callText";
-import { selectPrivateChat as selectPrivateChatAction } from "../../../services/contactService";
-import { selectGroupChat as selectGroupChatAction } from "../../../services/groupService";
+import { selectPrivateChatAction } from "../../../services/contactService";
+import { selectGroupChatAction } from "../../../services/groupService";
 
 export default function MinimizedCallBar() {
   const {

@@ -7,7 +7,7 @@ interface PomodoroConfigPayload {
   cycles_before_long_break: number;
 }
 
-export function requestPomodoroState(
+export function requestPomodoroStateAction(
   addEvent: AddEvent,
   chatId: string,
   chatType: "private" | "group"
@@ -15,7 +15,7 @@ export function requestPomodoroState(
   addEvent("get_pomodoro_state", { chat_id: chatId, chat_type: chatType });
 }
 
-export function startPomodoroTimer(
+export function startPomodoroTimerAction(
   addEvent: AddEvent,
   chatId: string,
   chatType: "private" | "group"
@@ -23,7 +23,7 @@ export function startPomodoroTimer(
   addEvent("start_pomodoro_timer", { chat_id: chatId, chat_type: chatType });
 }
 
-export function pausePomodoroTimer(
+export function pausePomodoroTimerAction(
   addEvent: AddEvent,
   chatId: string,
   chatType: "private" | "group"
@@ -31,7 +31,7 @@ export function pausePomodoroTimer(
   addEvent("pause_pomodoro_timer", { chat_id: chatId, chat_type: chatType });
 }
 
-export function resetPomodoroTimer(
+export function resetPomodoroTimerAction(
   addEvent: AddEvent,
   chatId: string,
   chatType: "private" | "group"
@@ -39,7 +39,7 @@ export function resetPomodoroTimer(
   addEvent("reset_pomodoro_timer", { chat_id: chatId, chat_type: chatType });
 }
 
-export function setPomodoroTimerMode(
+export function setPomodoroTimerModeAction(
   addEvent: AddEvent,
   chatId: string,
   chatType: "private" | "group",
@@ -48,7 +48,7 @@ export function setPomodoroTimerMode(
   addEvent("set_pomodoro_timer_mode", { chat_id: chatId, chat_type: chatType, mode });
 }
 
-export function savePomodoroConfig(
+export function savePomodoroConfigAction(
   addEvent: AddEvent,
   timerId: string,
   chatId: string,

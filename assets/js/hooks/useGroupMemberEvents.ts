@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { refreshConversations as refreshConversationsAction } from "../services/contactService";
+import { refreshConversationsAction } from "../services/contactService";
 
 type UseGroupMembershipEventsParams = {
   eventName: string;

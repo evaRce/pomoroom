@@ -1,7 +1,7 @@
 type AddEvent = (eventName: string, eventData: any) => void;
 type ChatType = "group" | "private";
 
-export function installChatPlugin(
+export function installChatPluginAction(
   addEvent: AddEvent,
   chatId: string,
   chatType: ChatType,
@@ -14,7 +14,7 @@ export function installChatPlugin(
   });
 }
 
-export function uninstallChatPlugin(
+export function uninstallChatPluginAction(
   addEvent: AddEvent,
   chatId: string,
   chatType: ChatType,

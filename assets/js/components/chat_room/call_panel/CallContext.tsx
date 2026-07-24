@@ -4,7 +4,7 @@ import { ConnectionError, ConnectionErrorReason, DisconnectReason, Room, RoomEve
 import { RoomContext, RoomAudioRenderer } from "@livekit/components-react";
 import { useEventContext, useEvent } from "../EventContext";
 import callText from "./callText";
-import { joinCallRoom } from "../../../services/callService";
+import { joinCallRoomAction } from "../../../services/callService";
 
 interface CallContextValue {
   activeCallChatId: string | null;
@@ -107,7 +107,7 @@ export function CallSessionProvider({ children }: { children: React.ReactNode })
     if (livekitTokenEvent?.chat_id || connectingChatId) return;
 
     setConnectingChatId(chatId);
-    joinCallRoom(addEvent, chatId, chatName, isGroupChat);
+    joinCallRoomAction(addEvent, chatId, chatName, isGroupChat);
   };
 
   const leaveCall = () => {

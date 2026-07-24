@@ -3,8 +3,8 @@ import { Button, Input } from "antd";
 import { SearchOutlined, CloseOutlined } from "@ant-design/icons";
 import ConversationTargetItem from "./ConversationTargetItem";
 import { useEventContext, useEvent } from "../EventContext";
-import { deleteContact as deleteContactAction } from "../../../services/contactService";
-import { deleteGroup as deleteGroupAction } from "../../../services/groupService";
+import { deleteContactAction } from "../../../services/contactService";
+import { deleteGroupAction } from "../../../services/groupService";
 
 const INITIAL_BATCH_SIZE = 15;
 const BATCH_SIZE = 10;

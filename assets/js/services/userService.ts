@@ -2,7 +2,7 @@ import { LiveViewHook } from "../types/liveview";
 
 type AddEvent = (eventName: string, eventData: any) => void;
 
-export function saveUser(
+export function saveUserAction(
   hook: LiveViewHook,
   email: string,
   password: string,
@@ -11,7 +11,7 @@ export function saveUser(
   hook.pushEventTo(hook.el, "action.save_user", { email, password, nickname });
 }
 
-export function loginUser(
+export function loginUserAction(
   hook: LiveViewHook,
   email: string,
   password: string
@@ -19,6 +19,6 @@ export function loginUser(
   hook.pushEventTo(hook.el, "action.log_user", { email, password });
 }
 
-export function logout(addEvent: AddEvent): void {
+export function logoutAction(addEvent: AddEvent): void {
   addEvent("logout", true);
 }

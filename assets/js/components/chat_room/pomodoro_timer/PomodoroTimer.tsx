@@ -28,12 +28,12 @@ import {
 } from "./pomodoroTimerStore";
 import { clearPomodoroNotification } from "./pomodoroNotificationStore";
 import {
-  requestPomodoroState as requestPomodoroStateAction,
-  startPomodoroTimer,
-  pausePomodoroTimer,
-  resetPomodoroTimer,
-  setPomodoroTimerMode,
-  savePomodoroConfig,
+  requestPomodoroStateAction,
+  startPomodoroTimerAction,
+  pausePomodoroTimerAction,
+  resetPomodoroTimerAction,
+  setPomodoroTimerModeAction,
+  savePomodoroConfigAction,
 } from "../../../services/pomodoroService";
 
 interface PomodoroTimerProps {
@@ -237,25 +237,25 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   const handleStart = () => {
     if (!chatId || !settings) return;
 
-    startPomodoroTimer(addEvent, chatId, chatType);
+    startPomodoroTimerAction(addEvent, chatId, chatType);
   };
 
   const handlePause = () => {
     if (!chatId || !settings) return;
 
-    pausePomodoroTimer(addEvent, chatId, chatType);
+    pausePomodoroTimerAction(addEvent, chatId, chatType);
   };
 
   const handleReset = () => {
     if (!chatId || !settings) return;
 
-    resetPomodoroTimer(addEvent, chatId, chatType);
+    resetPomodoroTimerAction(addEvent, chatId, chatType);
   };
 
   const handleModeChange = (newMode: TimerMode) => {
     if (isRunning || !chatId || !settings) return;
 
-    setPomodoroTimerMode(addEvent, chatId, chatType, newMode);
+    setPomodoroTimerModeAction(addEvent, chatId, chatType, newMode);
   };
 
   const handleChange = (field: keyof TimerSettings, value: string) => {
@@ -282,7 +282,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     setSaveState("saving");
     setSaveMessage(null);
 
-    savePomodoroConfig(
+    savePomodoroConfigAction(
       addEvent,
       timerId,
       chatId,

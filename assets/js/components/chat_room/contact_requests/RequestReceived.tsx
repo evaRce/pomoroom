@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useEventContext, useEvent } from "../EventContext";
-import { updateFriendRequestStatus as updateFriendRequestStatusAction } from "../../../services/contactService";
+import { updateFriendRequestStatusAction } from "../../../services/contactService";
 import { Button, Space, Typography } from "antd";
 
 const { Text } = Typography;

@@ -8,7 +8,7 @@ import { PomodoroTimer } from "../pomodoro_timer/PomodoroTimer";
 import { KanbanBoard } from "../kanban_board_panel/KanbanBoard";
 import CallScreen from "../call_panel/CallScreen";
 import { useCallContext } from "../call_panel/CallContext";
-import { loadOlderMessages as loadOlderMessagesAction } from "../../../services/messageService";
+import { loadOlderMessagesAction } from "../../../services/messageService";
 import {
   createTimer,
   hasTimer,

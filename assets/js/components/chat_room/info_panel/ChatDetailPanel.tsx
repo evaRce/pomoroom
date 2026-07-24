@@ -3,10 +3,10 @@ import { Avatar, Button, List } from "antd";
 import { CloseOutlined } from "@ant-design/icons";
 import { useEventContext, useEvent } from "../EventContext";
 import GroupMemberItem from "./GroupMemberItem";
-import { toggleDetailVisibility as toggleDetailVisibilityAction } from "../../../services/contactService";
+import { toggleDetailVisibilityAction } from "../../../services/contactService";
 import {
-  setGroupAdmin as setGroupAdminAction,
-  deleteMember as deleteMemberAction,
+  setGroupAdminAction,
+  deleteMemberAction,
 } from "../../../services/groupService";
 
 export default function ChatDetailPanel() {

@@ -1,18 +1,18 @@
 type AddEvent = (eventName: string, eventData: any) => void;
 
-export function deleteContact(addEvent: AddEvent, contactName: string): void {
+export function deleteContactAction(addEvent: AddEvent, contactName: string): void {
   addEvent("delete_contact", contactName);
 }
 
-export function selectPrivateChat(addEvent: AddEvent, contactName: string): void {
+export function selectPrivateChatAction(addEvent: AddEvent, contactName: string): void {
   addEvent("selected_private_chat", { contact_name: contactName });
 }
 
-export function sendFriendRequest(addEvent: AddEvent, toUser: string): void {
+export function sendFriendRequestAction(addEvent: AddEvent, toUser: string): void {
   addEvent("send_friend_request", { to_user: toUser });
 }
 
-export function updateFriendRequestStatus(
+export function updateFriendRequestStatusAction(
   addEvent: AddEvent,
   status: string,
   contactName: string,
@@ -25,7 +25,7 @@ export function updateFriendRequestStatus(
   });
 }
 
-export function toggleDetailVisibility(
+export function toggleDetailVisibilityAction(
   addEvent: AddEvent,
   isVisible: boolean,
   isGroup: boolean,
@@ -38,6 +38,6 @@ export function toggleDetailVisibility(
   });
 }
 
-export function refreshConversations(addEvent: AddEvent): void {
+export function refreshConversationsAction(addEvent: AddEvent): void {
   addEvent("refresh_conversations", {});
 }

@@ -1,22 +1,22 @@
 type AddEvent = (eventName: string, eventData: any) => void;
 
-export function addGroup(addEvent: AddEvent, name: string): void {
+export function addGroupAction(addEvent: AddEvent, name: string): void {
   addEvent("add_group", { name });
 }
 
-export function selectGroupChat(addEvent: AddEvent, groupName: string): void {
+export function selectGroupChatAction(addEvent: AddEvent, groupName: string): void {
   addEvent("selected_group_chat", { group_name: groupName });
 }
 
-export function deleteGroup(addEvent: AddEvent, groupName: string): void {
+export function deleteGroupAction(addEvent: AddEvent, groupName: string): void {
   addEvent("delete_group", groupName);
 }
 
-export function requestGroupContacts(addEvent: AddEvent, groupName: string): void {
+export function requestGroupContactsAction(addEvent: AddEvent, groupName: string): void {
   addEvent("get_my_contacts", { group_name: groupName });
 }
 
-export function addMemberToGroup(
+export function addMemberToGroupAction(
   addEvent: AddEvent,
   groupName: string,
   newMember: string
@@ -24,7 +24,7 @@ export function addMemberToGroup(
   addEvent("add_member", { group_name: groupName, new_member: newMember });
 }
 
-export function deleteMember(
+export function deleteMemberAction(
   addEvent: AddEvent,
   memberName: string,
   groupName: string
@@ -32,7 +32,7 @@ export function deleteMember(
   addEvent("delete_member", { member_name: memberName, group_name: groupName });
 }
 
-export function setGroupAdmin(
+export function setGroupAdminAction(
   addEvent: AddEvent,
   memberName: string,
   groupName: string,

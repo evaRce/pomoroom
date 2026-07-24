@@ -7,11 +7,11 @@ import CallButton from "../../call_panel/CallButton";
 import PluginMarketPlace, { AvailablePlugin, InstalledPlugin } from "../PluginMarketPlace";
 import { getTimer, subscribeTimer, type TimerState } from "../../pomodoro_timer/pomodoroTimerStore";
 import {
-  installChatPlugin as installChatPluginAction,
-  uninstallChatPlugin as uninstallChatPluginAction,
+  installChatPluginAction,
+  uninstallChatPluginAction,
 } from "../../../../services/chatPluginService";
-import { toggleDetailVisibility as toggleDetailVisibilityAction } from "../../../../services/contactService";
-import { requestGroupContacts as requestGroupContactsAction } from "../../../../services/groupService";
+import { toggleDetailVisibilityAction } from "../../../../services/contactService";
+import { requestGroupContactsAction } from "../../../../services/groupService";
 
 const PLUGIN_ERROR_MESSAGES: Record<string, string> = {
   unauthorized: "No tienes acceso a este chat.",

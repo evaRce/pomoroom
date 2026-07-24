@@ -1,6 +1,6 @@
 type AddEvent = (eventName: string, eventData: any) => void;
 
-export function sendMessageToGroup(
+export function sendMessageToGroupAction(
   addEvent: AddEvent,
   message: string,
   toGroupName: string
@@ -8,7 +8,7 @@ export function sendMessageToGroup(
   addEvent("send_message", { message, to_group_name: toGroupName });
 }
 
-export function sendMessageToUser(
+export function sendMessageToUserAction(
   addEvent: AddEvent,
   message: string,
   toUser: string
@@ -16,7 +16,7 @@ export function sendMessageToUser(
   addEvent("send_message", { message, to_user: toUser });
 }
 
-export function loadOlderMessages(
+export function loadOlderMessagesAction(
   addEvent: AddEvent,
   chatId: string,
   beforeInsertedAt: string,

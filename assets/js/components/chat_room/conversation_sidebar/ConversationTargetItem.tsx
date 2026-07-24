@@ -5,8 +5,8 @@ import { useEventContext } from "../EventContext";
 import { DownOutlined, DeleteOutlined } from "@ant-design/icons";
 import { usePomodoroNotification } from "../pomodoro_timer/pomodoroNotificationStore";
 import pomodoroTimerText from "../pomodoro_timer/pomodoroTimerText";
-import { selectPrivateChat as selectPrivateChatAction } from "../../../services/contactService";
-import { selectGroupChat as selectGroupChatAction } from "../../../services/groupService";
+import { selectPrivateChatAction } from "../../../services/contactService";
+import { selectGroupChatAction } from "../../../services/groupService";
 
 export default function ConversationTargetItem({ contact, isSelected, onSelect, onDelete }: any) {
   const { addEvent } = useEventContext();

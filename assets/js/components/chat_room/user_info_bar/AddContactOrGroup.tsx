@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button, Form, Input, Radio, message, Spin } from "antd";
 import { useEventContext, useEvent } from "../EventContext";
-import { sendFriendRequest as sendFriendRequestAction } from "../../../services/contactService";
-import { addGroup as addGroupAction } from "../../../services/groupService";
+import { sendFriendRequestAction } from "../../../services/contactService";
+import { addGroupAction } from "../../../services/groupService";
 
 export default function AddContactOrGroup({ sendDataToParent, receiveDataFromParent }) {
   const [form] = Form.useForm();

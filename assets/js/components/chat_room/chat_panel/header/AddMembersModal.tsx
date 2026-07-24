@@ -3,7 +3,7 @@ import { Button, Modal, Input, List } from "antd";
 import { CopyOutlined, SearchOutlined, CloseOutlined } from "@ant-design/icons";
 import { useEventContext, useEvent } from "../../EventContext";
 import GroupMemberItem from "../../info_panel/GroupMemberItem";
-import { addMemberToGroup as addMemberToGroupAction } from "../../../../services/groupService";
+import { addMemberToGroupAction } from "../../../../services/groupService";
 
 export default function AddMembersModal({
   chatData,

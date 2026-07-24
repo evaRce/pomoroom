@@ -20,15 +20,15 @@ import { KanbanColumn, KanbanTaskLimitWarningModal } from "./KanbanBoardComponen
 import { KANBAN_TEXT } from "./kanbanText";
 import type { Column, ColumnId, Task } from "./KanbanBoardComponents.tsx";
 import {
-  requestKanbanBoard,
-  addKanbanColumn as addKanbanColumnAction,
-  renameKanbanColumn as renameKanbanColumnAction,
-  removeKanbanColumn as removeKanbanColumnAction,
-  addKanbanTask as addKanbanTaskAction,
-  renameKanbanTask as renameKanbanTaskAction,
-  deleteKanbanTask as deleteKanbanTaskAction,
-  reorderKanbanTask as reorderKanbanTaskAction,
-  moveKanbanTask as moveKanbanTaskAction,
+  requestKanbanBoardAction,
+  addKanbanColumnAction,
+  renameKanbanColumnAction,
+  removeKanbanColumnAction,
+  addKanbanTaskAction,
+  renameKanbanTaskAction,
+  deleteKanbanTaskAction,
+  reorderKanbanTaskAction,
+  moveKanbanTaskAction,
 } from "../../../services/kanbanService";
 
 const MAX_COLUMNS = 5;
@@ -190,7 +190,7 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
       return;
     }
 
-    requestKanbanBoard(addEvent, chatId, chatType);
+    requestKanbanBoardAction(addEvent, chatId, chatType);
   }, [addEvent, chatId, chatType]);
 
   useEffect(() => {
