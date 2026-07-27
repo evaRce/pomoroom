@@ -23,35 +23,18 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanRepository do
     end
   end
 
-  def update_board_if_version_matches(kanban_id, columns, expected_board_version) do
-    next_board_version = expected_board_version + 1
-
-    query =
-      if expected_board_version == 0 do
-        %{
-          "$or" => [
-            %{"kanban_id" => kanban_id, "board_version" => 0},
-            %{"kanban_id" => kanban_id, "board_version" => %{"$exists" => false}}
-          ]
-        }
-      else
-        %{"kanban_id" => kanban_id, "board_version" => expected_board_version}
-      end
-
-    set_data = %{
-      columns: normalized_columns(columns),
-      board_version: next_board_version
-    }
+  def update_board(kanban_id, columns) do
+    set_data = %{columns: normalized_columns(columns)}
 
     case Mongo.find_one_and_update(
            :mongo,
            @board_collection,
-           query,
+           %{"kanban_id" => kanban_id},
            %{"$set" => set_data},
            return_document: :after
          ) do
       {:ok, %Mongo.FindAndModifyResult{value: nil}} ->
-        {:error, :version_conflict}
+        {:error, :not_found}
 
       {:ok, %Mongo.FindAndModifyResult{value: updated_board}} when is_map(updated_board) ->
         {:ok, board_changes(updated_board)}
@@ -151,8 +134,7 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanRepository do
 
     %{
       kanban_id: kanban_id,
-      columns: normalized_columns(columns),
-      board_version: get_board_version(args)
+      columns: normalized_columns(columns)
     }
   end
 
@@ -164,15 +146,6 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanRepository do
         task_ids: Map.get(column, :task_ids) || Map.get(column, "task_ids") || []
       }
     end)
-  end
-
-  defp get_board_version(args) do
-    value = Map.get(args, :board_version) || Map.get(args, "board_version")
-
-    case value do
-      version when is_integer(version) and version >= 0 -> version
-      _ -> 0
-    end
   end
 
   defp task_changes(args) do

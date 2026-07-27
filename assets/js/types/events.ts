@@ -80,7 +80,6 @@ export interface EventBusPayloads {
     timer_id: string;
     chat_id: string;
     chat_type: ChatType;
-    expected_config_version: number;
     config: PomodoroConfigPayload;
   };
   pomodoro_state_loaded: PomodoroServerPayload;
@@ -138,7 +137,6 @@ export interface PomodoroConfigPayload {
 export interface PomodoroServerPayload {
   chat_id: string;
   timer_id?: string;
-  config_version?: number;
   server_now?: number;
   config?: Partial<PomodoroConfigPayload>;
   state?: {

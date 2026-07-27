@@ -7,7 +7,6 @@ export type TimerState = {
   mode: TimerMode;
   cyclesCompleted: number;
   hasPendingWorkHalfCycle: boolean;
-  configVersion: number;
   settings: TimerSettings | null;
   modeSnapshots: Record<TimerMode, number>;
   lastCompletedMode: TimerMode | null;
@@ -267,7 +266,6 @@ export function createInitialTimerState(settings: TimerSettings): TimerState {
     mode: "work",
     cyclesCompleted: 0,
     hasPendingWorkHalfCycle: false,
-    configVersion: 0,
     settings,
     modeSnapshots,
     lastCompletedMode: null,
@@ -341,7 +339,6 @@ export function normalizeTimerPayload(payload: PomodoroServerPayload | undefined
     mode,
     cyclesCompleted: payloadState.cycles_completed ?? 0,
     hasPendingWorkHalfCycle: Boolean(payloadState.has_pending_work_half_cycle),
-    configVersion: payload.config_version ?? 0,
     settings,
     modeSnapshots,
     lastCompletedMode: (payloadState.last_completed_mode as TimerMode | undefined) ?? null,

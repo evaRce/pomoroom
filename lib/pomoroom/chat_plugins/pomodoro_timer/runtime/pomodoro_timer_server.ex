@@ -19,8 +19,8 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
     GenServer.call(via_tuple(process_id), :get_state)
   end
 
-  def update_config(process_id, config, expected_config_version) do
-    GenServer.call(via_tuple(process_id), {:update_config, config, expected_config_version})
+  def update_config(process_id, config) do
+    GenServer.call(via_tuple(process_id), {:update_config, config})
   end
 
   def start_timer(process_id) do
@@ -52,7 +52,6 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
         chat_id: chat_id,
         chat_type: chat_type,
         config: @default_config,
-        config_version: 0,
         timer_ref: nil,
         started_at: nil,
         paused_at: nil,
@@ -72,16 +71,19 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
   end
 
   @impl true
-  def handle_call({:update_config, raw_config, expected_config_version}, _from, state) do
+  def handle_call({:update_config, raw_config}, _from, state) do
     config = normalize_config(raw_config)
-    expected_version = normalize_config_version(expected_config_version)
 
-    case expected_version do
-      {:ok, parsed_version} ->
-        update_config_with_optimistic_lock(state, config, parsed_version)
+    case Repository.update_config(state.timer_id, config) do
+      {:ok, _updated} ->
+        next_state =
+          reset_runtime_for_config(%{cancel_pending_tick(state) | config: config})
 
-      {:error, reason} ->
-        {:reply, {:error, reason}, state}
+        broadcast_state(next_state, :update_config)
+        {:reply, {:ok, format_payload(next_state)}, next_state}
+
+      {:error, :not_found} ->
+        {:reply, {:error, :timer_not_found}, state}
     end
   end
 
@@ -213,50 +215,10 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
   defp apply_persisted_state(state) do
     case Repository.get_by_timer_id(state.timer_id) do
       {:ok, timer_data} ->
-        reset_runtime_for_config(%{
-          state
-          | config: extract_config(timer_data),
-            config_version: extract_config_version(timer_data)
-        })
+        reset_runtime_for_config(%{state | config: extract_config(timer_data)})
 
       {:error, :not_found} ->
         reset_runtime_for_config(state)
-    end
-  end
-
-  defp update_config_with_optimistic_lock(state, config, expected_version) do
-    case Repository.get_by_timer_id(state.timer_id) do
-      {:ok, timer_data} ->
-        current_version = extract_config_version(timer_data)
-
-        case current_version == expected_version do
-          true ->
-            case Repository.update_config_if_version_matches(
-                   state.timer_id,
-                   config,
-                   expected_version
-                 ) do
-              {:ok, _updated} ->
-                next_state =
-                  reset_runtime_for_config(%{
-                    cancel_pending_tick(state)
-                    | config: config,
-                      config_version: expected_version + 1
-                  })
-
-                broadcast_state(next_state, :update_config)
-                {:reply, {:ok, format_payload(next_state)}, next_state}
-
-              {:error, :version_conflict} ->
-                {:reply, {:error, :version_conflict}, state}
-            end
-
-          false ->
-            {:reply, {:error, :version_conflict}, state}
-        end
-
-      {:error, :not_found} ->
-        {:reply, {:error, :timer_not_found}, state}
     end
   end
 
@@ -402,7 +364,6 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
       timer_id: state.timer_id,
       chat_id: state.chat_id,
       chat_type: state.chat_type,
-      config_version: state.config_version,
       server_now: server_now,
       config: state.config,
       state: %{
@@ -456,26 +417,6 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
       cycles_before_long_break: timer_data.cycles_before_long_break
     }
   end
-
-  defp extract_config_version(timer_data) do
-    value = Map.get(timer_data, :config_version)
-
-    case value do
-      version when is_integer(version) and version >= 0 -> version
-      _ -> 0
-    end
-  end
-
-  defp normalize_config_version(value) when is_integer(value) and value >= 0, do: {:ok, value}
-
-  defp normalize_config_version(value) when is_binary(value) do
-    case Integer.parse(value) do
-      {parsed, ""} when parsed >= 0 -> {:ok, parsed}
-      _ -> {:error, :invalid_config_version}
-    end
-  end
-
-  defp normalize_config_version(_), do: {:error, :invalid_config_version}
 
   defp timer_topic(chat_id) do
     "chat:#{chat_id}:pomodoro"

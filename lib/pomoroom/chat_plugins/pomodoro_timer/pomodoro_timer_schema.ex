@@ -8,7 +8,6 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerSchema do
     field :short_break_duration, :integer
     field :long_break_duration, :integer
     field :cycles_before_long_break, :integer
-    field :config_version, :integer, default: 0
   end
 
   def changeset(args) do
@@ -18,8 +17,7 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerSchema do
       :work_duration,
       :short_break_duration,
       :long_break_duration,
-      :cycles_before_long_break,
-      :config_version
+      :cycles_before_long_break
     ])
   end
 
@@ -30,8 +28,7 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerSchema do
       :work_duration,
       :short_break_duration,
       :long_break_duration,
-      :cycles_before_long_break,
-      :config_version
+      :cycles_before_long_break
     ])
   end
 

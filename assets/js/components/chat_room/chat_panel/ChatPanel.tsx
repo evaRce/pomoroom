@@ -70,7 +70,6 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
       eventName,
       payload?.chat_id || "",
       payload?.timer_id || "",
-      payload?.config_version ?? 0,
       state.mode || state.last_completed_mode || "",
       state.started_at ?? "",
       state.paused_at ?? "",

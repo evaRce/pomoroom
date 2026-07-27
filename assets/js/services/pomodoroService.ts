@@ -46,14 +46,12 @@ export function savePomodoroConfigAction(
   timerId: string,
   chatId: string,
   chatType: "private" | "group",
-  expectedConfigVersion: number,
   config: PomodoroConfigPayload
 ): void {
   addEvent("update_pomodoro_plugin_config", {
     timer_id: timerId,
     chat_id: chatId,
     chat_type: chatType,
-    expected_config_version: expectedConfigVersion,
     config,
   });
 }

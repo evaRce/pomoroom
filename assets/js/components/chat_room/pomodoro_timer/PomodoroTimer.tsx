@@ -71,7 +71,6 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   const [cyclesCompleted, setCyclesCompleted] = useState(0);
   const [hasPendingWorkHalfCycle, setHasPendingWorkHalfCycle] = useState(false);
   const [timerId, setTimerId] = useState("");
-  const [configVersion, setConfigVersion] = useState(0);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [saveMessage, setSaveMessage] = useState<{
     type: "success" | "error";
@@ -126,7 +125,6 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     setIsRunning(nextTimer.isRunning);
     setCyclesCompleted(nextTimer.cyclesCompleted);
     setHasPendingWorkHalfCycle(nextTimer.hasPendingWorkHalfCycle);
-    setConfigVersion(nextTimer.configVersion);
     setTimerId(eventPayload.timer_id || "");
     setNowMs(Date.now());
     lastCompletionStampRef.current = `${nextTimer.lastCompletedMode || "none"}:${nextTimer.lastUpdated}`;
@@ -307,7 +305,6 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
       timerId,
       chatId,
       chatType,
-      configVersion,
       toPayloadConfig(settings)
     );
   };
@@ -329,7 +326,6 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     setIsRunning(timer.isRunning);
     setCyclesCompleted(timer.cyclesCompleted);
     setHasPendingWorkHalfCycle(timer.hasPendingWorkHalfCycle);
-    setConfigVersion(timer.configVersion);
 
     if (timer.settings) {
       setSettings(timer.settings);
@@ -431,7 +427,6 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     }
 
     setTimerId(configLoadedEvent.timer_id || "");
-    setConfigVersion(configLoadedEvent.config_version ?? 0);
     const newSettings: TimerSettings = {
       workDuration: configLoadedEvent.config.work_duration,
       shortBreakDuration: configLoadedEvent.config.short_break_duration,
@@ -459,7 +454,6 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     }
 
     setTimerId(configUpdatedEvent.timer_id || timerId);
-    setConfigVersion(configUpdatedEvent.config_version ?? configVersion);
     const newSettings: TimerSettings = {
       workDuration: configUpdatedEvent.config.work_duration,
       shortBreakDuration: configUpdatedEvent.config.short_break_duration,
@@ -488,10 +482,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     setSaveState("error");
     setSaveMessage({
       type: "error",
-      text:
-        configErrorEvent.reason === "version_conflict"
-          ? pomodoroTimerText.versionConflictError
-          : pomodoroTimerText.syncError,
+      text: pomodoroTimerText.syncError,
     });
     removeEvent("pomodoro_plugin_config_error");
   }, [configErrorEvent, chatId, chatType, removeEvent]);

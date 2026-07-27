@@ -133,22 +133,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
     end
   end
 
-  def handle_update_pomodoro_plugin_config(
-        chat_id,
-        chat_type,
-        config,
-        expected_config_version,
-        user,
-        socket
-      ) do
+  def handle_update_pomodoro_plugin_config(chat_id, chat_type, config, user, socket) do
     case authorize_and_validate_plugin(chat_id, chat_type, "pomodoro", user.nickname) do
       :ok ->
-        case PomodoroTimers.update_config(
-               chat_id,
-               chat_type,
-               config,
-               expected_config_version
-             ) do
+        case PomodoroTimers.update_config(chat_id, chat_type, config) do
           {:ok, _timer_data} ->
             {:noreply, socket}
 
