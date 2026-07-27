@@ -1,9 +1,10 @@
 import React from "react";
 import { Avatar } from "antd";
+import type { ChatMessage, EventBusPayload } from "../../../../types/events";
 
 interface MessageItemProps {
-  message: any;
-  userLogin: any;
+  message: ChatMessage;
+  userLogin: EventBusPayload<"show_user_info"> | null;
   hideSenderIdentity?: boolean;
 }
 

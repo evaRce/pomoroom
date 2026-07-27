@@ -16,9 +16,8 @@ import {
 import type { CollisionDetection, DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
 import { Button } from "../../../../components-shadcn/ui/button";
 import { useEventContext, useEvent } from "../EventContext";
-import { KanbanColumn, KanbanTaskLimitWarningModal } from "./KanbanBoardComponents";
+import { KanbanColumn, KanbanTaskLimitWarningModal, type Column, type ColumnId, type Task } from "./KanbanBoardComponents";
 import { KANBAN_TEXT } from "./kanbanText";
-import type { Column, ColumnId, Task } from "./KanbanBoardComponents";
 import {
   requestKanbanBoardAction,
   addKanbanColumnAction,
@@ -30,6 +29,7 @@ import {
   reorderKanbanTaskAction,
   moveKanbanTaskAction,
 } from "../../../services/kanbanService";
+import type { KanbanServerBoard, KanbanServerColumn } from "../../../types/events";
 
 const MAX_COLUMNS = 5;
 const MAX_TASKS_PER_COLUMN = 20;
@@ -45,12 +45,12 @@ interface KanbanBoardProps {
   chatType: "group" | "private";
 }
 
-function mapServerColumn(column: any): Column {
+function mapServerColumn(column: KanbanServerColumn): Column {
   return {
     id: column.column_id || column.columnId || "",
     title: column.title || "",
     tasks: Array.isArray(column.tasks)
-      ? column.tasks.map((task: any) => ({
+      ? column.tasks.map((task) => ({
         id: task.task_id || task.id || "",
         title: task.title || "",
       }))
@@ -124,7 +124,7 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
   const kanbanTaskDeletedEvent = useEvent("kanban_task_deleted");
 
 
-  const applyBoard = (board: any) => {
+  const applyBoard = (board: KanbanServerBoard | undefined) => {
     const nextColumns = Array.isArray(board?.columns)
       ? board.columns.map(mapServerColumn)
       : [];
@@ -161,7 +161,7 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
           throw new Error(`Failed to load default Kanban columns: ${response.status}`);
         }
 
-        const payload = await response.json();
+        const payload: { data?: KanbanServerColumn[] } = await response.json();
         const nextColumns = Array.isArray(payload?.data)
           ? payload.data.map(mapServerColumn)
           : [];

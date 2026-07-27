@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useCallback } from "react";
 import { AddEvent, EventBusPayload, RemoveEvent } from "../../types/events";
 
-type EventsDataMap = Record<string, any>;
+type EventsDataMap = Record<string, unknown>;
 
 type EventContextType = {
   eventsData: EventsDataMap,
@@ -25,7 +25,7 @@ export const EventProvider = ({ children }: { children: React.ReactNode }) => {
     setEventsData((prevEventsData) => ({
       ...prevEventsData,
       [eventName]: typeof eventData === "function"
-        ? (eventData as (prev: any) => any)(prevEventsData[eventName])
+        ? (eventData as (prev: unknown) => unknown)(prevEventsData[eventName])
         : eventData,
     }));
   }, []);
@@ -49,5 +49,5 @@ export const useEventContext = () => useContext(EventContext);
 
 export const useEvent = <K extends string>(eventName: K): EventBusPayload<K> => {
   const { eventsData } = useEventContext();
-  return eventsData[eventName];
+  return eventsData[eventName] as EventBusPayload<K>;
 };

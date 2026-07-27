@@ -12,6 +12,7 @@ import {
 } from "../../../../services/chatPluginService";
 import { toggleDetailVisibilityAction } from "../../../../services/contactService";
 import { requestGroupContactsAction } from "../../../../services/groupService";
+import type { ChatPluginRef, ChatSessionData, EventBusPayload } from "../../../../types/events";
 
 const PLUGIN_ERROR_MESSAGES: Record<string, string> = {
   unauthorized: "No tienes acceso a este chat.",
@@ -29,7 +30,7 @@ function getPluginErrorMessage(reason: unknown): string {
 }
 
 interface ChatHeaderProps {
-  userLogin: any;
+  userLogin: EventBusPayload<"show_user_info"> | null;
   isVisibleDetail: boolean;
   activePluginId: string | null;
   onTogglePluginTab: (pluginId: string | null) => void;
@@ -55,9 +56,9 @@ export default function ChatHeader({
   const checkAdminEvent = useEvent("check_admin");
   const groupAdminUpdatedEvent = useEvent("group_admin_updated");
   const membersSnapshotEvent = useEvent("members_snapshot");
-  const [chatData, setChatData] = useState<any>(null);
+  const [chatData, setChatData] = useState<ChatSessionData | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [checkAdmin, setCheckAdmin] = useState<any>({});
+  const [checkAdmin, setCheckAdmin] = useState<{ is_admin: boolean }>({ is_admin: false });
   const [chatName, setChatName] = useState("");
   const [chatImage, setChatImage] = useState("");
   const [isGroupMemberRemoved, setIsGroupMemberRemoved] = useState(false);
@@ -80,11 +81,11 @@ export default function ChatHeader({
 
         if (!res.ok) return;
 
-        const payload = await res.json();
+        const payload: { data?: ChatPluginRef[] } = await res.json();
         const plugins = Array.isArray(payload?.data) ? payload.data : [];
 
         const map: Record<string, { name: string; icon: string }> = {};
-        plugins.forEach((p: any) => {
+        plugins.forEach((p) => {
           if (p?.type) {
             map[p.type] = { name: p.name || p.type, icon: p.icon || "🔌" };
           }
@@ -103,7 +104,7 @@ export default function ChatHeader({
     };
   }, []);
 
-  const normalizePlugin = (plugin: any) => {
+  const normalizePlugin = (plugin: ChatPluginRef | undefined) => {
     const normalizedType = plugin?.type;
 
     if (!normalizedType) return null;
@@ -120,7 +121,7 @@ export default function ChatHeader({
     } as InstalledPlugin;
   };
 
-  const normalizeInstalledPlugins = (plugins: any[] = []) => {
+  const normalizeInstalledPlugins = (plugins: ChatPluginRef[] = []) => {
     const merged: InstalledPlugin[] = [];
 
     plugins.forEach((plugin) => {
@@ -140,7 +141,7 @@ export default function ChatHeader({
     return merged;
   };
 
-  const getPluginsFromChat = (chat: any): any[] => {
+  const getPluginsFromChat = (chat: ChatSessionData | null): ChatPluginRef[] => {
     const plugins = chat?.plugins;
     return Array.isArray(plugins) ? plugins : [];
   };
@@ -286,7 +287,7 @@ export default function ChatHeader({
 
     if (groupMemberAddedEvent && isAddedEventForCurrentChat) {
       setIsGroupMemberRemoved(false);
-      setChatData((prevChatData: any) =>
+      setChatData((prevChatData) =>
         prevChatData ? { ...prevChatData, removed_at: null } : prevChatData
       );
 
@@ -324,7 +325,7 @@ export default function ChatHeader({
     if (!membersSnapshotEvent?.members || !currentNickname || !isGroupChat) return;
 
     const currentMember = membersSnapshotEvent.members.find(
-      (member: any) => member?.nickname === currentNickname
+      (member) => member?.nickname === currentNickname
     );
 
     if (currentMember) {
@@ -338,8 +339,8 @@ export default function ChatHeader({
 
   useEffect(() => {
     if (chatData) {
-      setChatName(setNameChat());
-      setChatImage(setImageProfile());
+      setChatName(setNameChat() || "");
+      setChatImage(setImageProfile() || "");
     }
   }, [chatData]);
 
@@ -359,30 +360,35 @@ export default function ChatHeader({
   };
 
   const setImageProfile = () => {
+    if (!chatData || !userLogin) return undefined;
+
     if (chatData.group_data) {
       return chatData.group_data.image;
     } else {
-      if (userLogin.nickname === chatData.from_user_data.nickname) {
-        return chatData.to_user_data.image_profile;
-      } else if (userLogin.nickname === chatData.to_user_data.nickname) {
-        return chatData.from_user_data.image_profile;
+      if (userLogin.nickname === chatData.from_user_data?.nickname) {
+        return chatData.to_user_data?.image_profile;
+      } else if (userLogin.nickname === chatData.to_user_data?.nickname) {
+        return chatData.from_user_data?.image_profile;
       }
     }
   };
 
   const setNameChat = () => {
+    if (!chatData || !userLogin) return undefined;
+
     if (chatData.group_data) {
       return chatData.group_data.name;
     } else {
-      if (userLogin.nickname === chatData.from_user_data.nickname) {
-        return chatData.to_user_data.nickname;
-      } else if (userLogin.nickname === chatData.to_user_data.nickname) {
-        return chatData.from_user_data.nickname;
+      if (userLogin.nickname === chatData.from_user_data?.nickname) {
+        return chatData.to_user_data?.nickname;
+      } else if (userLogin.nickname === chatData.to_user_data?.nickname) {
+        return chatData.from_user_data?.nickname;
       }
     }
   };
 
   const openAddMembersModal = () => {
+    if (!chatData?.group_data) return;
     requestGroupContactsAction(addEvent, chatData.group_data.name);
     setIsModalVisible(true);
   };

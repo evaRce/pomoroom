@@ -35,6 +35,7 @@ import {
   setPomodoroTimerModeAction,
   savePomodoroConfigAction,
 } from "../../../services/pomodoroService";
+import type { PomodoroConfigPayload, PomodoroServerPayload } from "../../../types/events";
 
 interface PomodoroTimerProps {
   chatId: string;
@@ -104,7 +105,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     cycles_before_long_break: settings?.cyclesBeforeLongBreak,
   }), []);
 
-  const applyIncomingConfig = useCallback((config: any) => {
+  const applyIncomingConfig = useCallback((config: PomodoroConfigPayload | undefined) => {
     if (!config) return;
 
     setSettings({
@@ -115,7 +116,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     });
   }, []);
 
-  const applyIncomingTimerState = useCallback((eventPayload: any) => {
+  const applyIncomingTimerState = useCallback((eventPayload: PomodoroServerPayload) => {
     const nextTimer = normalizeTimerPayload(eventPayload);
     if (!nextTimer) return;
 

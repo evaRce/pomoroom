@@ -13,8 +13,8 @@ import {
   SwitchCamera,
 } from "lucide-react";
 import { useLocalParticipant, useParticipants, useTracks, VideoTrack } from "@livekit/components-react";
-import { Track } from "livekit-client";
-import type { Participant, TrackPublication, VideoCaptureOptions } from "livekit-client";
+import type { TrackReference } from "@livekit/components-core";
+import { Track, type Participant, type TrackPublication, type VideoCaptureOptions } from "livekit-client";
 import { formatDuration } from "../../../utils/formatDuration";
 import callText from "./callText";
 
@@ -107,7 +107,7 @@ function ParticipantTile({
   isLocal: boolean;
   avatarUrl?: string;
   hasVideo: boolean;
-  videoTrackRef: any;
+  videoTrackRef: ReturnType<typeof useTracks>[number] | undefined;
   isMuted: boolean;
   canSwitchCamera?: boolean;
   isSwitchingCamera?: boolean;
@@ -122,7 +122,7 @@ function ParticipantTile({
     >
       {hasVideo && videoTrackRef ? (
         <>
-          <VideoTrack trackRef={videoTrackRef} className="h-full w-full object-cover" />
+          <VideoTrack trackRef={videoTrackRef as TrackReference} className="h-full w-full object-cover" />
           <span className="absolute bottom-2 left-2 max-w-[80%] truncate rounded bg-black/55 px-2 py-0.5 text-xs text-white">
             {displayName}
           </span>

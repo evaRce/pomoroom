@@ -1,14 +1,21 @@
 import { useEffect } from "react";
-import { AddEvent } from "../types/events";
+import { AddEvent, FriendRequestRef } from "../types/events";
+import type { InfoChatSelected } from "./outgoing_actions/useContactsAndGroupsOutgoingActions";
+
+type RejectedRequestPayload = FriendRequestRef & { status: string };
 
 type UseFriendRequestEventsParams = {
   eventName: string;
-  eventData: any;
+  eventData: Record<string, unknown> & {
+    request?: FriendRequestRef & { status: string };
+    rejected_request?: RejectedRequestPayload;
+    new_status?: string;
+  };
   addEvent: AddEvent;
   userNickname: string;
   setIsVisibleDetail: (value: boolean) => void;
   setComponent: (value: string) => void;
-  infoChatSelected: any;
+  infoChatSelected: InfoChatSelected;
 };
 
 export function useFriendRequestEvents({
@@ -23,6 +30,7 @@ export function useFriendRequestEvents({
   useEffect(() => {
     if (
       eventName === "open_chat_request_send" &&
+      eventData.request &&
       userNickname === eventData.request.from_user
     ) {
       addEvent(eventName, eventData.request);
@@ -31,6 +39,7 @@ export function useFriendRequestEvents({
     }
     if (
       eventName === "open_chat_request_received" &&
+      eventData.request &&
       userNickname === eventData.request.to_user
     ) {
       addEvent(eventName, eventData.request);
@@ -42,6 +51,7 @@ export function useFriendRequestEvents({
   useEffect(() => {
     if (
       eventName === "open_rejected_request_send" &&
+      eventData.rejected_request &&
       userNickname === eventData.rejected_request.to_user
     ) {
       setIsVisibleDetail(false);
@@ -58,6 +68,7 @@ export function useFriendRequestEvents({
     }
     if (
       eventName === "open_rejected_request_received" &&
+      eventData.rejected_request &&
       userNickname === eventData.rejected_request.from_user
     ) {
       setIsVisibleDetail(false);
@@ -75,8 +86,8 @@ export function useFriendRequestEvents({
   }, [eventData.rejected_request]);
 
   useEffect(() => {
-    if (eventName === "update_contact_status_to_accepted") {
-      addEvent(eventName, eventData);
+    if (eventName === "update_contact_status_to_accepted" && eventData.request) {
+      addEvent(eventName, { request: eventData.request, new_status: eventData.new_status || "" });
       setComponent("");
       addEvent("deselect_contact", {
         from_user: eventData.request.from_user,

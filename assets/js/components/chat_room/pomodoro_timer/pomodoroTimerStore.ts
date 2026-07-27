@@ -1,4 +1,5 @@
 import { TimerMode, TimerSettings } from "./PomodoroSettingsPopover";
+import type { PomodoroServerPayload } from "../../../types/events";
 
 export type TimerState = {
   timeLeft: number;
@@ -291,7 +292,7 @@ export function getSnapshotForMode(chatId: string, mode: TimerMode): number {
  * Used by every component that receives
  * pomodoro events, so the time/mode/session math only lives here.
  */
-export function normalizeTimerPayload(payload: any): TimerState | null {
+export function normalizeTimerPayload(payload: PomodoroServerPayload | undefined): TimerState | null {
   if (!payload) return null;
 
   const payloadConfig = payload.config || {};
@@ -343,7 +344,7 @@ export function normalizeTimerPayload(payload: any): TimerState | null {
     configVersion: payload.config_version ?? 0,
     settings,
     modeSnapshots,
-    lastCompletedMode: payloadState.last_completed_mode ?? null,
+    lastCompletedMode: (payloadState.last_completed_mode as TimerMode | undefined) ?? null,
     lastUpdated: payloadState.last_updated ?? serverNow,
     startedAt,
     pausedAt,

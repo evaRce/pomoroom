@@ -17,10 +17,10 @@ export interface EventBusPayloads {
   add_member: { group_name: string; new_member: string };
   delete_member: { member_name: string; group_name: string };
   set_admin: { member_name: string; group_name: string; operation: string };
-  refresh_conversations: Record<string, any>;
+  refresh_conversations: Record<string, never>;
   logout: boolean;
   group_deleted: { chat_id: string; group_name: string };
-  show_user_info: { nickname: string;[key: string]: any };
+  show_user_info: ChatUserRef;
   add_contact_to_list: ConversationEntry;
   add_group_to_list: ConversationEntry;
   show_list_contact: ConversationEntry[];
@@ -66,9 +66,9 @@ export interface EventBusPayloads {
   open_private_chat: ChatSessionData;
   open_group_chat: ChatSessionData;
   active_chat_context: ChatSessionData;
-  show_list_messages: ChatSessionData & { user_avatar_map?: Record<string, string>; has_more?: boolean };
-  show_older_messages: { messages?: any[]; has_more?: boolean };
-  show_message_to_send: { message: any };
+  show_list_messages: ChatSessionData;
+  show_older_messages: { messages?: ChatMessage[]; has_more?: boolean };
+  show_message_to_send: { message: ChatMessage };
 
   // Pomodoro plugin
   get_pomodoro_state: { chat_id: string; chat_type: ChatType };
@@ -113,8 +113,8 @@ export interface EventBusPayloads {
 
   // Group membership
   show_my_contacts: ConversationEntry[];
-  show_members: { members: any[] };
-  members_snapshot: { members: any[] };
+  show_members: { members: ChatMember[] };
+  members_snapshot: { members: ChatMember[] };
   check_admin: { is_admin: boolean };
   show_detail: { chat_name: string; image: string; is_group: boolean; chat_id: string; group_name: string };
   group_admin_updated: { chat_id?: string; group_name?: string; is_admin?: boolean };
@@ -126,7 +126,6 @@ export interface FriendRequestRef {
   from_user: string;
   to_user: string;
   status?: string;
-  [key: string]: any;
 }
 
 export interface PomodoroConfigPayload {
@@ -141,7 +140,7 @@ export interface PomodoroServerPayload {
   timer_id?: string;
   config_version?: number;
   server_now?: number;
-  config?: Partial<PomodoroConfigPayload> & { [key: string]: any };
+  config?: Partial<PomodoroConfigPayload>;
   state?: {
     mode?: string;
     is_running?: boolean;
@@ -152,11 +151,16 @@ export interface PomodoroServerPayload {
     session_elapsed_ms?: number;
     session_started_at?: number | null;
     last_completed_mode?: string;
-    settings?: any;
+    lastCompletedMode?: string;
+    last_updated?: number;
+    time_left?: number;
+    cycles_completed?: number;
+    has_pending_work_half_cycle?: boolean;
+    settings?: Partial<PomodoroConfigPayload>;
     server_now?: number;
-    [key: string]: any;
   };
-  [key: string]: any;
+  reason?: string;
+  chat_type?: ChatType;
 }
 
 export interface ChatPluginRef {
@@ -164,34 +168,56 @@ export interface ChatPluginRef {
   type: string;
   name?: string;
   icon?: string;
-  [key: string]: any;
 }
 
 export interface ChatUserRef {
   nickname: string;
+  chat_id?: string;
   image_profile?: string;
-  [key: string]: any;
+}
+
+export interface ChatMember {
+  nickname: string;
+  user_id?: string;
+  image_profile?: string;
+  is_admin?: boolean;
+  removed_at?: string | null;
+}
+
+export interface ChatMessageData {
+  msg_id?: string;
+  db_id?: string;
+  chat_id?: string;
+  from_user: string;
+  text: string;
+  inserted_at: string;
+}
+
+export interface ChatMessage {
+  data: ChatMessageData;
+  image_user?: string;
 }
 
 export interface ChatGroupData {
   name: string;
   chat_id?: string;
   image?: string;
-  members?: any[];
+  invite_link?: string;
+  members?: ChatMember[];
   admin?: string[];
-  [key: string]: any;
 }
 
 export interface ChatSessionData {
   chat_id?: string;
-  messages?: any[];
+  messages?: ChatMessage[];
   removed_at?: string | null;
   is_admin?: boolean;
-  plugins?: any[];
+  plugins?: ChatPluginRef[];
   group_data?: ChatGroupData;
   from_user_data?: ChatUserRef;
   to_user_data?: ChatUserRef;
-  [key: string]: any;
+  user_avatar_map?: Record<string, string>;
+  has_more?: boolean;
 }
 
 export type ChatType = "group" | "private";
@@ -208,9 +234,9 @@ export interface KanbanServerBoard {
 }
 
 export interface ConversationEntry {
-  contact_data?: { nickname: string; chat_id?: string; image_profile?: string;[key: string]: any };
-  group_data?: { name: string; chat_id?: string; image?: string; members?: any[]; admin?: string[];[key: string]: any };
-  request?: { status: string; to_user: string; from_user: string;[key: string]: any };
+  contact_data?: ChatUserRef;
+  group_data?: ChatGroupData;
+  request?: FriendRequestRef & { status: string };
   status?: string;
   chat_id?: string;
   is_group?: boolean;
@@ -218,7 +244,7 @@ export interface ConversationEntry {
 
 export type EventBusPayload<K extends string> = K extends keyof EventBusPayloads
   ? EventBusPayloads[K]
-  : any;
+  : unknown;
 
 export type AddEvent = <K extends string>(
   eventName: K,

@@ -9,7 +9,7 @@ import RejectedRequestSend from "./contact_requests/RejectedRequestSend";
 import RejectedRequestReceived from "./contact_requests/RejectedRequestReceived";
 import ConversationSidebar from "./conversation_sidebar/ConversationSidebar";
 import { CallSessionProvider } from "./call_panel/CallContext";
-import { useContactsAndGroupsOutgoingActions } from "../../hooks/outgoing_actions/useContactsAndGroupsOutgoingActions";
+import { useContactsAndGroupsOutgoingActions, InfoChatSelected } from "../../hooks/outgoing_actions/useContactsAndGroupsOutgoingActions";
 import { usePomodoroOutgoingActions } from "../../hooks/outgoing_actions/usePomodoroOutgoingActions";
 import { useKanbanOutgoingActions } from "../../hooks/outgoing_actions/useKanbanOutgoingActions";
 import { useMessageOutgoingActions } from "../../hooks/outgoing_actions/useMessageOutgoingActions";
@@ -25,7 +25,7 @@ import { getRandomBackgroundImageNumber } from "../../utils/randomBackgroundImag
 import { PushEventToLiveView } from "../../types/events";
 export interface ChatRoomProps {
   eventName: string;
-  eventData: any;
+  eventData: Record<string, unknown>;
   pushEventToLiveView: PushEventToLiveView;
 }
 
@@ -36,7 +36,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
   const [imageNumber, setImageNumber] = useState(1);
   const [userNickname, setUserNickname] = useState("");
   const [isVisibleDetail, setIsVisibleDetail] = useState(false);
-  const [infoChatSelected, setInfoChatSelected] = useState({});
+  const [infoChatSelected, setInfoChatSelected] = useState<InfoChatSelected>({});
   const hasRequestedInitialData = useRef(false);
 
   useEffect(() => {

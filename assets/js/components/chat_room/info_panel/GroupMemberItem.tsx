@@ -1,20 +1,14 @@
 import React, { useState } from "react";
-import { Button, Dropdown } from "antd";
+import { Button, Dropdown, type MenuProps } from "antd";
 import {
   DownOutlined,
   ThunderboltOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
-
-interface GroupMemberContact {
-  nickname: string;
-  image_profile?: string;
-  is_admin?: boolean;
-  [key: string]: any;
-}
+import type { ChatMember } from "../../../types/events";
 
 interface GroupMemberItemProps {
-  contact: GroupMemberContact;
+  contact: ChatMember;
   onSelect: () => void;
   onSetAdmin: ((memberName: string, operation: string) => void) | null;
   onDelete: ((memberName: string) => void) | null;
@@ -66,9 +60,9 @@ export default function GroupMemberItem({
         },
       ];
 
-  const menuProps = {
+  const menuProps: MenuProps = {
     items,
-    onClick: (e: any) => handleMenuClick(e.key),
+    onClick: (e) => handleMenuClick(e.key),
   };
 
   return (

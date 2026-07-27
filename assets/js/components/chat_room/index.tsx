@@ -5,17 +5,16 @@ import { ChatRoom, ChatRoomProps } from "./ChatRoom";
 import { LiveViewHook } from "../../types/liveview";
 import { PushEventToLiveView } from "../../types/events";
 
-// Contexto que Phoenix inyecta en `this` al invocar cada callback del hook.
 interface ChatRoomHookThis extends LiveViewHook {
 	pushEventToLiveView: PushEventToLiveView;
-	opts(eventName?: string, eventData?: any): ChatRoomProps;
+	opts(eventName?: string, eventData?: Record<string, unknown>): ChatRoomProps;
 }
 
 const ChatRoomHook: {
 	mounted(this: ChatRoomHookThis): void;
 	destroyed(this: ChatRoomHookThis): void;
-	pushEventToLiveView(this: ChatRoomHookThis, event: string, payload: object): any;
-	opts(this: ChatRoomHookThis, eventName?: string, eventData?: any): ChatRoomProps;
+	pushEventToLiveView(this: ChatRoomHookThis, event: string, payload: object): void;
+	opts(this: ChatRoomHookThis, eventName?: string, eventData?: Record<string, unknown>): ChatRoomProps;
 } = {
 	mounted() {
 		const chatDomNode = document.getElementById('chat_container') as Element;
@@ -29,7 +28,7 @@ const ChatRoomHook: {
 		const rootElementChat = createRoot(chatDomNode);
 
 		render(rootElementChat, this.opts());
-		this.handleEvent("react", (event: any) => {
+		this.handleEvent<{ event_name: string; event_data: Record<string, unknown> }>("react", (event) => {
 			render(rootElementChat, this.opts(event.event_name, event.event_data));
 		});
 	},

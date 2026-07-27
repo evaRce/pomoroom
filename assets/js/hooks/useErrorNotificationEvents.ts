@@ -3,7 +3,7 @@ import { message } from "antd";
 
 type UseErrorNotificationEventsParams = {
   eventName: string;
-  eventData: any;
+  eventData: unknown;
 };
 
 const ERROR_EVENT_NAMES = [
@@ -24,7 +24,7 @@ export function useErrorNotificationEvents({
     }
 
     const errorMessage =
-      typeof eventData === "string" ? eventData : Object.values(eventData)[0];
+      typeof eventData === "string" ? eventData : Object.values(eventData as object)[0];
 
     if (errorMessage) {
       message.error(String(errorMessage), 3);

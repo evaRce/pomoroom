@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Button, Modal, Dropdown } from "antd";
+import { Button, Modal, Dropdown, type MenuProps } from "antd";
 import { UserAddOutlined, MoreOutlined } from '@ant-design/icons';
 import { useEventContext, useEvent } from "../EventContext";
 import AddContactOrGroup from "./AddContactOrGroup";
@@ -27,8 +27,7 @@ export default function CurrentUserCard() {
 		setShowModal(showModal);
 	};
 
-	const handleMenuClick = (e: any, key: string) => {
-		e.domEvent.stopPropagation(); // Prevent container selection
+	const handleMenuClick = (key: string) => {
 		if (key === "logout") {
 			logoutAction(addEvent);
 			setDropdownVisible(false);
@@ -62,9 +61,12 @@ export default function CurrentUserCard() {
 		},
 	];
 
-	const menuProps = {
+	const menuProps: MenuProps = {
 		items,
-		onClick: (e: any) => handleMenuClick(e, e.key),
+		onClick: (e) => {
+			e.domEvent.stopPropagation(); // Prevent container selection
+			handleMenuClick(e.key);
+		},
 	};
 
 	const handleDropdownVisibility = (visible: boolean) => {

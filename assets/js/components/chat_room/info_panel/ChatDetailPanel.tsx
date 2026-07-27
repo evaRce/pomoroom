@@ -8,12 +8,13 @@ import {
   setGroupAdminAction,
   deleteMemberAction,
 } from "../../../services/groupService";
+import type { ChatMember, EventBusPayload } from "../../../types/events";
 
 export default function ChatDetailPanel() {
   const { addEvent, removeEvent } = useEventContext();
-  const [chatData, setChatData] = useState<any>(null);
-  const [members, setMembers] = useState<any[]>([]);
-  const [checkAdmin, setCheckAdmin] = useState<any>({});
+  const [chatData, setChatData] = useState<EventBusPayload<"show_detail"> | null>(null);
+  const [members, setMembers] = useState<ChatMember[]>([]);
+  const [checkAdmin, setCheckAdmin] = useState(false);
   const [currentUserNickname, setCurrentUserNickname] = useState("");
   const currentChatId = chatData?.chat_id || "";
   const currentGroupName = chatData?.group_name || chatData?.chat_name || "";
@@ -32,7 +33,7 @@ export default function ChatDetailPanel() {
 
   useEffect(() => {
     if (showMembersEvent) {
-      setMembers(showMembersEvent.members);
+      setMembers(showMembersEvent.members || []);
       removeEvent("show_members");
     }
   }, [showMembersEvent]);
@@ -62,7 +63,7 @@ export default function ChatDetailPanel() {
     }
 
     const currentMember = members.find(
-      (member: any) => member?.nickname === currentUserNickname
+      (member) => member?.nickname === currentUserNickname
     );
 
     if (currentMember) {
@@ -89,19 +90,21 @@ export default function ChatDetailPanel() {
       addEvent,
       false,
       Boolean(chatData?.is_group),
-      chatData?.group_name || chatData?.chat_name
+      chatData?.group_name || chatData?.chat_name || ""
     );
     removeEvent("check_admin");
     removeEvent("show_detail");
   };
 
-  const setAdmin = (memberName: any, operation: any) => {
+  const setAdmin = (memberName: string, operation: string) => {
+    if (!chatData) return;
     setGroupAdminAction(addEvent, memberName, chatData.chat_name, operation);
   };
 
-  const deleteMember = (memberName: any) => {
+  const deleteMember = (memberName: string) => {
+    if (!chatData) return;
     const index = members.findIndex(
-      (memberFind: any) => memberFind.nickname === memberName
+      (memberFind) => memberFind.nickname === memberName
     );
     if (index !== -1) {
       deleteMemberAction(addEvent, memberName, chatData.chat_name);

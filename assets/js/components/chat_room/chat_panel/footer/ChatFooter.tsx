@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button, Modal, message } from "antd";
-import EmojiPicker from "emoji-picker-react";
+import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
 import {
   PictureOutlined,
   SendOutlined,
@@ -9,12 +9,13 @@ import {
 import { useEventContext, useEvent } from "../../EventContext";
 import { sendMessageToGroupAction, sendMessageToUserAction } from "../../../../services/messageService";
 import { selectGroupChatAction } from "../../../../services/groupService";
+import type { ChatSessionData } from "../../../../types/events";
 
 export default function ChatFooter() {
   const [inputStr, setInputStr] = useState("");
   const [showPicker, setShowPicker] = useState(false);
   const { addEvent, removeEvent } = useEventContext();
-  const [chatData, setChatData] = useState<any>({});
+  const [chatData, setChatData] = useState<ChatSessionData>({});
   const [modalVisible, setModalVisible] = useState(false);
   const [isGroupMemberRemoved, setIsGroupMemberRemoved] = useState(false);
   const [groupMemberRemovedMessage, setGroupMemberRemovedMessage] = useState("");
@@ -27,7 +28,7 @@ export default function ChatFooter() {
   const groupMemberRemovedEvent = useEvent("group_member_removed");
   const groupMemberAddedEvent = useEvent("group_member_added");
 
-  const onEmojiClick = (emojiObject: any, event: any) => {
+  const onEmojiClick = (emojiObject: EmojiClickData, _event: MouseEvent) => {
     setInputStr((prevInput) => prevInput + emojiObject.emoji);
     setShowPicker(false);
   };
@@ -98,18 +99,20 @@ export default function ChatFooter() {
       groupMemberAddedEvent.chat_id &&
       chatData.chat_id === groupMemberAddedEvent.chat_id;
 
-    if (isSameChatById) {
+    const groupName = chatData.group_data?.name || groupMemberAddedEvent.group_name;
+
+    if (isSameChatById && groupName) {
       lastProcessedGroupMemberAddedEventSignatureRef.current = addedEventSignature;
       setIsGroupMemberRemoved(false);
       setGroupMemberRemovedMessage("");
-      selectGroupChatAction(addEvent, chatData.group_data?.name || groupMemberAddedEvent.group_name);
+      selectGroupChatAction(addEvent, groupName);
       if (groupMemberAddedEvent.message) {
         message.success(groupMemberAddedEvent.message);
       }
     }
   }, [groupMemberAddedEvent]);
 
-  const handleSendMessage = (e: any) => {
+  const handleSendMessage = (e: React.FormEvent | React.MouseEvent) => {
     e.preventDefault();
 
     const currentData = chatData?.chat_id ? chatData : activeChatContextEvent || chatData;

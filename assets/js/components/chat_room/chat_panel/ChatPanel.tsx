@@ -19,6 +19,8 @@ import {
   getPomodoroNotifications,
   markPomodoroNotification,
 } from "../pomodoro_timer/pomodoroNotificationStore";
+import type { TimerMode } from "../pomodoro_timer/PomodoroSettingsPopover";
+import type { ChatMessage, EventBusPayload, PomodoroServerPayload } from "../../../types/events";
 
 interface ChatPanelProps {
   isVisibleDetail: boolean;
@@ -31,7 +33,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   const { activeCallChatId, activeCallRoomName, connectedAt, isMinimized, setMinimized, setViewingChatId, leaveCall } =
     useCallContext();
 
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const showListMessagesEvent = useEvent("show_list_messages");
   const showOlderMessagesEvent = useEvent("show_older_messages");
   const pomodoroStateLoadedEvent = useEvent("pomodoro_state_loaded");
@@ -44,7 +46,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   const showMessageToSendEvent = useEvent("show_message_to_send");
   const showUserInfoEvent = useEvent("show_user_info");
 
-  const [userLogin, setUserLogin] = useState<any>(null);
+  const [userLogin, setUserLogin] = useState<EventBusPayload<"show_user_info"> | null>(null);
   const [currentChatId, setCurrentChatId] = useState<string>("");
   const [isPrivateChat, setIsPrivateChat] = useState(false);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
@@ -52,8 +54,8 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   const [activePluginId, setActivePluginId] = useState<string | null>(null);
   const [avatarByNickname, setAvatarByNickname] = useState<Record<string, string>>({});
 
-  const messagesEndRef = useRef<any>(null);
-  const seenMessageIdsRef = useRef<Set<any>>(new Set());
+  const messagesEndRef = useRef<HTMLElement | null>(null);
+  const seenMessageIdsRef = useRef<Set<string>>(new Set());
   const previousScrollHeightRef = useRef(0);
   const isPrependingOlderRef = useRef(false);
   const lastAppliedPomodoroSignatureByChatRef = useRef<Record<string, string>>({});
@@ -61,7 +63,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   const soundEndWork = useRef(new Audio("/sounds/bell-notification.wav"));
   const soundEndBreak = useRef(new Audio("/sounds/happy-bells-notification.wav"));
 
-  const getPomodoroSignature = useCallback((eventName: string, payload: any) => {
+  const getPomodoroSignature = useCallback((eventName: string, payload: PomodoroServerPayload | undefined) => {
     const state = payload?.state || {};
 
     return [
@@ -82,7 +84,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
     ].join(":");
   }, []);
 
-  const applyPomodoroEvent = useCallback((eventName: string, payload: any) => {
+  const applyPomodoroEvent = useCallback((eventName: string, payload: PomodoroServerPayload | undefined) => {
     const targetChatId = payload?.chat_id;
 
     if (!targetChatId) {
@@ -110,7 +112,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
     lastAppliedPomodoroSignatureByChatRef.current[targetChatId] = signature;
   }, [getPomodoroSignature]);
 
-  const syncPomodoroStore = useCallback((eventName: string, payload: any) => {
+  const syncPomodoroStore = useCallback((eventName: string, payload: PomodoroServerPayload | undefined) => {
     if (!payload?.chat_id) {
       return;
     }
@@ -118,8 +120,8 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
     applyPomodoroEvent(eventName, payload);
   }, [applyPomodoroEvent]);
 
-  const getMessageUniqueKey = (message: any) => {
-    const data = message?.data || {};
+  const getMessageUniqueKey = (message: ChatMessage) => {
+    const data = message?.data || ({} as Partial<ChatMessage["data"]>);
 
     if (data.msg_id) {
       return `msg:${data.msg_id}`;
@@ -132,9 +134,9 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
     return `msg:${data.msg_id || ""}:${data.inserted_at || ""}:${data.from_user || ""}:${data.text || ""}`;
   };
 
-  const buildUniqueMessagesAndSeedIds = (messagesList: any[]) => {
-    const seenMessageIds = new Set<any>();
-    const uniqueMessages: any[] = [];
+  const buildUniqueMessagesAndSeedIds = (messagesList: ChatMessage[]) => {
+    const seenMessageIds = new Set<string>();
+    const uniqueMessages: ChatMessage[] = [];
 
     for (const message of messagesList) {
       const messageId = getMessageUniqueKey(message);
@@ -200,10 +202,9 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
   useEffect(() => {
     if (!timerFinishedEvent?.chat_id) return;
 
-    const completedMode =
-      timerFinishedEvent?.state?.lastCompletedMode ||
+    const completedMode = (timerFinishedEvent?.state?.lastCompletedMode ||
       timerFinishedEvent?.state?.last_completed_mode ||
-      null;
+      null) as TimerMode | null;
 
     if (timerFinishedEvent.chat_id === currentChatId) {
       if (activePluginId !== "pomodoro") {
@@ -298,7 +299,7 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
     return () => setViewingChatId(null);
   }, [setViewingChatId]);
 
-  const addMessage = (message: any) => {
+  const addMessage = (message: ChatMessage) => {
     if (!message || !message.data || message.data.text.trim() === "") {
       return; // No añadir mensajes vacíos
     }
@@ -331,10 +332,10 @@ export default function ChatPanel({ isVisibleDetail }: ChatPanelProps) {
     }
 
     setIsLoadingOlder(true);
-    loadOlderMessagesAction(addEvent, currentChatId, oldestInsertedAt, oldestDbId);
+    loadOlderMessagesAction(addEvent, currentChatId, oldestInsertedAt, oldestDbId || "");
   };
 
-  const handleMessagesScroll = (event: any) => {
+  const handleMessagesScroll = (event: React.UIEvent<HTMLElement>) => {
     const target = event.currentTarget;
 
     if (target.scrollTop <= TOP_SCROLL_THRESHOLD_PX) {

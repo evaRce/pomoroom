@@ -4,13 +4,15 @@ import { clearAllTimers, clearRequestedConfigs } from "../../components/chat_roo
 import { clearAllPomodoroNotifications } from "../../components/chat_room/pomodoro_timer/pomodoroNotificationStore";
 import { PushEventToLiveView, RemoveEvent } from "../../types/events";
 
+export type InfoChatSelected = { contact_name?: string; group_name?: string };
+
 type UseContactsAndGroupsOutgoingActionsParams = {
   removeEvent: RemoveEvent;
   pushEventToLiveView: PushEventToLiveView;
-  infoChatSelected: any;
+  infoChatSelected: InfoChatSelected;
   isVisibleDetail: boolean;
   setIsVisibleDetail: (value: boolean) => void;
-  setInfoChatSelected: (value: any) => void;
+  setInfoChatSelected: (value: InfoChatSelected) => void;
   setComponent: (value: string) => void;
 };
 
