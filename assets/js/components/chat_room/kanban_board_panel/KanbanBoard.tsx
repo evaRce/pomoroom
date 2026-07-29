@@ -374,17 +374,8 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
     setNewColumnInputId(null);
   };
 
-  const handleRenameColumn = (columnId: ColumnId) => {
-    const currentColumn = columns.find((column) => column.id === columnId);
-    if (!currentColumn) return;
-
-    const nextTitle = window.prompt(KANBAN_TEXT.column.rename.prompt, currentColumn.title);
-    if (!nextTitle) return;
-
-    const trimmed = nextTitle.trim();
-    if (!trimmed || trimmed === currentColumn.title) return;
-
-    renameKanbanColumnAction(addEvent, chatId, chatType, columnId, trimmed);
+  const handleRenameColumn = (columnId: ColumnId, nextTitle: string) => {
+    renameKanbanColumnAction(addEvent, chatId, chatType, columnId, nextTitle);
   };
 
   const handleDeleteColumn = (columnId: ColumnId) => {

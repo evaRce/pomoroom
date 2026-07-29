@@ -72,7 +72,7 @@ export interface KanbanColumnProps {
   onCancelAdd: () => void;
   onDeleteTask: (columnId: ColumnId, taskId: string) => void;
   onRenameTask: (columnId: ColumnId, taskId: string, nextTitle: string) => void;
-  onRenameColumn: (columnId: ColumnId) => void;
+  onRenameColumn: (columnId: ColumnId, nextTitle: string) => void;
   onDeleteColumn: (columnId: ColumnId) => void;
 }
 
@@ -375,6 +375,8 @@ export function KanbanColumn({
     },
   });
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editTitle, setEditTitle] = useState(column.title);
   const hasTasks = column.tasks.length > 0;
   const hasPreview = typeof dragPreviewIndex === "number";
   const activeTaskIndex = activeTaskId
@@ -422,25 +424,57 @@ export function KanbanColumn({
     taskRows.push(renderPreview());
   }
 
+  const startEditingTitle = () => {
+    setEditTitle(column.title);
+    setIsEditingTitle(true);
+  };
+
+  const submitTitleRename = () => {
+    const trimmed = editTitle.trim();
+    if (trimmed && trimmed !== column.title) {
+      onRenameColumn(column.id, trimmed);
+    }
+
+    setEditTitle(trimmed || column.title);
+    setIsEditingTitle(false);
+  };
+
   return (
     <>
       <div
         ref={setNodeRef}
         className={cn(
-          "flex h-full min-h-0 w-80 shrink-0 flex-col rounded-xl bg-gray-50 border border-gray-200 transition-colors",
+          "flex h-[92%] max-h-[92%] min-h-0 w-64 shrink-0 flex-col overflow-hidden rounded-xl bg-gray-50 border border-gray-200 transition-colors sm:h-full sm:max-h-full sm:w-80 landscape-sm:h-full landscape-sm:max-h-full landscape-sm:w-60",
           (isOver || isHighlighted) &&
             "border-primary border-dashed bg-sky-100",
         )}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <div className="flex items-center gap-2">
-            <h3 className="text-base font-semibold text-slate-700">
-              {column.title}
-            </h3>
-            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-gray-200 px-1.5 text-xs font-medium text-slate-700">
-              {column.tasks.length}
-            </span>
-          </div>
+        <div className="flex items-center justify-between px-4 py-3 landscape-sm:py-2 border-b border-border">
+          {isEditingTitle ? (
+            <Input
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") submitTitleRename();
+                if (e.key === "Escape") {
+                  setEditTitle(column.title);
+                  setIsEditingTitle(false);
+                }
+              }}
+              onBlur={submitTitleRename}
+              className="h-8 flex-1 min-w-0 mr-2 text-sm font-semibold"
+              autoFocus
+            />
+          ) : (
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-semibold text-slate-700">
+                {column.title}
+              </h3>
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-gray-200 px-1.5 text-xs font-medium text-slate-700">
+                {column.tasks.length}
+              </span>
+            </div>
+          )}
 
           <div className="flex items-center gap-1">
             <Button
@@ -465,7 +499,7 @@ export function KanbanColumn({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-auto bg-white">
                 <DropdownMenuItem
-                  onClick={() => onRenameColumn(column.id)}
+                  onClick={startEditingTitle}
                   className="focus:bg-sky-100 outline-none"
                 >
                   <Pencil className="h-4 w-4 mr-2" />
