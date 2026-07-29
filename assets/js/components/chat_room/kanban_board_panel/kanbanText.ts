@@ -3,16 +3,19 @@ export const KANBAN_TEXT = {
     delete: {
       title: "Eliminar tarea",
       confirmMessage: "¿Deseas eliminar esta tarea?",
-      irreversibleWarning: "Esta acción es irreversible y no se podrá recuperar la tarea eliminada.",
+      irreversibleWarning:
+        "Esta acción es irreversible y no se podrá recuperar la tarea eliminada.",
       okButton: "Eliminar",
     },
     editButton: "Editar",
     addButton: "Agregar tarea",
+    saveButton: "Guardar",
     inputPlaceholder: "Título de la tarea...",
     emptyListMessage: "No hay tareas todavía",
     limitReached: {
       title: (max: number) => `Límite de ${max} tareas por columna`,
-      content: (max: number) => `No puedes añadir más de ${max} tareas en esta columna.`,
+      content: (max: number) =>
+        `No puedes añadir más de ${max} tareas en esta columna.`,
     },
     cancelButton: "Cancelar",
   },
@@ -20,7 +23,7 @@ export const KANBAN_TEXT = {
   column: {
     delete: {
       title: "Eliminar columna",
-      confirmMessage: (colTitle: string, hasTasks: boolean) => 
+      confirmMessage: (colTitle: string, hasTasks: boolean) =>
         hasTasks
           ? `¿Deseas eliminar la columna "${colTitle}" y todas sus tareas?`
           : `¿Deseas eliminar la columna "${colTitle}"?`,
@@ -45,4 +48,3 @@ export const KANBAN_TEXT = {
     createButton: "Crear",
   },
 };
-
