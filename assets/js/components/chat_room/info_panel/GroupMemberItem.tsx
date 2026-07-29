@@ -1,10 +1,21 @@
 import React, { useState } from "react";
-import { Button, Dropdown } from "antd";
+import { Button, Dropdown, type MenuProps } from "antd";
 import {
   DownOutlined,
   ThunderboltOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
+import type { ChatMember } from "../../../types/events";
+
+interface GroupMemberItemProps {
+  contact: ChatMember;
+  onSelect: () => void;
+  onSetAdmin: ((memberName: string, operation: string) => void) | null;
+  onDelete: ((memberName: string) => void) | null;
+  isInModal?: boolean;
+  imAdmin: boolean;
+  isCurrentUser?: boolean;
+}
 
 export default function GroupMemberItem({
   contact,
@@ -14,16 +25,16 @@ export default function GroupMemberItem({
   isInModal = false,
   imAdmin,
   isCurrentUser = false,
-}) {
+}: GroupMemberItemProps) {
   const [dropdownVisible, setDropdownVisible] = useState(false);
 
-  const handleMenuClick = (key) => {
+  const handleMenuClick = (key: string) => {
     if (key === "addAdmin") {
-      onSetAdmin(contact.nickname, "add");
+      onSetAdmin?.(contact.nickname, "add");
     } else if (key === "deleteAdmin") {
-      onSetAdmin(contact.nickname, "delete");
+      onSetAdmin?.(contact.nickname, "delete");
     } else if (key === "deleteMember") {
-      onDelete(contact.nickname);
+      onDelete?.(contact.nickname);
     }
     setDropdownVisible(false);
   };
@@ -49,7 +60,7 @@ export default function GroupMemberItem({
         },
       ];
 
-  const menuProps = {
+  const menuProps: MenuProps = {
     items,
     onClick: (e) => handleMenuClick(e.key),
   };
@@ -82,6 +93,8 @@ export default function GroupMemberItem({
             <Button
               icon={<DownOutlined />}
               onClick={() => setDropdownVisible(!dropdownVisible)}
+              title="Más opciones"
+              aria-label="Más opciones"
             />
           </Dropdown>
         )}

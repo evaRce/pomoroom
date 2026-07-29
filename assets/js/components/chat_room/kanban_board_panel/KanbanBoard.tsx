@@ -17,9 +17,20 @@ import {
 import type { CollisionDetection, DragEndEvent, DragOverEvent, DragStartEvent } from "@dnd-kit/core";
 import { Button } from "../../../../components-shadcn/ui/button";
 import { useEventContext, useEvent } from "../EventContext";
-import { KanbanColumn, KanbanTaskLimitWarningModal } from "./KanbanBoardComponents.tsx";
+import { KanbanColumn, KanbanTaskLimitWarningModal, type Column, type ColumnId, type Task } from "./KanbanBoardComponents";
 import { KANBAN_TEXT } from "./kanbanText";
-import type { Column, ColumnId, Task } from "./KanbanBoardComponents.tsx";
+import {
+  requestKanbanBoardAction,
+  addKanbanColumnAction,
+  renameKanbanColumnAction,
+  removeKanbanColumnAction,
+  addKanbanTaskAction,
+  renameKanbanTaskAction,
+  deleteKanbanTaskAction,
+  reorderKanbanTaskAction,
+  moveKanbanTaskAction,
+} from "../../../services/kanbanService";
+import type { KanbanServerBoard, KanbanServerColumn } from "../../../types/events";
 
 const MAX_COLUMNS = 5;
 const MAX_TASKS_PER_COLUMN = 20;
@@ -35,12 +46,12 @@ interface KanbanBoardProps {
   chatType: "group" | "private";
 }
 
-function mapServerColumn(column: any): Column {
+function mapServerColumn(column: KanbanServerColumn): Column {
   return {
     id: column.column_id || column.columnId || "",
     title: column.title || "",
     tasks: Array.isArray(column.tasks)
-      ? column.tasks.map((task: any) => ({
+      ? column.tasks.map((task) => ({
         id: task.task_id || task.id || "",
         title: task.title || "",
       }))
@@ -86,7 +97,7 @@ function getInsertionIndex(
 }
 
 export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
-  const { addEvent, removeEvent } = useEventContext() as any;
+  const { addEvent, removeEvent } = useEventContext();
   const [columns, setColumns] = useState<Column[]>([]);
   const [newTaskInputs, setNewTaskInputs] = useState<Record<ColumnId, string>>({});
   const [showAddInput, setShowAddInput] = useState<Record<ColumnId, boolean>>({});
@@ -114,7 +125,7 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
   const kanbanTaskDeletedEvent = useEvent("kanban_task_deleted");
 
 
-  const applyBoard = (board: any) => {
+  const applyBoard = (board: KanbanServerBoard | undefined) => {
     const nextColumns = Array.isArray(board?.columns)
       ? board.columns.map(mapServerColumn)
       : [];
@@ -151,7 +162,7 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
           throw new Error(`Failed to load default Kanban columns: ${response.status}`);
         }
 
-        const payload = await response.json();
+        const payload: { data?: KanbanServerColumn[] } = await response.json();
         const nextColumns = Array.isArray(payload?.data)
           ? payload.data.map(mapServerColumn)
           : [];
@@ -180,10 +191,7 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
       return;
     }
 
-    addEvent("get_kanban_board", {
-      chat_id: chatId,
-      chat_type: chatType,
-    });
+    requestKanbanBoardAction(addEvent, chatId, chatType);
   }, [addEvent, chatId, chatType]);
 
   useEffect(() => {
@@ -324,29 +332,15 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
     setNewTaskInputs((prev) => ({ ...prev, [columnId]: "" }));
     setShowAddInput((prev) => ({ ...prev, [columnId]: false }));
 
-    addEvent("add_kanban_task", {
-      chat_id: chatId,
-      chat_type: chatType,
-      column_id: columnId,
-      title: taskTitle,
-    });
+    addKanbanTaskAction(addEvent, chatId, chatType, columnId, taskTitle);
   };
 
   const handleDeleteTask = (columnId: ColumnId, taskId: string) => {
-    addEvent("delete_kanban_task", {
-      chat_id: chatId,
-      chat_type: chatType,
-      task_id: taskId,
-    });
+    deleteKanbanTaskAction(addEvent, chatId, chatType, taskId);
   };
 
   const handleRenameTask = (columnId: ColumnId, taskId: string, nextTitle: string) => {
-    addEvent("rename_kanban_task", {
-      chat_id: chatId,
-      chat_type: chatType,
-      task_id: taskId,
-      title: nextTitle,
-    });
+    renameKanbanTaskAction(addEvent, chatId, chatType, taskId, nextTitle);
   };
 
   const handleAddColumn = () => {
@@ -371,11 +365,7 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
     setNewColumnTitle("");
     setNewColumnInputId(null);
 
-    addEvent("add_kanban_column", {
-      chat_id: chatId,
-      chat_type: chatType,
-      title: trimmed,
-    });
+    addKanbanColumnAction(addEvent, chatId, chatType, trimmed);
   };
 
   const handleCancelAddColumn = () => {
@@ -394,20 +384,11 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
     const trimmed = nextTitle.trim();
     if (!trimmed || trimmed === currentColumn.title) return;
 
-    addEvent("rename_kanban_column", {
-      chat_id: chatId,
-      chat_type: chatType,
-      column_id: columnId,
-      title: trimmed,
-    });
+    renameKanbanColumnAction(addEvent, chatId, chatType, columnId, trimmed);
   };
 
   const handleDeleteColumn = (columnId: ColumnId) => {
-    addEvent("remove_kanban_column", {
-      chat_id: chatId,
-      chat_type: chatType,
-      column_id: columnId,
-    });
+    removeKanbanColumnAction(addEvent, chatId, chatType, columnId);
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -498,22 +479,17 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
 
     if (dropTarget) {
       if (dropTarget.columnId === from.columnId) {
-        addEvent("reorder_kanban_task", {
-          chat_id: chatId,
-          chat_type: chatType,
-          task_id: from.task.id,
-          column_id: from.columnId,
-          new_position: dropTarget.taskIndex,
-        });
+        reorderKanbanTaskAction(addEvent, chatId, chatType, from.task.id, from.columnId, dropTarget.taskIndex);
       } else {
-        addEvent("move_kanban_task", {
-          chat_id: chatId,
-          chat_type: chatType,
-          task_id: from.task.id,
-          from_column_id: from.columnId,
-          to_column_id: dropTarget.columnId,
-          new_position: dropTarget.taskIndex,
-        });
+        moveKanbanTaskAction(
+          addEvent,
+          chatId,
+          chatType,
+          from.task.id,
+          from.columnId,
+          dropTarget.columnId,
+          dropTarget.taskIndex
+        );
       }
 
       return;
@@ -543,25 +519,12 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
       }
 
       if (from.columnId === to.columnId) {
-        addEvent("reorder_kanban_task", {
-          chat_id: chatId,
-          chat_type: chatType,
-          task_id: from.task.id,
-          column_id: from.columnId,
-          new_position: to.taskIndex,
-        });
+        reorderKanbanTaskAction(addEvent, chatId, chatType, from.task.id, from.columnId, to.taskIndex);
 
         return;
       }
 
-      addEvent("move_kanban_task", {
-        chat_id: chatId,
-        chat_type: chatType,
-        task_id: from.task.id,
-        from_column_id: from.columnId,
-        to_column_id: to.columnId,
-        new_position: to.taskIndex,
-      });
+      moveKanbanTaskAction(addEvent, chatId, chatType, from.task.id, from.columnId, to.columnId, to.taskIndex);
 
       return;
     }
@@ -574,14 +537,15 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
         return;
       }
 
-      addEvent("move_kanban_task", {
-        chat_id: chatId,
-        chat_type: chatType,
-        task_id: from.task.id,
-        from_column_id: from.columnId,
-        to_column_id: targetColumnId,
-        new_position: columns.find((column) => column.id === targetColumnId)?.tasks.length ?? 0,
-      });
+      moveKanbanTaskAction(
+        addEvent,
+        chatId,
+        chatType,
+        from.task.id,
+        from.columnId,
+        targetColumnId,
+        columns.find((column) => column.id === targetColumnId)?.tasks.length ?? 0
+      );
 
       return;
     }

@@ -7,6 +7,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
   alias Pomoroom.PrivateChats
   alias Pomoroom.Users
 
+  @max_requests 5
+  @scale_ms :timer.minutes(1)
+
   def handle_friend_request_sent(payload, socket) do
     {:noreply, push_event(socket, "react", payload)}
   end
@@ -23,7 +26,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
   def handle_update_status_request(status, to_user_name, from_user_name, user_nickname, socket) do
     case status do
       "accepted" ->
-        case FriendRequests.accept_friend_request(to_user_name, from_user_name) do
+        case FriendRequests.accept_friend_request(to_user_name, from_user_name, user_nickname) do
           {:ok, request} ->
             case PrivateChats.get(request.to_user, request.from_user) do
               {:ok, private_chat} ->
@@ -48,11 +51,12 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
               {:error, _reason} ->
                 {:noreply, socket}
             end
-          {:error, _reason} ->
-            {:noreply, socket}
+          {:error, reason} ->
+            payload = %{event_name: "error_accepting_friend_request", event_data: reason}
+            {:noreply, push_event(socket, "react", payload)}
         end
       "rejected" ->
-        case FriendRequests.reject_friend_request(to_user_name, from_user_name) do
+        case FriendRequests.reject_friend_request(to_user_name, from_user_name, user_nickname) do
           {:ok, request} ->
             payload =
               if request.to_user == user_nickname do
@@ -95,6 +99,23 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
   end
 
   def handle_send_friend_request(to_user_arg, user, socket) do
+    user_nickname = user.nickname
+
+    case PomoroomWeb.RateLimiter.hit("friend_request:#{user_nickname}", @scale_ms, @max_requests) do
+      {:deny, _retry_after} ->
+        payload = %{
+          event_name: "error_adding_contact",
+          event_data: %{error: "Demasiadas solicitudes enviadas. Inténtalo de nuevo en un minuto"}
+        }
+
+        {:noreply, push_event(socket, "react", payload)}
+
+      {:allow, _count} ->
+        do_send_friend_request(to_user_arg, user, socket)
+    end
+  end
+
+  defp do_send_friend_request(to_user_arg, user, socket) do
     user_nickname = user.nickname
 
     cond do

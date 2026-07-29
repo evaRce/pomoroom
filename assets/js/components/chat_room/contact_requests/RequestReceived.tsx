@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useEventContext, useEvent } from "../EventContext";
+import { updateFriendRequestStatusAction } from "../../../services/contactService";
 import { Button, Space, Typography } from "antd";
+import { FriendRequestRef } from "../../../types/events";
 
 const { Text } = Typography;
 
-export default function RequestReceived({ imageNumber }) {
+export default function RequestReceived({ imageNumber }: { imageNumber: number }) {
   const { addEvent, removeEvent } = useEventContext();
-  const [requestData, setRequestData] = useState(null);
+  const [requestData, setRequestData] = useState<FriendRequestRef | null>(null);
   const requestReceivedEvent = useEvent("open_chat_request_received");
 
   useEffect(() => {
@@ -16,12 +18,9 @@ export default function RequestReceived({ imageNumber }) {
     }
   }, [requestReceivedEvent]);
 
-  const handleStatus = (newStatus) => {
-    addEvent("update_status_request", {
-      status: newStatus,
-      contact_name: requestData?.to_user,
-      from_user_name: requestData?.from_user,
-    });
+  const handleStatus = (newStatus: string) => {
+    if (!requestData) return;
+    updateFriendRequestStatusAction(addEvent, newStatus, requestData.to_user, requestData.from_user);
   };
 
   return (

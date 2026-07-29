@@ -3,17 +3,31 @@ import { Button, Input } from "antd";
 import { SearchOutlined, CloseOutlined } from "@ant-design/icons";
 import ConversationTargetItem from "./ConversationTargetItem";
 import { useEventContext, useEvent } from "../EventContext";
+import { deleteContactAction } from "../../../services/contactService";
+import { deleteGroupAction } from "../../../services/groupService";
+import type { ChatGroupData, ChatUserRef, ConversationEntry } from "../../../types/events";
+
+export interface NormalizedContact {
+  name: string;
+  chat_id: string | null;
+  image?: string;
+  status_request?: string;
+  is_group: boolean;
+  is_group_member_removed: boolean;
+  is_group_admin: boolean;
+  group_data_raw?: ChatGroupData;
+}
 
 const INITIAL_BATCH_SIZE = 15;
 const BATCH_SIZE = 10;
 
 export default function ConversationTargetsList() {
-  const { addEvent, removeEvent } = useEventContext() as any;
-  const [contacts, setContacts] = useState<any[]>([]);
-  const [filteredContacts, setFilteredContacts] = useState<any[]>([]);
+  const { addEvent, removeEvent } = useEventContext();
+  const [contacts, setContacts] = useState<NormalizedContact[]>([]);
+  const [filteredContacts, setFilteredContacts] = useState<NormalizedContact[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedContact, setSelectedContact] = useState("");
-  const [userLogin, setUserLogin] = useState<any>({});
+  const [userLogin, setUserLogin] = useState<Partial<ChatUserRef>>({});
   const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH_SIZE);
   const lastProcessedGroupAdminUpdatedRef = useRef("");
 
@@ -28,21 +42,18 @@ export default function ConversationTargetsList() {
   const groupAdminUpdatedEvent = useEvent("group_admin_updated");
   const showListMessagesEvent = useEvent("show_list_messages");
 
-  const getCurrentUserRemovedAtFromGroup = (groupData: any, nickname: string) => {
+  const getCurrentUserRemovedAtFromGroup = (groupData: ChatGroupData | undefined, nickname: string | undefined) => {
     if (!groupData || !nickname) {
       return null;
     }
 
     const members = groupData.members || [];
-    const myMember = members.find((member: any) => {
-      const memberId = member?.user_id || member?.["user_id"];
-      return memberId === nickname;
-    });
+    const myMember = members.find((member) => member?.user_id === nickname);
 
-    return myMember?.removed_at || myMember?.["removed_at"] || null;
+    return myMember?.removed_at || null;
   };
 
-  const isCurrentUserGroupAdmin = (groupData: any, nickname: string) => {
+  const isCurrentUserGroupAdmin = (groupData: ChatGroupData | undefined, nickname: string | undefined) => {
     if (!groupData || !nickname) {
       return false;
     }
@@ -60,7 +71,7 @@ export default function ConversationTargetsList() {
 
   useEffect(() => {
     if (Array.isArray(showListContactEvent) && showListContactEvent.length > 0) {
-      const normalizedList = showListContactEvent.map((contact: any) =>
+      const normalizedList = showListContactEvent.map((contact) =>
         normalizeContact(contact)
       );
       setContacts(normalizedList);
@@ -175,7 +186,7 @@ export default function ConversationTargetsList() {
     setVisibleCount((prev) => Math.min(Math.max(prev, INITIAL_BATCH_SIZE), results.length || INITIAL_BATCH_SIZE));
   }, [searchTerm, contacts]);
 
-  const normalizeContact = (contact: any) => {
+  const normalizeContact = (contact: ConversationEntry): NormalizedContact => {
     const groupData = contact?.group_data;
     const removedAt = getCurrentUserRemovedAtFromGroup(groupData, userLogin?.nickname);
     const isGroupAdmin = isCurrentUserGroupAdmin(groupData, userLogin?.nickname);
@@ -183,7 +194,8 @@ export default function ConversationTargetsList() {
     return {
       name:
         contact?.contact_data?.nickname ||
-        groupData?.name,
+        groupData?.name ||
+        "",
       chat_id:
         contact?.contact_data?.chat_id ||
         contact?.chat_id ||
@@ -202,7 +214,7 @@ export default function ConversationTargetsList() {
     };
   };
 
-  const addContact = (contact: any) => {
+  const addContact = (contact: ConversationEntry) => {
     const newContact = normalizeContact(contact);
 
     setContacts((prevContacts) => {
@@ -247,7 +259,7 @@ export default function ConversationTargetsList() {
     );
   }, [userLogin?.nickname]);
 
-  const updateContactStatus = (request: any, new_status: any) => {
+  const updateContactStatus = (request: { from_user?: string; to_user?: string } | undefined, new_status: string | undefined) => {
     setContacts((prevContacts) =>
       prevContacts.map((contact) => {
         const isInvolvedReceived =
@@ -269,7 +281,7 @@ export default function ConversationTargetsList() {
     );
   };
 
-  const handleSearch = (event: any) => {
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
 
@@ -277,15 +289,15 @@ export default function ConversationTargetsList() {
     setSearchTerm("");
   };
 
-  const deleteContact = (contact: any) => {
+  const deleteContact = (contact: Pick<NormalizedContact, "name" | "is_group">) => {
     const index = contacts.findIndex(
       (contactFind) => contactFind.name === contact.name
     );
     if (index !== -1) {
       if (contact.is_group) {
-        addEvent("delete_group", contact.name);
+        deleteGroupAction(addEvent, contact.name);
       } else {
-        addEvent("delete_contact", contact.name);
+        deleteContactAction(addEvent, contact.name);
       }
       setContacts((prevContacts) => {
         const newContacts = [...prevContacts];
@@ -302,7 +314,7 @@ export default function ConversationTargetsList() {
     setSelectedContact(contactName);
   };
 
-  const handleListScroll = (event: any) => {
+  const handleListScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const target = event.currentTarget;
     const reachedBottom =
       target.scrollTop + target.clientHeight >= target.scrollHeight - 1;
@@ -331,9 +343,16 @@ export default function ConversationTargetsList() {
             className="bg-red-300 mr-2 sm:mr-1.5 lg:mr-2 shrink-0"
             icon={<CloseOutlined />}
             onClick={clearSearch}
+            title="Limpiar búsqueda"
+            aria-label="Limpiar búsqueda"
           />
         ) : (
-          <Button className="bg-sky-400 mr-2 sm:mr-1.5 lg:mr-2 shrink-0" icon={<SearchOutlined />} />
+          <Button
+            className="bg-sky-400 mr-2 sm:mr-1.5 lg:mr-2 shrink-0"
+            icon={<SearchOutlined />}
+            title="Buscar"
+            aria-label="Buscar"
+          />
         )}
       </div>
       <div

@@ -13,9 +13,9 @@ import {
   SwitchCamera,
 } from "lucide-react";
 import { useLocalParticipant, useParticipants, useTracks, VideoTrack } from "@livekit/components-react";
-import { Track } from "livekit-client";
-import type { Participant, TrackPublication, VideoCaptureOptions } from "livekit-client";
-import { formatDuration } from "../../../../lib/utils";
+import type { TrackReference } from "@livekit/components-core";
+import { Track, type Participant, type TrackPublication, type VideoCaptureOptions } from "livekit-client";
+import { formatDuration } from "../../../utils/formatDuration";
 import callText from "./callText";
 
 interface CallScreenProps {
@@ -107,7 +107,7 @@ function ParticipantTile({
   isLocal: boolean;
   avatarUrl?: string;
   hasVideo: boolean;
-  videoTrackRef: any;
+  videoTrackRef: ReturnType<typeof useTracks>[number] | undefined;
   isMuted: boolean;
   canSwitchCamera?: boolean;
   isSwitchingCamera?: boolean;
@@ -122,7 +122,7 @@ function ParticipantTile({
     >
       {hasVideo && videoTrackRef ? (
         <>
-          <VideoTrack trackRef={videoTrackRef} className="h-full w-full object-cover" />
+          <VideoTrack trackRef={videoTrackRef as TrackReference} className="h-full w-full object-cover" />
           <span className="absolute bottom-2 left-2 max-w-[80%] truncate rounded bg-black/55 px-2 py-0.5 text-xs text-white">
             {displayName}
           </span>
@@ -132,6 +132,7 @@ function ParticipantTile({
               onClick={onSwitchCamera}
               disabled={isSwitchingCamera}
               title={callText.screen.switchCamera}
+              aria-label={callText.screen.switchCamera}
               className="absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/55 text-white disabled:opacity-50"
             >
               <SwitchCamera className="h-4 w-4" />
@@ -410,6 +411,7 @@ export default function CallScreen({
       icon={isMicrophoneEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
       onClick={() => localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled)}
       title={isMicrophoneEnabled ? callText.screen.muteMic : callText.screen.unmuteMic}
+      aria-label={isMicrophoneEnabled ? callText.screen.muteMic : callText.screen.unmuteMic}
     />
   );
 
@@ -422,6 +424,7 @@ export default function CallScreen({
       icon={isCameraEnabled ? <VideoIcon className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
       onClick={() => localParticipant.setCameraEnabled(!isCameraEnabled)}
       title={isCameraEnabled ? callText.screen.turnOffCamera : callText.screen.turnOnCamera}
+      aria-label={isCameraEnabled ? callText.screen.turnOffCamera : callText.screen.turnOnCamera}
     />
   );
 
@@ -447,6 +450,7 @@ export default function CallScreen({
               .catch(() => message.error(callText.screen.screenShareFailed))
           }
           title={screenShareToggleTitle}
+          aria-label={screenShareToggleTitle}
         />
       </span>
     </Tooltip>
@@ -461,6 +465,7 @@ export default function CallScreen({
       icon={<PhoneOff className="h-5 w-5" />}
       onClick={onEndCall}
       title={callText.screen.endCall}
+      aria-label={callText.screen.endCall}
     />
   );
 
@@ -475,6 +480,7 @@ export default function CallScreen({
             icon={<X className="h-5 w-5" />}
             onClick={exitFullscreen}
             title={callText.screen.exitFullscreen}
+            aria-label={callText.screen.exitFullscreen}
           />
         </div>
         <div className="relative min-h-0 flex-1 px-4 pb-2" {...activityProps}>
@@ -491,6 +497,7 @@ export default function CallScreen({
               icon={<ScreenShareOff className="h-5 w-5" />}
               onClick={() => localParticipant.setScreenShareEnabled(false)}
               title={callText.screen.stopScreenShare}
+              aria-label={callText.screen.stopScreenShare}
             />
           </FloatingControls>
         </div>
@@ -520,6 +527,7 @@ export default function CallScreen({
               icon={<Maximize2 className="h-4 w-4" />}
               onClick={enterFullscreen}
               title={callText.screen.enterFullscreen}
+              aria-label={callText.screen.enterFullscreen}
             />
           )}
           <Button
@@ -529,6 +537,7 @@ export default function CallScreen({
             icon={<X className="h-4 w-4" />}
             onClick={onClose}
             title={callText.screen.close}
+            aria-label={callText.screen.close}
           />
         </div>
       </div>

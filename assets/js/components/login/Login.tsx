@@ -3,10 +3,12 @@ import { Button, Form, Input, Statistic} from "antd";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { HomeOutlined } from '@ant-design/icons';
 import loginText from "./loginText";
+import { FormErrors } from "../../types/liveview";
+import { getRandomBackgroundImageNumber } from "../../utils/randomBackgroundImage";
 
 export interface LoginProps {
-  searchUser(email: string, password: string): any;
-  errors: object;
+  searchUser(email: string, password: string): void;
+  errors: FormErrors;
 }
 
 export const Login: React.FC<LoginProps> = (props: LoginProps) => {
@@ -14,7 +16,7 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
   const [form] = Form.useForm();
   const [imageNumber, setImageNumber] = useState(1);
 
-  const onFinish = (newValues: any) => {
+  const onFinish = (newValues: { email: string; password: string }) => {
     searchUser(newValues.email, newValues.password);
   };
 
@@ -31,8 +33,7 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
   }, [errors, form]);
 
   useEffect(() => {
-    const randomImageNumber = Math.floor(Math.random() * 5) + 1;
-    setImageNumber(randomImageNumber);
+    setImageNumber(getRandomBackgroundImageNumber());
   }, []);
 
   return (
@@ -52,6 +53,7 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
           icon={<HomeOutlined />}
           size="large"
           title={loginText.homeButtonTitle}
+          aria-label={loginText.homeButtonTitle}
         />
       </a>
       <div className="max-w-md md:max-w-lg lg:max-w-xl w-full my-4">

@@ -1,8 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Button, Form, Input, message, Spin } from "antd";
 import { useEventContext, useEvent } from "../EventContext";
+import { sendFriendRequestAction } from "../../../services/contactService";
+import { addGroupAction } from "../../../services/groupService";
+import { ConversationEntry } from "../../../types/events";
 
-export default function AddContactOrGroup({ sendDataToParent, receiveDataFromParent, entryType }) {
+interface AddContactOrGroupProps {
+  sendDataToParent: (isVisible: boolean) => void;
+  receiveDataFromParent: boolean;
+  entryType: string;
+}
+
+type ContactListEntry = ConversationEntry & {
+  request: NonNullable<ConversationEntry["request"]>;
+  contact_data: NonNullable<ConversationEntry["contact_data"]>;
+};
+
+export default function AddContactOrGroup({ sendDataToParent, receiveDataFromParent, entryType }: AddContactOrGroupProps) {
   const [form] = Form.useForm();
   const [inputStr, setInputStr] = useState("");
   const { addEvent, removeEvent } = useEventContext();
@@ -17,9 +31,9 @@ export default function AddContactOrGroup({ sendDataToParent, receiveDataFromPar
     }
     setLoading(true);
     if (entryType === "contact") {
-      addEvent("send_friend_request", { to_user: inputStr })
+      sendFriendRequestAction(addEvent, inputStr)
     } else if (entryType === "group") {
-      addEvent("add_group", { name: inputStr });
+      addGroupAction(addEvent, inputStr);
     }
     setInputStr("");
     form.resetFields();
@@ -48,8 +62,14 @@ export default function AddContactOrGroup({ sendDataToParent, receiveDataFromPar
 
   useEffect(() => {
     if (addContactToListEvent) {
-      const messageText = handleContactMessage(addContactToListEvent);
-      handleTypeContactMessage(messageText, addContactToListEvent.request.status);
+      if (!addContactToListEvent.request || !addContactToListEvent.contact_data) {
+        removeEvent("add_contact_to_list");
+        setLoading(false);
+        return;
+      }
+      const entry = addContactToListEvent as ContactListEntry;
+      const messageText = handleContactMessage(entry);
+      handleTypeContactMessage(messageText, entry.request.status);
       removeEvent("add_contact_to_list");
       setLoading(false);
     }
@@ -63,7 +83,7 @@ export default function AddContactOrGroup({ sendDataToParent, receiveDataFromPar
     }
   }, [addGroupToListEvent]);
 
-  const handleContactMessage = (data) => {
+  const handleContactMessage = (data: ContactListEntry) => {
     if (data.request.status === "accepted") {
       return 'Añade petición de amistad ya aceptada';
     } else if (data.request.status === "rejected") {
@@ -81,7 +101,7 @@ export default function AddContactOrGroup({ sendDataToParent, receiveDataFromPar
     }
   };
 
-  const handleTypeContactMessage = (messageText, status) => {
+  const handleTypeContactMessage = (messageText: string, status: string) => {
     if (status === "pending") {
       return message.success(messageText, 2);
     } else {

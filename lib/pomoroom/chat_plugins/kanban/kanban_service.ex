@@ -129,11 +129,7 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
 
             new_columns = board_columns(board) ++ [column]
 
-            case KanbanRepository.update_board_if_version_matches(
-                   kanban_id,
-                   new_columns,
-                   board.board_version
-                 ) do
+            case KanbanRepository.update_board(kanban_id, new_columns) do
               {:ok, updated_board} -> {:ok, sanitize_for_client(materialize_board(updated_board))}
               {:error, reason} -> {:error, reason}
             end
@@ -155,11 +151,7 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
           {:ok, board} ->
             new_columns = renamed_columns(board, column_id, title)
 
-            case KanbanRepository.update_board_if_version_matches(
-                   kanban_id,
-                   new_columns,
-                   board.board_version
-                 ) do
+            case KanbanRepository.update_board(kanban_id, new_columns) do
               {:ok, updated_board} -> {:ok, materialize_board(updated_board)}
               {:error, reason} -> {:error, reason}
             end
@@ -190,11 +182,7 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
                     column_id_from_column(col) == column_id
                   end)
 
-                case KanbanRepository.update_board_if_version_matches(
-                       kanban_id,
-                       remaining_columns,
-                       board.board_version
-                     ) do
+                case KanbanRepository.update_board(kanban_id, remaining_columns) do
                   {:ok, updated_board} ->
                     case delete_tasks(task_ids_from_column(column)) do
                       :ok -> {:ok, sanitize_for_client(materialize_board(updated_board))}
@@ -242,11 +230,7 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
                     new_columns =
                       replace_column_task_ids(columns, column_id, task_ids ++ [task_id])
 
-                    case KanbanRepository.update_board_if_version_matches(
-                           kanban_id,
-                           new_columns,
-                           board.board_version
-                         ) do
+                    case KanbanRepository.update_board(kanban_id, new_columns) do
                       {:ok, updated_board} ->
                         {:ok, sanitize_for_client(materialize_board(updated_board))}
 
@@ -385,11 +369,7 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
           {:ok, board} ->
             new_columns = columns_without_task(board, task)
 
-            case KanbanRepository.update_board_if_version_matches(
-                   board.kanban_id,
-                   new_columns,
-                   board.board_version
-                 ) do
+            case KanbanRepository.update_board(board.kanban_id, new_columns) do
               {:ok, updated_board} ->
                 case KanbanRepository.delete_task(task_id) do
                   {:ok, _result} -> {:ok, materialize_board(updated_board)}
@@ -499,11 +479,7 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
               |> replace_column_task_ids(from_column_id, updated_from_ids)
               |> replace_column_task_ids(to_column_id, inserted_to_ids)
 
-            case KanbanRepository.update_board_if_version_matches(
-                   board.kanban_id,
-                   new_columns,
-                   board.board_version
-                 ) do
+            case KanbanRepository.update_board(board.kanban_id, new_columns) do
               {:ok, updated_board} ->
                 {:ok, sanitize_for_client(materialize_board(updated_board))}
 
@@ -534,11 +510,7 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
 
             new_columns = replace_column_task_ids(columns, column_id, reordered_task_ids)
 
-            case KanbanRepository.update_board_if_version_matches(
-                   board.kanban_id,
-                   new_columns,
-                   board.board_version
-                 ) do
+            case KanbanRepository.update_board(board.kanban_id, new_columns) do
               {:ok, updated_board} ->
                 {:ok, sanitize_for_client(materialize_board(updated_board))}
 

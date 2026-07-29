@@ -8,8 +8,7 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimers do
   defdelegate get_state(chat_id, chat_type), to: PomodoroTimerService
   defdelegate ensure_started(chat_id, chat_type), to: PomodoroTimerService
   defdelegate start_timer(chat_id, chat_type, timer_id), to: PomodoroTimerService
-  defdelegate update_config(chat_id, chat_type, config, expected_config_version),
-    to: PomodoroTimerService
+  defdelegate update_config(chat_id, chat_type, config), to: PomodoroTimerService
 
   defdelegate start(chat_id, chat_type), to: PomodoroTimerService
   defdelegate pause(chat_id, chat_type), to: PomodoroTimerService

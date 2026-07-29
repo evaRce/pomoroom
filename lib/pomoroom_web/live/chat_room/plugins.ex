@@ -46,8 +46,18 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
             {:noreply, push_event(socket, "react", payload)}
         end
 
-      {:error, _reason} ->
-        {:noreply, socket}
+      {:error, reason} ->
+        payload = %{
+          event_name: "chat_plugin_install_failed",
+          event_data: %{
+            chat_id: chat_id,
+            chat_type: chat_type,
+            plugin_type: plugin_type,
+            reason: reason_payload(reason)
+          }
+        }
+
+        {:noreply, push_event(socket, "react", payload)}
     end
   end
 
@@ -87,8 +97,18 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
             {:noreply, push_event(socket, "react", payload)}
         end
 
-      {:error, _reason} ->
-        {:noreply, socket}
+      {:error, reason} ->
+        payload = %{
+          event_name: "chat_plugin_uninstall_failed",
+          event_data: %{
+            chat_id: chat_id,
+            chat_type: chat_type,
+            plugin_id: plugin_id,
+            reason: reason_payload(reason)
+          }
+        }
+
+        {:noreply, push_event(socket, "react", payload)}
     end
   end
 
@@ -113,22 +133,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
     end
   end
 
-  def handle_update_pomodoro_plugin_config(
-        chat_id,
-        chat_type,
-        config,
-        expected_config_version,
-        user,
-        socket
-      ) do
+  def handle_update_pomodoro_plugin_config(chat_id, chat_type, config, user, socket) do
     case authorize_and_validate_plugin(chat_id, chat_type, "pomodoro", user.nickname) do
       :ok ->
-        case PomodoroTimers.update_config(
-               chat_id,
-               chat_type,
-               config,
-               expected_config_version
-             ) do
+        case PomodoroTimers.update_config(chat_id, chat_type, config) do
           {:ok, _timer_data} ->
             {:noreply, socket}
 

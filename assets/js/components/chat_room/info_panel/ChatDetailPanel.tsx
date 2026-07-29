@@ -3,12 +3,18 @@ import { Avatar, Button, List } from "antd";
 import { CloseOutlined } from "@ant-design/icons";
 import { useEventContext, useEvent } from "../EventContext";
 import GroupMemberItem from "./GroupMemberItem";
+import { toggleDetailVisibilityAction } from "../../../services/contactService";
+import {
+  setGroupAdminAction,
+  deleteMemberAction,
+} from "../../../services/groupService";
+import type { ChatMember, EventBusPayload } from "../../../types/events";
 
 export default function ChatDetailPanel() {
-  const { addEvent, removeEvent } = useEventContext() as any;
-  const [chatData, setChatData] = useState<any>(null);
-  const [members, setMembers] = useState<any[]>([]);
-  const [checkAdmin, setCheckAdmin] = useState<any>({});
+  const { addEvent, removeEvent } = useEventContext();
+  const [chatData, setChatData] = useState<EventBusPayload<"show_detail"> | null>(null);
+  const [members, setMembers] = useState<ChatMember[]>([]);
+  const [checkAdmin, setCheckAdmin] = useState(false);
   const [currentUserNickname, setCurrentUserNickname] = useState("");
   const currentChatId = chatData?.chat_id || "";
   const currentGroupName = chatData?.group_name || chatData?.chat_name || "";
@@ -27,7 +33,7 @@ export default function ChatDetailPanel() {
 
   useEffect(() => {
     if (showMembersEvent) {
-      setMembers(showMembersEvent.members);
+      setMembers(showMembersEvent.members || []);
       removeEvent("show_members");
     }
   }, [showMembersEvent]);
@@ -57,7 +63,7 @@ export default function ChatDetailPanel() {
     }
 
     const currentMember = members.find(
-      (member: any) => member?.nickname === currentUserNickname
+      (member) => member?.nickname === currentUserNickname
     );
 
     if (currentMember) {
@@ -80,32 +86,28 @@ export default function ChatDetailPanel() {
   }, [groupMemberRemovedEvent, currentChatId, currentGroupName]);
 
   const hideUserDetails = () => {
-    addEvent("toggle_detail_visibility", {
-      is_visible: false,
-      is_group: Boolean(chatData?.is_group),
-      group_name: chatData?.group_name || chatData?.chat_name,
-    });
+    toggleDetailVisibilityAction(
+      addEvent,
+      false,
+      Boolean(chatData?.is_group),
+      chatData?.group_name || chatData?.chat_name || ""
+    );
     removeEvent("check_admin");
     removeEvent("show_detail");
   };
 
-  const setAdmin = (memberName: any, operation: any) => {
-    addEvent("set_admin", {
-      member_name: memberName,
-      group_name: chatData.chat_name,
-      operation: operation,
-    });
+  const setAdmin = (memberName: string, operation: string) => {
+    if (!chatData) return;
+    setGroupAdminAction(addEvent, memberName, chatData.chat_name, operation);
   };
 
-  const deleteMember = (memberName: any) => {
+  const deleteMember = (memberName: string) => {
+    if (!chatData) return;
     const index = members.findIndex(
-      (memberFind: any) => memberFind.nickname === memberName
+      (memberFind) => memberFind.nickname === memberName
     );
     if (index !== -1) {
-      addEvent("delete_member", {
-        member_name: memberName,
-        group_name: chatData.chat_name,
-      });
+      deleteMemberAction(addEvent, memberName, chatData.chat_name);
       setMembers((prevMembers) => {
         const newMembers = [...prevMembers];
         newMembers.splice(index, 1);
@@ -124,6 +126,8 @@ export default function ChatDetailPanel() {
           className="top-0 left-0 bg-white"
           icon={<CloseOutlined />}
           onClick={hideUserDetails}
+          title="Cerrar detalles"
+          aria-label="Cerrar detalles"
         />
         {chatData && (
           <div className="text-center w-full mb-10">

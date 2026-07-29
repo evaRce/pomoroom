@@ -1,10 +1,20 @@
 import { useEffect, useRef } from "react";
+import { refreshConversationsAction } from "../services/contactService";
+import { AddEvent, ChatMember, ConversationEntry, EventBusPayloads, RemoveEvent } from "../types/events";
 
 type UseGroupMembershipEventsParams = {
   eventName: string;
-  eventData: any;
-  addEvent: (eventName: string, eventData: any) => void;
-  removeEvent: (eventName: string) => void;
+  eventData: Record<string, unknown> & {
+    contact_list?: ConversationEntry[];
+    members_data?: ChatMember[];
+    is_admin?: EventBusPayloads["group_member_added"]["is_admin"];
+    chat_id?: EventBusPayloads["group_member_removed"]["chat_id"];
+    removed_at?: EventBusPayloads["group_member_removed"]["removed_at"];
+    group_name?: EventBusPayloads["group_member_removed"]["group_name"];
+    message?: EventBusPayloads["group_member_added"]["message"];
+  };
+  addEvent: AddEvent;
+  removeEvent: RemoveEvent;
 };
 
 export function useGroupMembershipEvents({
@@ -23,7 +33,7 @@ export function useGroupMembershipEvents({
 
   useEffect(() => {
     if (eventName === "show_members") {
-      const membersPayload = { members: eventData?.members_data };
+      const membersPayload = { members: eventData?.members_data || [] };
       addEvent(eventName, membersPayload);
       addEvent("members_snapshot", membersPayload);
     }
@@ -31,14 +41,14 @@ export function useGroupMembershipEvents({
 
   useEffect(() => {
     if (eventName === "check_admin") {
-      addEvent(eventName, eventData);
+      addEvent(eventName, { is_admin: Boolean(eventData?.is_admin) });
     }
   }, [eventName, eventData?.is_admin]);
 
   useEffect(() => {
     if (eventName === "update_show_my_contacts_and_members") {
-      addEvent("show_my_contacts", eventData?.contact_list);
-      addEvent("show_members", { members: eventData?.members_data });
+      addEvent("show_my_contacts", eventData?.contact_list || []);
+      addEvent("show_members", { members: eventData?.members_data || [] });
     }
   }, [eventName, eventData]);
 
@@ -52,8 +62,12 @@ export function useGroupMembershipEvents({
         return;
       }
 
-      addEvent(eventName, eventData);
-      addEvent("refresh_conversations", {});
+      addEvent(eventName, {
+        chat_id: eventData?.chat_id,
+        group_name: eventData?.group_name,
+        removed_at: eventData?.removed_at,
+      });
+      refreshConversationsAction(addEvent);
     }
   }, [eventName, eventData]);
 
@@ -67,12 +81,17 @@ export function useGroupMembershipEvents({
         return;
       }
 
-      addEvent(eventName, eventData);
+      addEvent(eventName, {
+        chat_id: eventData?.chat_id,
+        group_name: eventData?.group_name,
+        is_admin: eventData?.is_admin,
+        message: eventData?.message,
+      });
       if (typeof eventData?.is_admin === "boolean") {
         addEvent("check_admin", { is_admin: eventData.is_admin });
       }
       removeEvent("group_member_removed");
-      addEvent("refresh_conversations", {});
+      refreshConversationsAction(addEvent);
     }
   }, [eventName, eventData]);
 
@@ -86,8 +105,11 @@ export function useGroupMembershipEvents({
         return;
       }
 
-      addEvent(eventName, eventData);
-      addEvent("refresh_conversations", {});
+      addEvent(eventName, {
+        chat_id: eventData?.chat_id || "",
+        group_name: eventData?.group_name || "",
+      });
+      refreshConversationsAction(addEvent);
     }
   }, [eventName, eventData]);
 
@@ -102,8 +124,12 @@ export function useGroupMembershipEvents({
       }
 
       addEvent("check_admin", { is_admin: Boolean(eventData?.is_admin) });
-      addEvent(eventName, eventData);
-      addEvent("refresh_conversations", {});
+      addEvent(eventName, {
+        chat_id: eventData?.chat_id,
+        group_name: eventData?.group_name,
+        is_admin: eventData?.is_admin,
+      });
+      refreshConversationsAction(addEvent);
     }
   }, [eventName, eventData]);
 }

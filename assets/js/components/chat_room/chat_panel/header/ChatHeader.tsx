@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useSyncExternalStore } from "react";
-import { Avatar, Button, Dropdown } from "antd";
+import { Avatar, Button, Dropdown, message } from "antd";
 import { ArrowLeft, Info, Loader2, MoreVertical, Phone, PhoneOff, Puzzle, UserPlus } from "lucide-react";
 import { useEventContext, useEvent } from "../../EventContext";
 import AddMembersModal from "./AddMembersModal";
@@ -8,9 +8,31 @@ import { useCallContext } from "../../call_panel/CallContext";
 import callText from "../../call_panel/callText";
 import PluginMarketPlace, { AvailablePlugin, InstalledPlugin } from "../PluginMarketPlace";
 import { getTimer, subscribeTimer, type TimerState } from "../../pomodoro_timer/pomodoroTimerStore";
+import {
+  installChatPluginAction,
+  uninstallChatPluginAction,
+} from "../../../../services/chatPluginService";
+import { toggleDetailVisibilityAction } from "../../../../services/contactService";
+import { requestGroupContactsAction } from "../../../../services/groupService";
+import type { ChatPluginRef, ChatSessionData, EventBusPayload } from "../../../../types/events";
+
+const PLUGIN_ERROR_MESSAGES: Record<string, string> = {
+  unauthorized: "No tienes acceso a este chat.",
+  plugin_already_installed: "Este plugin ya está instalado.",
+  plugin_not_installed: "Este plugin no está instalado.",
+  unsupported_plugin: "Este plugin no está soportado.",
+  chat_not_found: "El chat no existe.",
+};
+
+function getPluginErrorMessage(reason: unknown): string {
+  if (typeof reason === "string" && PLUGIN_ERROR_MESSAGES[reason]) {
+    return PLUGIN_ERROR_MESSAGES[reason];
+  }
+  return "No se ha podido completar la operación con el plugin.";
+}
 
 interface ChatHeaderProps {
-  userLogin: any;
+  userLogin: EventBusPayload<"show_user_info"> | null;
   isVisibleDetail: boolean;
   activePluginId: string | null;
   onTogglePluginTab: (pluginId: string | null) => void;
@@ -24,7 +46,7 @@ export default function ChatHeader({
   onTogglePluginTab,
   onBack,
 }: ChatHeaderProps) {
-  const { addEvent, removeEvent } = useEventContext() as any;
+  const { addEvent, removeEvent } = useEventContext();
   const [pluginDisplayMap, setPluginDisplayMap] = useState<Record<string, { name: string; icon: string }>>({});
 
   const openPrivateChatEvent = useEvent("open_private_chat");
@@ -38,9 +60,9 @@ export default function ChatHeader({
   const checkAdminEvent = useEvent("check_admin");
   const groupAdminUpdatedEvent = useEvent("group_admin_updated");
   const membersSnapshotEvent = useEvent("members_snapshot");
-  const [chatData, setChatData] = useState<any>(null);
+  const [chatData, setChatData] = useState<ChatSessionData | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [checkAdmin, setCheckAdmin] = useState<any>({});
+  const [checkAdmin, setCheckAdmin] = useState<{ is_admin: boolean }>({ is_admin: false });
   const [chatName, setChatName] = useState("");
   const [chatImage, setChatImage] = useState("");
   const [isGroupMemberRemoved, setIsGroupMemberRemoved] = useState(false);
@@ -94,11 +116,11 @@ export default function ChatHeader({
 
         if (!res.ok) return;
 
-        const payload = await res.json();
+        const payload: { data?: ChatPluginRef[] } = await res.json();
         const plugins = Array.isArray(payload?.data) ? payload.data : [];
 
         const map: Record<string, { name: string; icon: string }> = {};
-        plugins.forEach((p: any) => {
+        plugins.forEach((p) => {
           if (p?.type) {
             map[p.type] = { name: p.name || p.type, icon: p.icon || "🔌" };
           }
@@ -117,7 +139,7 @@ export default function ChatHeader({
     };
   }, []);
 
-  const normalizePlugin = (plugin: any) => {
+  const normalizePlugin = (plugin: ChatPluginRef | undefined) => {
     const normalizedType = plugin?.type;
 
     if (!normalizedType) return null;
@@ -134,7 +156,7 @@ export default function ChatHeader({
     } as InstalledPlugin;
   };
 
-  const normalizeInstalledPlugins = (plugins: any[] = []) => {
+  const normalizeInstalledPlugins = (plugins: ChatPluginRef[] = []) => {
     const merged: InstalledPlugin[] = [];
 
     plugins.forEach((plugin) => {
@@ -154,7 +176,7 @@ export default function ChatHeader({
     return merged;
   };
 
-  const getPluginsFromChat = (chat: any): any[] => {
+  const getPluginsFromChat = (chat: ChatSessionData | null): ChatPluginRef[] => {
     const plugins = chat?.plugins;
     return Array.isArray(plugins) ? plugins : [];
   };
@@ -231,6 +253,7 @@ export default function ChatHeader({
       return;
     }
 
+    message.error(getPluginErrorMessage(chatPluginInstallFailedEvent.reason));
     setPendingPluginId(null);
     removeEvent("chat_plugin_install_failed");
   }, [chatPluginInstallFailedEvent, currentChatId]);
@@ -270,6 +293,7 @@ export default function ChatHeader({
       return;
     }
 
+    message.error(getPluginErrorMessage(chatPluginUninstallFailedEvent.reason));
     setPendingPluginId(null);
     removeEvent("chat_plugin_uninstall_failed");
   }, [chatPluginUninstallFailedEvent, currentChatId]);
@@ -284,11 +308,7 @@ export default function ChatHeader({
 
     if (groupMemberRemovedEvent && isRemovedEventForCurrentChat) {
       setIsGroupMemberRemoved(true);
-      addEvent("toggle_detail_visibility", {
-        is_visible: false,
-        is_group: true,
-        group_name: groupMemberRemovedEvent.group_name,
-      });
+      toggleDetailVisibilityAction(addEvent, false, true, groupMemberRemovedEvent.group_name ?? currentGroupName);
     }
   }, [groupMemberRemovedEvent, currentChatId, currentGroupName]);
 
@@ -302,7 +322,7 @@ export default function ChatHeader({
 
     if (groupMemberAddedEvent && isAddedEventForCurrentChat) {
       setIsGroupMemberRemoved(false);
-      setChatData((prevChatData: any) =>
+      setChatData((prevChatData) =>
         prevChatData ? { ...prevChatData, removed_at: null } : prevChatData
       );
 
@@ -340,7 +360,7 @@ export default function ChatHeader({
     if (!membersSnapshotEvent?.members || !currentNickname || !isGroupChat) return;
 
     const currentMember = membersSnapshotEvent.members.find(
-      (member: any) => member?.nickname === currentNickname
+      (member) => member?.nickname === currentNickname
     );
 
     if (currentMember) {
@@ -354,8 +374,8 @@ export default function ChatHeader({
 
   useEffect(() => {
     if (chatData) {
-      setChatName(setNameChat());
-      setChatImage(setImageProfile());
+      setChatName(setNameChat() || "");
+      setChatImage(setImageProfile() || "");
     }
   }, [chatData]);
 
@@ -364,11 +384,7 @@ export default function ChatHeader({
       return;
     }
 
-    addEvent("toggle_detail_visibility", {
-      is_visible: !isVisibleDetail,
-      is_group: isGroupChat,
-      group_name: chatName,
-    });
+    toggleDetailVisibilityAction(addEvent, !isVisibleDetail, isGroupChat, chatName);
     addEvent("show_detail", {
       chat_name: chatName,
       image: chatImage,
@@ -379,31 +395,36 @@ export default function ChatHeader({
   };
 
   const setImageProfile = () => {
+    if (!chatData || !userLogin) return undefined;
+
     if (chatData.group_data) {
       return chatData.group_data.image;
     } else {
-      if (userLogin.nickname === chatData.from_user_data.nickname) {
-        return chatData.to_user_data.image_profile;
-      } else if (userLogin.nickname === chatData.to_user_data.nickname) {
-        return chatData.from_user_data.image_profile;
+      if (userLogin.nickname === chatData.from_user_data?.nickname) {
+        return chatData.to_user_data?.image_profile;
+      } else if (userLogin.nickname === chatData.to_user_data?.nickname) {
+        return chatData.from_user_data?.image_profile;
       }
     }
   };
 
   const setNameChat = () => {
+    if (!chatData || !userLogin) return undefined;
+
     if (chatData.group_data) {
       return chatData.group_data.name;
     } else {
-      if (userLogin.nickname === chatData.from_user_data.nickname) {
-        return chatData.to_user_data.nickname;
-      } else if (userLogin.nickname === chatData.to_user_data.nickname) {
-        return chatData.from_user_data.nickname;
+      if (userLogin.nickname === chatData.from_user_data?.nickname) {
+        return chatData.to_user_data?.nickname;
+      } else if (userLogin.nickname === chatData.to_user_data?.nickname) {
+        return chatData.from_user_data?.nickname;
       }
     }
   };
 
   const openAddMembersModal = () => {
-    addEvent("get_my_contacts", { group_name: chatData.group_data.name });
+    if (!chatData?.group_data) return;
+    requestGroupContactsAction(addEvent, chatData.group_data.name);
     setIsModalVisible(true);
   };
 
@@ -421,11 +442,7 @@ export default function ChatHeader({
     }
 
     setPendingPluginId(plugin.type);
-    addEvent("install_chat_plugin", {
-      chat_id: currentChatId,
-      chat_type: isGroupChat ? "group" : "private",
-      plugin_type: plugin.type,
-    });
+    installChatPluginAction(addEvent, currentChatId, isGroupChat ? "group" : "private", plugin.type);
   };
 
   const handleUninstallPlugin = (pluginId: string) => {
@@ -434,11 +451,7 @@ export default function ChatHeader({
     }
 
     setPendingPluginId(pluginId);
-    addEvent("uninstall_chat_plugin", {
-      chat_id: currentChatId,
-      chat_type: isGroupChat ? "group" : "private",
-      plugin_id: pluginId,
-    });
+    uninstallChatPluginAction(addEvent, currentChatId, isGroupChat ? "group" : "private", pluginId);
   };
 
   const togglePluginTab = (pluginId: string | null) => {
@@ -539,6 +552,7 @@ export default function ChatHeader({
                 icon={<UserPlus className="h-5 w-5" />}
                 onClick={openAddMembersModal}
                 title="Añadir miembros"
+                aria-label="Añadir miembros"
               />
             )}
 
@@ -552,6 +566,7 @@ export default function ChatHeader({
               icon={<Puzzle className="h-5 w-5" />}
               onClick={openPluginMarketplace}
               title="Plugins"
+              aria-label="Plugins"
               disabled={isGroupChat && isGroupMemberRemoved}
             />
 

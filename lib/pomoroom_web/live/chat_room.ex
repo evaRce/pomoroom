@@ -285,19 +285,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         %{
           "chat_id" => chat_id,
           "chat_type" => chat_type,
-          "config" => config,
-          "expected_config_version" => expected_config_version
+          "config" => config
         },
         %{assigns: %{user_info: user}} = socket
       ) do
-    Plugins.handle_update_pomodoro_plugin_config(
-      chat_id,
-      chat_type,
-      config,
-      expected_config_version,
-      user,
-      socket
-    )
+    Plugins.handle_update_pomodoro_plugin_config(chat_id, chat_type, config, user, socket)
   end
 
   def handle_event(

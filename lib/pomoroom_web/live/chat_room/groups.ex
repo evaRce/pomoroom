@@ -74,8 +74,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
 
   def handle_add_member(group_name, new_member, user, socket) do
     case GroupChats.add_member(group_name, user.nickname, new_member) do
-      {:error, _reason} ->
-        {:noreply, socket}
+      {:error, reason} ->
+        payload = %{event_name: "error_managing_group_member", event_data: reason}
+        {:noreply, push_event(socket, "react", payload)}
 
       {:ok, _result} ->
         payload =
@@ -132,8 +133,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
 
         handle_member_update(group_name, user, socket)
 
-      _ ->
-        {:noreply, socket}
+      {:error, reason} ->
+        payload = %{event_name: "error_managing_group_member", event_data: reason}
+        {:noreply, push_event(socket, "react", payload)}
     end
   end
 
@@ -166,8 +168,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
             {:noreply, socket}
         end
 
-      {:error, _reason} ->
-        {:noreply, socket}
+      {:error, reason} ->
+        payload = %{event_name: "error_managing_group_member", event_data: reason}
+        {:noreply, push_event(socket, "react", payload)}
     end
   end
 

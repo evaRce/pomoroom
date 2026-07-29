@@ -1,4 +1,5 @@
 import { TimerMode, TimerSettings } from "./PomodoroSettingsPopover";
+import type { PomodoroServerPayload } from "../../../types/events";
 
 export type TimerState = {
   timeLeft: number;
@@ -6,7 +7,6 @@ export type TimerState = {
   mode: TimerMode;
   cyclesCompleted: number;
   hasPendingWorkHalfCycle: boolean;
-  configVersion: number;
   settings: TimerSettings | null;
   modeSnapshots: Record<TimerMode, number>;
   lastCompletedMode: TimerMode | null;
@@ -266,7 +266,6 @@ export function createInitialTimerState(settings: TimerSettings): TimerState {
     mode: "work",
     cyclesCompleted: 0,
     hasPendingWorkHalfCycle: false,
-    configVersion: 0,
     settings,
     modeSnapshots,
     lastCompletedMode: null,
@@ -291,7 +290,7 @@ export function getSnapshotForMode(chatId: string, mode: TimerMode): number {
  * Used by every component that receives
  * pomodoro events, so the time/mode/session math only lives here.
  */
-export function normalizeTimerPayload(payload: any): TimerState | null {
+export function normalizeTimerPayload(payload: PomodoroServerPayload | undefined): TimerState | null {
   if (!payload) return null;
 
   const payloadConfig = payload.config || {};
@@ -340,10 +339,9 @@ export function normalizeTimerPayload(payload: any): TimerState | null {
     mode,
     cyclesCompleted: payloadState.cycles_completed ?? 0,
     hasPendingWorkHalfCycle: Boolean(payloadState.has_pending_work_half_cycle),
-    configVersion: payload.config_version ?? 0,
     settings,
     modeSnapshots,
-    lastCompletedMode: payloadState.last_completed_mode ?? null,
+    lastCompletedMode: (payloadState.last_completed_mode as TimerMode | undefined) ?? null,
     lastUpdated: payloadState.last_updated ?? serverNow,
     startedAt,
     pausedAt,

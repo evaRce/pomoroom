@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 import { message } from "antd";
 import { Button } from "../../../../components-shadcn/ui/button";
-import { cn, formatDuration } from "../../../../lib/utils";
+import { cn } from "../../../../lib/utils";
+import { formatDuration } from "../../../utils/formatDuration";
 import pomodoroTimerText from "./pomodoroTimerText";
 import { useEventContext, useEvent } from "../EventContext";
 import {
@@ -26,14 +27,42 @@ import {
   type TimerState,
 } from "./pomodoroTimerStore";
 import { clearPomodoroNotification } from "./pomodoroNotificationStore";
+import {
+  requestPomodoroStateAction,
+  startPomodoroTimerAction,
+  pausePomodoroTimerAction,
+  resetPomodoroTimerAction,
+  setPomodoroTimerModeAction,
+  savePomodoroConfigAction,
+} from "../../../services/pomodoroService";
+import type { PomodoroConfigPayload, PomodoroServerPayload } from "../../../types/events";
 
 interface PomodoroTimerProps {
   chatId: string;
   chatType: "private" | "group";
 }
 
+function hasCompleteConfig(config: {
+  work_duration?: number;
+  short_break_duration?: number;
+  long_break_duration?: number;
+  cycles_before_long_break?: number;
+} | undefined): config is {
+  work_duration: number;
+  short_break_duration: number;
+  long_break_duration: number;
+  cycles_before_long_break: number;
+} {
+  return (
+    config?.work_duration !== undefined &&
+    config?.short_break_duration !== undefined &&
+    config?.long_break_duration !== undefined &&
+    config?.cycles_before_long_break !== undefined
+  );
+}
+
 export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
-  const { addEvent, removeEvent } = useEventContext() as any;
+  const { addEvent, removeEvent } = useEventContext();
   const [settings, setSettings] = useState<TimerSettings | null>(null);
   const [timerSnapshot, setTimerSnapshot] = useState<TimerState | null>(null);
   const [mode, setMode] = useState<TimerMode>("work");
@@ -42,7 +71,6 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   const [cyclesCompleted, setCyclesCompleted] = useState(0);
   const [hasPendingWorkHalfCycle, setHasPendingWorkHalfCycle] = useState(false);
   const [timerId, setTimerId] = useState("");
-  const [configVersion, setConfigVersion] = useState(0);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [saveMessage, setSaveMessage] = useState<{
     type: "success" | "error";
@@ -76,7 +104,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     cycles_before_long_break: settings?.cyclesBeforeLongBreak,
   }), []);
 
-  const applyIncomingConfig = useCallback((config: any) => {
+  const applyIncomingConfig = useCallback((config: PomodoroConfigPayload | undefined) => {
     if (!config) return;
 
     setSettings({
@@ -87,7 +115,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     });
   }, []);
 
-  const applyIncomingTimerState = useCallback((eventPayload: any) => {
+  const applyIncomingTimerState = useCallback((eventPayload: PomodoroServerPayload) => {
     const nextTimer = normalizeTimerPayload(eventPayload);
     if (!nextTimer) return;
 
@@ -97,7 +125,6 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     setIsRunning(nextTimer.isRunning);
     setCyclesCompleted(nextTimer.cyclesCompleted);
     setHasPendingWorkHalfCycle(nextTimer.hasPendingWorkHalfCycle);
-    setConfigVersion(nextTimer.configVersion);
     setTimerId(eventPayload.timer_id || "");
     setNowMs(Date.now());
     lastCompletionStampRef.current = `${nextTimer.lastCompletedMode || "none"}:${nextTimer.lastUpdated}`;
@@ -228,38 +255,25 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   const handleStart = () => {
     if (!chatId || !settings) return;
 
-    addEvent("start_pomodoro_timer", {
-      chat_id: chatId,
-      chat_type: chatType,
-    });
+    startPomodoroTimerAction(addEvent, chatId, chatType);
   };
 
   const handlePause = () => {
     if (!chatId || !settings) return;
 
-    addEvent("pause_pomodoro_timer", {
-      chat_id: chatId,
-      chat_type: chatType,
-    });
+    pausePomodoroTimerAction(addEvent, chatId, chatType);
   };
 
   const handleReset = () => {
     if (!chatId || !settings) return;
 
-    addEvent("reset_pomodoro_timer", {
-      chat_id: chatId,
-      chat_type: chatType,
-    });
+    resetPomodoroTimerAction(addEvent, chatId, chatType);
   };
 
   const handleModeChange = (newMode: TimerMode) => {
     if (isRunning || !chatId || !settings) return;
 
-    addEvent("set_pomodoro_timer_mode", {
-      chat_id: chatId,
-      chat_type: chatType,
-      mode: newMode,
-    });
+    setPomodoroTimerModeAction(addEvent, chatId, chatType, newMode);
   };
 
   const handleChange = (field: keyof TimerSettings, value: string) => {
@@ -286,22 +300,19 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     setSaveState("saving");
     setSaveMessage(null);
 
-    addEvent("update_pomodoro_plugin_config", {
-      timer_id: timerId,
-      chat_id: chatId,
-      chat_type: chatType,
-      expected_config_version: configVersion,
-      config: toPayloadConfig(settings),
-    });
+    savePomodoroConfigAction(
+      addEvent,
+      timerId,
+      chatId,
+      chatType,
+      toPayloadConfig(settings)
+    );
   };
 
   const requestPomodoroState = useCallback(() => {
     if (!chatId || !chatType) return;
 
-    addEvent("get_pomodoro_state", {
-      chat_id: chatId,
-      chat_type: chatType,
-    });
+    requestPomodoroStateAction(addEvent, chatId, chatType);
   }, [addEvent, chatId, chatType]);
 
   const syncTimerState = useCallback((timer: TimerState | undefined) => {
@@ -315,7 +326,6 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     setIsRunning(timer.isRunning);
     setCyclesCompleted(timer.cyclesCompleted);
     setHasPendingWorkHalfCycle(timer.hasPendingWorkHalfCycle);
-    setConfigVersion(timer.configVersion);
 
     if (timer.settings) {
       setSettings(timer.settings);
@@ -410,8 +420,13 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
       return;
     }
 
+    if (!hasCompleteConfig(configLoadedEvent.config)) {
+      console.error("pomodoro_state_loaded llegó sin config completo", configLoadedEvent);
+      removeEvent("pomodoro_state_loaded");
+      return;
+    }
+
     setTimerId(configLoadedEvent.timer_id || "");
-    setConfigVersion(configLoadedEvent.config_version ?? 0);
     const newSettings: TimerSettings = {
       workDuration: configLoadedEvent.config.work_duration,
       shortBreakDuration: configLoadedEvent.config.short_break_duration,
@@ -432,8 +447,13 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
       return;
     }
 
+    if (!hasCompleteConfig(configUpdatedEvent.config)) {
+      console.error("update_config llegó sin config completo", configUpdatedEvent);
+      removeEvent("update_config");
+      return;
+    }
+
     setTimerId(configUpdatedEvent.timer_id || timerId);
-    setConfigVersion(configUpdatedEvent.config_version ?? configVersion);
     const newSettings: TimerSettings = {
       workDuration: configUpdatedEvent.config.work_duration,
       shortBreakDuration: configUpdatedEvent.config.short_break_duration,
@@ -462,10 +482,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     setSaveState("error");
     setSaveMessage({
       type: "error",
-      text:
-        configErrorEvent.reason === "version_conflict"
-          ? pomodoroTimerText.versionConflictError
-          : pomodoroTimerText.syncError,
+      text: pomodoroTimerText.syncError,
     });
     removeEvent("pomodoro_plugin_config_error");
   }, [configErrorEvent, chatId, chatType, removeEvent]);

@@ -11,16 +11,24 @@ import RejectedRequestSend from "./contact_requests/RejectedRequestSend";
 import RejectedRequestReceived from "./contact_requests/RejectedRequestReceived";
 import ConversationSidebar from "./conversation_sidebar/ConversationSidebar";
 import { CallSessionProvider } from "./call_panel/CallContext";
-import { useOutgoingLiveViewActions } from "../../hooks/useLiveViewActions";
+import { useContactsAndGroupsOutgoingActions, InfoChatSelected } from "../../hooks/outgoing_actions/useContactsAndGroupsOutgoingActions";
+import { usePomodoroOutgoingActions } from "../../hooks/outgoing_actions/usePomodoroOutgoingActions";
+import { useKanbanOutgoingActions } from "../../hooks/outgoing_actions/useKanbanOutgoingActions";
+import { useMessageOutgoingActions } from "../../hooks/outgoing_actions/useMessageOutgoingActions";
+import { useChatPluginOutgoingActions } from "../../hooks/outgoing_actions/useChatPluginOutgoingActions";
+import { useCallOutgoingActions } from "../../hooks/outgoing_actions/useCallOutgoingActions";
 import { useUserContactsAndGroupsEvents } from "../../hooks/useUserContactsAndGroupsEvents";
 import { useChatSessionEvents } from "../../hooks/useChatSessionEvents";
 import { useFriendRequestEvents } from "../../hooks/useFriendRequestEvents";
 import { useCallSignalingEvents } from "../../hooks/useCallSignalEvents";
 import { useGroupMembershipEvents } from "../../hooks/useGroupMemberEvents";
+import { useErrorNotificationEvents } from "../../hooks/useErrorNotificationEvents";
+import { getRandomBackgroundImageNumber } from "../../utils/randomBackgroundImage";
+import { PushEventToLiveView } from "../../types/events";
 export interface ChatRoomProps {
   eventName: string;
-  eventData: any;
-  pushEventToLiveView(event: string, payload: object): any;
+  eventData: Record<string, unknown>;
+  pushEventToLiveView: PushEventToLiveView;
 }
 
 export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
@@ -30,7 +38,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
   const [imageNumber, setImageNumber] = useState(1);
   const [userNickname, setUserNickname] = useState("");
   const [isVisibleDetail, setIsVisibleDetail] = useState(false);
-  const [infoChatSelected, setInfoChatSelected] = useState({});
+  const [infoChatSelected, setInfoChatSelected] = useState<InfoChatSelected>({});
   const [mobileShowChat, setMobileShowChat] = useState(false);
   const hasRequestedInitialData = useRef(false);
   const mobileOpenChatEvent = useEvent("mobile_open_chat");
@@ -47,8 +55,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
   };
 
   useEffect(() => {
-    const randomImageNumber = Math.floor(Math.random() * 5) + 1;
-    setImageNumber(randomImageNumber);
+    setImageNumber(getRandomBackgroundImageNumber());
     if (!hasRequestedInitialData.current) {
       pushEventToLiveView("action.get_user_info", {});
       pushEventToLiveView("action.get_list_contact", {});
@@ -56,7 +63,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
     }
   }, []);
 
-  useOutgoingLiveViewActions({
+  useContactsAndGroupsOutgoingActions({
     removeEvent,
     pushEventToLiveView,
     infoChatSelected,
@@ -64,6 +71,31 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
     setIsVisibleDetail,
     setInfoChatSelected,
     setComponent,
+  });
+
+  usePomodoroOutgoingActions({
+    removeEvent,
+    pushEventToLiveView,
+  });
+
+  useKanbanOutgoingActions({
+    removeEvent,
+    pushEventToLiveView,
+  });
+
+  useMessageOutgoingActions({
+    removeEvent,
+    pushEventToLiveView,
+  });
+
+  useChatPluginOutgoingActions({
+    removeEvent,
+    pushEventToLiveView,
+  });
+
+  useCallOutgoingActions({
+    removeEvent,
+    pushEventToLiveView,
   });
 
   useUserContactsAndGroupsEvents({
@@ -102,6 +134,11 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
     eventName,
     eventData,
     addEvent,
+  });
+
+  useErrorNotificationEvents({
+    eventName,
+    eventData,
   });
 
   return (

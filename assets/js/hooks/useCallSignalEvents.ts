@@ -1,9 +1,10 @@
 import { useEffect } from "react";
+import { AddEvent, EventBusPayloads } from "../types/events";
 
 type UseCallSignalingEventsParams = {
   eventName: string;
-  eventData: any;
-  addEvent: (eventName: string, eventData: any) => void;
+  eventData: Record<string, unknown>;
+  addEvent: AddEvent;
 };
 
 export function useCallSignalingEvents({
@@ -13,7 +14,7 @@ export function useCallSignalingEvents({
 }: UseCallSignalingEventsParams) {
   useEffect(() => {
     if (eventName === "livekit_token") {
-      addEvent(eventName, eventData);
+      addEvent(eventName, eventData as unknown as EventBusPayloads["livekit_token"]);
     }
   }, [eventName, eventData.token, eventData.ws_url]);
 }

@@ -1,14 +1,27 @@
 import React from "react";
-import { createRoot } from "react-dom/client";
+import { Root, createRoot } from "react-dom/client";
 import { Login, LoginProps } from "./Login";
+import { loginUserAction } from "../../services/userService";
+import { LiveViewHook, FormErrors } from "../../types/liveview";
 
-export default {
+// Contexto que Phoenix inyecta en `this` al invocar cada callback del hook.
+interface LoginHookThis extends LiveViewHook {
+	searchUser(email: string, password: string): void;
+	opts(errorLoginUser?: FormErrors | {}): LoginProps;
+}
+
+const LoginHook: {
+	mounted(this: LoginHookThis): void;
+	destroyed(this: LoginHookThis): void;
+	searchUser(this: LoginHookThis, email_: string, password_: string): void;
+	opts(this: LoginHookThis, errorLoginUser?: FormErrors | {}): LoginProps;
+} = {
 	mounted() {
 		const loginDomNode = document.getElementById('login') as Element;
 		const rootElement2 = createRoot(loginDomNode);
 
 		render(rootElement2, this.opts());
-		this.handleEvent("react.error_login_user", ({ errors }) => {
+		this.handleEvent("react.error_login_user", ({ errors }: { errors: FormErrors }) => {
 			render(rootElement2, this.opts(errors));
 		});
 	},
@@ -20,9 +33,9 @@ export default {
 	},
 
 	searchUser(email_, password_) {
-		this.pushEventTo(this.el, "action.log_user", {email: email_, password: password_})
+		loginUserAction(this, email_, password_)
 	},
-  
+
 	opts(error_login_user = {}): LoginProps {
 		return {
 			searchUser: this.searchUser.bind(this),
@@ -31,7 +44,9 @@ export default {
 	},
 }
 
-function render(rootElement2: any, opts: LoginProps) {
+export default LoginHook;
+
+function render(rootElement2: Root, opts: LoginProps) {
 	rootElement2.render(
 		<React.StrictMode>
 			<Login {...opts}/>

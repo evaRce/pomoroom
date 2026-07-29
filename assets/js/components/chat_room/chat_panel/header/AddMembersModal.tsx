@@ -3,16 +3,24 @@ import { Button, Modal, Input, List } from "antd";
 import { CopyOutlined, SearchOutlined, CloseOutlined } from "@ant-design/icons";
 import { useEventContext, useEvent } from "../../EventContext";
 import GroupMemberItem from "../../info_panel/GroupMemberItem";
+import { addMemberToGroupAction } from "../../../../services/groupService";
+import { ChatSessionData, ConversationEntry } from "../../../../types/events";
+
+interface AddMembersModalProps {
+  chatData: ChatSessionData;
+  isModalVisibleFromAddContacts: (isVisible: boolean) => void;
+  isModalVisibleFromHeader: boolean;
+}
 
 export default function AddMembersModal({
   chatData,
   isModalVisibleFromAddContacts,
   isModalVisibleFromHeader,
-}) {
+}: AddMembersModalProps) {
   const { addEvent, removeEvent } = useEventContext();
-  const [contacts, setContacts] = useState([]);
+  const [contacts, setContacts] = useState<ConversationEntry[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredContacts, setFilteredContacts] = useState([]);
+  const [filteredContacts, setFilteredContacts] = useState<ConversationEntry[]>([]);
   const showMyContactsEvent = useEvent("show_my_contacts");
 
   useEffect(() => {
@@ -36,7 +44,7 @@ export default function AddMembersModal({
     setSearchTerm("");
   };
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
@@ -44,16 +52,14 @@ export default function AddMembersModal({
     setSearchTerm("");
   };
 
-  const inviteToGroup = (contactData) => {
-    addEvent("add_member", {
-      group_name: chatData.group_data.name,
-      new_member: contactData.nickname,
-    });
+  const inviteToGroup = (contactData: ConversationEntry["contact_data"]) => {
+    if (!chatData.group_data || !contactData) return;
+    addMemberToGroupAction(addEvent, chatData.group_data.name, contactData.nickname);
   };
 
   return (
     <Modal
-      title={`Añade a tus panas a ${chatData?.group_data.name}`}
+      title={`Añade a tus panas a ${chatData?.group_data?.name}`}
       open={isModalVisibleFromHeader}
       onCancel={handleModalClose}
       footer={null}
@@ -71,12 +77,15 @@ export default function AddMembersModal({
             className="bg-red-300"
             icon={<CloseOutlined />}
             onClick={clearSearch}
+            title="Limpiar búsqueda"
+            aria-label="Limpiar búsqueda"
           />
         ) : (
           <Button
             className="bg-sky-400"
             icon={<SearchOutlined />}
-            onClick={handleSearch}
+            title="Buscar"
+            aria-label="Buscar"
           />
         )}
       </div>
@@ -89,14 +98,16 @@ export default function AddMembersModal({
           bordered
           dataSource={filteredContacts}
           renderItem={(item) => (
-            <GroupMemberItem
-              contact={item.contact_data}
-              onSelect={() => inviteToGroup(item.contact_data)}
-              isInModal={true}
-              onSetAdmin={null}
-              onDelete={null}
-              imAdmin={false}
-            />
+            !item.contact_data ? null : (
+              <GroupMemberItem
+                contact={item.contact_data}
+                onSelect={() => inviteToGroup(item.contact_data)}
+                isInModal={true}
+                onSetAdmin={null}
+                onDelete={null}
+                imAdmin={false}
+              />
+            )
           )}
         />
       </div>
@@ -107,13 +118,13 @@ export default function AddMembersModal({
 
       <div className="flex items-center justify-between mt-2 p-1 bg-gray-300">
         <span className="mx-2 overflow-ellipsis overflow-hidden whitespace-nowrap truncate">
-          {chatData?.group_data.invite_link}
+          {chatData?.group_data?.invite_link}
         </span>
         <Button
           className="bg-sky-400"
           icon={<CopyOutlined />}
           onClick={() =>
-            navigator.clipboard.writeText(`${chatData?.group_data.invite_link}`)
+            navigator.clipboard.writeText(`${chatData?.group_data?.invite_link}`)
           }
         >
           Copiar enlace

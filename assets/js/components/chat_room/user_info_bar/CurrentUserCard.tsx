@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Button, Modal, Dropdown } from "antd";
+import { Button, Modal, Dropdown, type MenuProps } from "antd";
 import { UserAddOutlined, UsergroupAddOutlined, MoreOutlined } from '@ant-design/icons';
 import { useEventContext, useEvent } from "../EventContext";
 import AddContactOrGroup from "./AddContactOrGroup";
+import { logoutAction } from "../../../services/userService";
+import { EventBusPayload } from "../../../types/events";
 
 export default function CurrentUserCard() {
-	const [userLogin, setUserLogin] = useState(null);
+	const [userLogin, setUserLogin] = useState<EventBusPayload<"show_user_info"> | null>(null);
 	const [showModal, setShowModal] = useState(false);
 	const [entryType, setEntryType] = useState("contact");
 	const { addEvent } = useEventContext();
@@ -18,19 +20,18 @@ export default function CurrentUserCard() {
 		}
 	}, [userInfoEvent]);
 
-	const showAddEntryModal = (type) => {
+	const showAddEntryModal = (type: string) => {
 		setEntryType(type);
 		setShowModal(true);
 	};
 
-	const handleDataFromChild = (showModal) => {
+	const handleDataFromChild = (showModal: boolean) => {
 		setShowModal(showModal);
 	};
 
-	const handleMenuClick = (e, key) => {
-		e.domEvent.stopPropagation(); // Prevent container selection
+	const handleMenuClick = (key: string) => {
 		if (key === "logout") {
-			addEvent("logout", true);
+			logoutAction(addEvent);
 		} else if (key === "add_contact") {
 			showAddEntryModal("contact");
 		} else if (key === "create_group") {
@@ -74,16 +75,19 @@ export default function CurrentUserCard() {
 		},
 	];
 
-	const menuProps = {
+	const menuProps: MenuProps = {
 		items,
-		onClick: (e) => handleMenuClick(e, e.key),
+		onClick: (e) => {
+			e.domEvent.stopPropagation(); // Prevent container selection
+			handleMenuClick(e.key);
+		},
 	};
 
-	const handleDropdownVisibility = (visible) => {
+	const handleDropdownVisibility = (visible: boolean) => {
 		setDropdownVisible(visible);
 	};
 
-	const handleButtonClick = (e) => {
+	const handleButtonClick = (e: React.MouseEvent) => {
 		e.stopPropagation(); // Prevent click from propagating to the contact container
 		setDropdownVisible(!dropdownVisible); // Toggle dropdown visibility
 	};
@@ -117,6 +121,7 @@ export default function CurrentUserCard() {
 									icon={<MoreOutlined />}
 									onClick={handleButtonClick}
 									title="Otros"
+									aria-label="Otros"
 								/>
 							</Dropdown>
 						</div>

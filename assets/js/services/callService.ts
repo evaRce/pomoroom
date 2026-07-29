@@ -1,0 +1,11 @@
+import { AddEvent } from "../types/events";
+
+export function joinCallRoomAction(
+  addEvent: AddEvent,
+  chatId: string,
+  chatName: string,
+  isGroupChat: boolean
+): void {
+  addEvent("call_room_name", { chat_id: chatId, name: chatName, is_group: isGroupChat });
+  addEvent("join_room", { chat_id: chatId });
+}

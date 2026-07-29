@@ -1,12 +1,22 @@
 import React, { useState } from "react";
-import { Button, Dropdown } from "antd";
+import { Button, Dropdown, type MenuProps } from "antd";
 import { Brain, Coffee, RotateCcw } from "lucide-react";
 import { useEventContext } from "../EventContext";
 import { DownOutlined, DeleteOutlined } from "@ant-design/icons";
 import { usePomodoroNotification } from "../pomodoro_timer/pomodoroNotificationStore";
 import pomodoroTimerText from "../pomodoro_timer/pomodoroTimerText";
+import { selectPrivateChatAction } from "../../../services/contactService";
+import { selectGroupChatAction } from "../../../services/groupService";
+import type { NormalizedContact } from "./ConversationTargetsList";
 
-export default function ConversationTargetItem({ contact, isSelected, onSelect, onDelete }: any) {
+interface ConversationTargetItemProps {
+  contact: NormalizedContact;
+  isSelected: boolean;
+  onSelect: () => void;
+  onDelete: () => void;
+}
+
+export default function ConversationTargetItem({ contact, isSelected, onSelect, onDelete }: ConversationTargetItemProps) {
   const { addEvent } = useEventContext();
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const notification = usePomodoroNotification(contact?.chat_id || "");
@@ -15,9 +25,9 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
   const handleChat = () => {
     if (!isSelected) {
       if (contact.is_group) {
-        addEvent("selected_group_chat", { group_name: contact.name });
+        selectGroupChatAction(addEvent, contact.name);
       } else {
-        addEvent("selected_private_chat", { contact_name: contact.name });
+        selectPrivateChatAction(addEvent, contact.name);
       }
       onSelect();
     }
@@ -49,10 +59,9 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
     }
   };
 
-  const handleMenuClick = (e: any, key: any) => {
-    e.domEvent.stopPropagation(); // Prevent container selection
+  const handleMenuClick = (key: string) => {
     if (key === "deleteChat") {
-      onDelete(contact.nickname);
+      onDelete();
     }
     setDropdownVisible(false);
   };
@@ -69,16 +78,19 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
     },
   ];
 
-  const menuProps = {
+  const menuProps: MenuProps = {
     items,
-    onClick: (e: any) => handleMenuClick(e, e.key),
+    onClick: (e) => {
+      e.domEvent.stopPropagation(); // Prevent container selection
+      handleMenuClick(e.key);
+    },
   };
 
-  const handleDropdownVisibility = (visible: any) => {
+  const handleDropdownVisibility = (visible: boolean) => {
     setDropdownVisible(visible);
   };
 
-  const handleButtonClick = (e: any) => {
+  const handleButtonClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent click from propagating to the contact container
     setDropdownVisible(!dropdownVisible); // Toggle dropdown visibility
   };
@@ -158,6 +170,8 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
                   className="hover:bg-gray-700 ml-1"
                   icon={<DownOutlined />}
                   onClick={handleButtonClick}
+                  title="Más opciones"
+                  aria-label="Más opciones"
                 />
               </Dropdown>
             )}

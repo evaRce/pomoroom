@@ -5,6 +5,8 @@ import { useLocalParticipant } from "@livekit/components-react";
 import { useCallContext } from "./CallContext";
 import { useEventContext } from "../EventContext";
 import callText from "./callText";
+import { selectPrivateChatAction } from "../../../services/contactService";
+import { selectGroupChatAction } from "../../../services/groupService";
 
 export default function MinimizedCallBar() {
   const {
@@ -31,9 +33,9 @@ export default function MinimizedCallBar() {
 
     if (canNavigateToCall) {
       if (activeCallIsGroupChat) {
-        addEvent("selected_group_chat", { group_name: activeCallRoomName });
+        selectGroupChatAction(addEvent, activeCallRoomName);
       } else {
-        addEvent("selected_private_chat", { contact_name: activeCallRoomName });
+        selectPrivateChatAction(addEvent, activeCallRoomName);
       }
       setMinimized(false);
     }
@@ -68,6 +70,7 @@ export default function MinimizedCallBar() {
           localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled);
         }}
         title={isMicrophoneEnabled ? callText.screen.muteMic : callText.screen.unmuteMic}
+        aria-label={isMicrophoneEnabled ? callText.screen.muteMic : callText.screen.unmuteMic}
       />
       <Button
         shape="circle"
@@ -80,6 +83,7 @@ export default function MinimizedCallBar() {
           leaveCall();
         }}
         title={callText.screen.endCall}
+        aria-label={callText.screen.endCall}
       />
     </div>
   );

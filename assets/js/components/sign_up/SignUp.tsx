@@ -2,14 +2,16 @@ import React, { useEffect, useState } from "react";
 import { Button, Form, Input } from "antd";
 import { LockOutlined, UserOutlined, RobotOutlined, HomeOutlined } from "@ant-design/icons";
 import signupText from "./signupText";
+import { FormErrors } from "../../types/liveview";
+import { getRandomBackgroundImageNumber } from "../../utils/randomBackgroundImage";
 
 export interface SignUpProps {
   submitUser(
     newUsername: string,
     newPassword: string,
     newNickname: string
-  ): any;
-  errors: object;
+  ): void;
+  errors: FormErrors;
 }
 
 export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
@@ -18,7 +20,12 @@ export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
   const nicknameRegex = new RegExp(/^\w[\w.]{2,18}\w$/);
 	const [imageNumber, setImageNumber] = useState(1);
 
-  const onFinish = (userData: any) => {
+  const onFinish = (userData: {
+    email: string;
+    password: string;
+    confirmPassword: string;
+    nickname: string;
+  }) => {
     submitUser(userData.email, userData.confirmPassword, userData.nickname);
   };
 
@@ -27,15 +34,14 @@ export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
       form.setFields(
         Object.keys(errors).map((key) => ({
           name: key,
-          errors: [errors[key]],
+          errors: [errors[key] as string],
         }))
       );
     }
   }, [errors, form]);
 
 	useEffect(() => {
-    const randomImageNumber = Math.floor(Math.random() * 5) + 1;
-    setImageNumber(randomImageNumber);
+    setImageNumber(getRandomBackgroundImageNumber());
   }, []);
 
   return (
@@ -52,9 +58,10 @@ export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
       <a href="/">
         <Button 
           className="absolute top-4 left-4 sm:top-8 sm:left-8 shadow bg-white"
-          icon={<HomeOutlined />} 
-          size="large" 
+          icon={<HomeOutlined />}
+          size="large"
           title={signupText.homeButtonTitle}
+          aria-label={signupText.homeButtonTitle}
         />
       </a>
       <div className="max-w-md w-full mt-12 sm:mt-0">

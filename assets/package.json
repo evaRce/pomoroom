@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
@@ -29,6 +32,7 @@
   "devDependencies": {
     "@types/react": "^18.2.69",
     "@types/react-dom": "^18.2.22",
-    "daisyui": "^4.12.2"
+    "daisyui": "^4.12.2",
+    "typescript": "^5.9.3"
   }
 }

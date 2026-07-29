@@ -2,6 +2,8 @@ defmodule Pomoroom.Messages.MessageSchema do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @max_text_length 5_000
+
   schema "messages" do
     field :msg_id, :string
     field :text, :string
@@ -21,6 +23,7 @@ defmodule Pomoroom.Messages.MessageSchema do
       :inserted_at,
       :updated_at
     ])
+    |> validate_length(:text, max: @max_text_length)
   end
 
   def message_changeset(args) do
