@@ -93,12 +93,12 @@ export default function CurrentUserCard() {
 	};
 
 	return (
-		<div className="flex w-full min-w-0 shrink-0 justify-between sm:items-center py-3 px-2 gap-2 bg-gray-100 border-t border-gray-200">
+		<div className="flex w-full min-w-0 shrink-0 justify-between sm:items-center py-3 landscape-sm:py-1.5 px-2 gap-2 bg-gray-100 border-t border-gray-200">
 			{userLogin && (
 				<div className="flex w-full min-w-0 relative rounded-lg items-center gap-2">
 					<div className="flex-shrink-0">
 						<img
-							className="h-10 w-10 rounded-full bg-white"
+							className="h-10 w-10 landscape-sm:h-8 landscape-sm:w-8 rounded-full bg-white"
 							src={userLogin.image_profile}
 							alt="default"
 							title={userLogin.nickname}

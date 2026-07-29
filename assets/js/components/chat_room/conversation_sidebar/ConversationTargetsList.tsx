@@ -332,7 +332,7 @@ export default function ConversationTargetsList() {
     <div className="flex flex-col flex-1 min-h-0 w-full min-w-0">
       <div className="flex items-center w-full bg-gray-100 shrink-0">
         <Input
-          className="my-2 ml-2 mr-1 sm:my-1.5 sm:ml-1.5 lg:my-2 lg:ml-2 flex-1 min-w-0"
+          className="my-2 ml-2 mr-1 sm:my-1.5 sm:ml-1.5 lg:my-2 lg:ml-2 landscape-sm:my-1 flex-1 min-w-0"
           type="text"
           placeholder="Buscar a mis panas"
           value={searchTerm}
