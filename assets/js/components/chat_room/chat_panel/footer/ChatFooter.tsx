@@ -20,6 +20,9 @@ export default function ChatFooter() {
   const [groupMemberRemovedMessage, setGroupMemberRemovedMessage] = useState("");
   const lastProcessedGroupMemberRemovedEventSignatureRef = useRef("");
   const lastProcessedGroupMemberAddedEventSignatureRef = useRef("");
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const emojiButtonRef = useRef<HTMLElement>(null);
+  const [isLandscapeSm, setIsLandscapeSm] = useState(false);
 
   const openPrivateChatEvent = useEvent("open_private_chat");
   const activeChatContextEvent = useEvent("active_chat_context");
@@ -29,8 +32,34 @@ export default function ChatFooter() {
 
   const onEmojiClick = (emojiObject: EmojiClickData, _event: MouseEvent) => {
     setInputStr((prevInput) => prevInput + emojiObject.emoji);
-    setShowPicker(false);
   };
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-height: 500px) and (orientation: landscape)");
+    setIsLandscapeSm(mediaQuery.matches);
+
+    const handleChange = (event: MediaQueryListEvent) => setIsLandscapeSm(event.matches);
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
+
+  useEffect(() => {
+    if (!showPicker) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (
+        emojiPickerRef.current?.contains(target) ||
+        emojiButtonRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setShowPicker(false);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showPicker]);
 
   const buildRemovedMessage = (groupName?: string) =>
     groupName
@@ -143,9 +172,9 @@ export default function ChatFooter() {
         </div>
       ) : (
         <form className="flex w-full gap-3" onSubmit={handleSendMessage}>
-          <div className="flex items-center w-full justify-center">
+          <div className="flex items-center w-full justify-center rounded-full bg-gray-100 shadow-sm transition-shadow duration-200 focus-within:shadow-md">
             <input
-              className="input bg-gray-100 h-8 w-full focus:outline-none rounded-r-none"
+              className="input bg-transparent border-none h-9 w-full px-4 focus:outline-none shadow-none"
               type="text"
               value={inputStr}
               onChange={(e) => {
@@ -155,19 +184,37 @@ export default function ChatFooter() {
                   setModalVisible(true);
                 }
               }}
-              placeholder="Type a message..."
+              placeholder="Escribe un mensaje"
               maxLength={5001}
             />
-            <div className="flex">
+            <div className="flex items-center shrink-0">
+              <div className="relative">
+                <Button
+                  ref={emojiButtonRef}
+                  className="bg-transparent border-none h-9 w-9 flex items-center justify-center hover:bg-gray-200 transition-colors duration-200"
+                  onClick={() => setShowPicker((prev) => !prev)}
+                  icon={<SmileOutlined />}
+                  title="Elegir emoji"
+                  aria-label="Elegir emoji"
+                />
+                {showPicker && (
+                  <div
+                    ref={emojiPickerRef}
+                    className="absolute bottom-full right-0 mb-2 z-50 rounded-lg shadow-lg overflow-hidden"
+                  >
+                    <EmojiPicker
+                      onEmojiClick={onEmojiClick}
+                      width={isLandscapeSm ? 260 : 300}
+                      height={isLandscapeSm ? 220 : 360}
+                      autoFocusSearch={false}
+                      searchDisabled={isLandscapeSm}
+                      previewConfig={{ showPreview: false }}
+                    />
+                  </div>
+                )}
+              </div>
               <Button
-                className="bg-gray-100 rounded-none"
-                onClick={() => setShowPicker(true)}
-                icon={<SmileOutlined />}
-                title="Elegir emoji"
-                aria-label="Elegir emoji"
-              />
-              <Button
-                className="bg-sky-400 rounded-l-none rounded-r-lg"
+                className="bg-sky-400 hover:bg-sky-500 border-none text-white h-9 w-9 flex items-center justify-center rounded-full mr-1 transition-colors duration-200"
                 icon={<SendOutlined />}
                 onClick={(e) => handleSendMessage(e)}
                 title="Enviar mensaje"
@@ -177,16 +224,6 @@ export default function ChatFooter() {
           </div>
         </form>
       )}
-      <Modal
-        title="Elige los emojis"
-        open={showPicker}
-        onCancel={() => setShowPicker(false)}
-        footer={null}
-        width={400}
-        centered
-      >
-        <EmojiPicker onEmojiClick={onEmojiClick} />
-      </Modal>
       <Modal
         title="Límite de caracteres excedido"
         open={modalVisible}
