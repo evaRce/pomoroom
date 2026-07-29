@@ -201,9 +201,12 @@ function ParticipantGrid({
 
   if (count === 2) {
     return (
-      <div className="flex h-full w-full items-center justify-center gap-[5%]">
+      <div className="flex h-full w-full items-center justify-center gap-[5%] max-sm:portrait:flex-col">
         {participants.map((participant) => (
-          <div key={participant.identity} className="aspect-square h-[80%] w-[40%]">
+          <div
+            key={participant.identity}
+            className="aspect-square h-[80%] w-[40%] max-sm:portrait:h-[40%] max-sm:portrait:w-[80%]"
+          >
             {renderTile(participant, "h-full w-full")}
           </div>
         ))}

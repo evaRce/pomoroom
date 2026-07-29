@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import {
-  Play,
-  Pause,
-  RotateCcw,
-  Coffee,
-  Brain,
-  Sparkles,
-} from "lucide-react";
+import { Play, Pause, RotateCcw, Coffee, Brain, Sparkles } from "lucide-react";
 import { message } from "antd";
 import { Button } from "../../../../components-shadcn/ui/button";
 import { cn } from "../../../../lib/utils";
@@ -35,19 +28,26 @@ import {
   setPomodoroTimerModeAction,
   savePomodoroConfigAction,
 } from "../../../services/pomodoroService";
-import type { PomodoroConfigPayload, PomodoroServerPayload } from "../../../types/events";
+import type {
+  PomodoroConfigPayload,
+  PomodoroServerPayload,
+} from "../../../types/events";
 
 interface PomodoroTimerProps {
   chatId: string;
   chatType: "private" | "group";
 }
 
-function hasCompleteConfig(config: {
-  work_duration?: number;
-  short_break_duration?: number;
-  long_break_duration?: number;
-  cycles_before_long_break?: number;
-} | undefined): config is {
+function hasCompleteConfig(
+  config:
+    | {
+        work_duration?: number;
+        short_break_duration?: number;
+        long_break_duration?: number;
+        cycles_before_long_break?: number;
+      }
+    | undefined,
+): config is {
   work_duration: number;
   short_break_duration: number;
   long_break_duration: number;
@@ -86,7 +86,9 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   const lastCompletionStampRef = useRef<string>("");
   const lastStateResyncStampRef = useRef<string>("");
   const soundEndWork = useRef(new Audio("/sounds/bell-notification.wav"));
-  const soundEndBreak = useRef(new Audio("/sounds/happy-bells-notification.wav"));
+  const soundEndBreak = useRef(
+    new Audio("/sounds/happy-bells-notification.wav"),
+  );
 
   // Events
   const configLoadedEvent = useEvent("pomodoro_state_loaded");
@@ -97,78 +99,104 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   // HELPERS & VALIDATORS
   // ============================================================================
 
-  const toPayloadConfig = useCallback((settings: TimerSettings) => ({
-    work_duration: settings?.workDuration,
-    short_break_duration: settings?.shortBreakDuration,
-    long_break_duration: settings?.longBreakDuration,
-    cycles_before_long_break: settings?.cyclesBeforeLongBreak,
-  }), []);
+  const toPayloadConfig = useCallback(
+    (settings: TimerSettings) => ({
+      work_duration: settings?.workDuration,
+      short_break_duration: settings?.shortBreakDuration,
+      long_break_duration: settings?.longBreakDuration,
+      cycles_before_long_break: settings?.cyclesBeforeLongBreak,
+    }),
+    [],
+  );
 
-  const applyIncomingConfig = useCallback((config: PomodoroConfigPayload | undefined) => {
-    if (!config) return;
+  const applyIncomingConfig = useCallback(
+    (config: PomodoroConfigPayload | undefined) => {
+      if (!config) return;
 
-    setSettings({
-      workDuration: config.work_duration,
-      shortBreakDuration: config.short_break_duration,
-      longBreakDuration: config.long_break_duration,
-      cyclesBeforeLongBreak: config.cycles_before_long_break,
-    });
-  }, []);
+      setSettings({
+        workDuration: config.work_duration,
+        shortBreakDuration: config.short_break_duration,
+        longBreakDuration: config.long_break_duration,
+        cyclesBeforeLongBreak: config.cycles_before_long_break,
+      });
+    },
+    [],
+  );
 
-  const applyIncomingTimerState = useCallback((eventPayload: PomodoroServerPayload) => {
-    const nextTimer = normalizeTimerPayload(eventPayload);
-    if (!nextTimer) return;
+  const applyIncomingTimerState = useCallback(
+    (eventPayload: PomodoroServerPayload) => {
+      const nextTimer = normalizeTimerPayload(eventPayload);
+      if (!nextTimer) return;
 
-    setSettings(nextTimer.settings);
-    setTimerSnapshot(nextTimer);
-    setMode(nextTimer.mode);
-    setIsRunning(nextTimer.isRunning);
-    setCyclesCompleted(nextTimer.cyclesCompleted);
-    setHasPendingWorkHalfCycle(nextTimer.hasPendingWorkHalfCycle);
-    setTimerId(eventPayload.timer_id || "");
-    setNowMs(Date.now());
-    lastCompletionStampRef.current = `${nextTimer.lastCompletedMode || "none"}:${nextTimer.lastUpdated}`;
-    hasSyncedInitialTimerRef.current = true;
-  }, []);
+      setSettings(nextTimer.settings);
+      setTimerSnapshot(nextTimer);
+      setMode(nextTimer.mode);
+      setIsRunning(nextTimer.isRunning);
+      setCyclesCompleted(nextTimer.cyclesCompleted);
+      setHasPendingWorkHalfCycle(nextTimer.hasPendingWorkHalfCycle);
+      setTimerId(eventPayload.timer_id || "");
+      setNowMs(Date.now());
+      lastCompletionStampRef.current = `${nextTimer.lastCompletedMode || "none"}:${nextTimer.lastUpdated}`;
+      hasSyncedInitialTimerRef.current = true;
+    },
+    [],
+  );
 
-  const getDuration = useCallback((m: TimerMode) => {
-    if (!settings) return 0;
-    switch (m) {
-      case "work": return settings.workDuration * 60;
-      case "shortBreak": return settings.shortBreakDuration * 60;
-      case "longBreak": return settings.longBreakDuration * 60;
-    }
-  }, [settings]);
+  const getDuration = useCallback(
+    (m: TimerMode) => {
+      if (!settings) return 0;
+      switch (m) {
+        case "work":
+          return settings.workDuration * 60;
+        case "shortBreak":
+          return settings.shortBreakDuration * 60;
+        case "longBreak":
+          return settings.longBreakDuration * 60;
+      }
+    },
+    [settings],
+  );
 
-  const calculateRemainingSeconds = useCallback((timer: TimerState | null, currentNowMs: number) => {
-    if (!timer) return 0;
+  const calculateRemainingSeconds = useCallback(
+    (timer: TimerState | null, currentNowMs: number) => {
+      if (!timer) return 0;
 
-    const durationMs = timer.durationMs || getDuration(timer.mode) * 1000;
-    const adjustedNowMs = currentNowMs - (timer.serverClockOffsetMs || 0);
+      const durationMs = timer.durationMs || getDuration(timer.mode) * 1000;
+      const adjustedNowMs = currentNowMs - (timer.serverClockOffsetMs || 0);
 
-    if (timer.isRunning && timer.startedAt) {
-      return Math.max(Math.ceil((durationMs - (adjustedNowMs - timer.startedAt)) / 1000), 0);
-    }
+      if (timer.isRunning && timer.startedAt) {
+        return Math.max(
+          Math.ceil((durationMs - (adjustedNowMs - timer.startedAt)) / 1000),
+          0,
+        );
+      }
 
-    if (timer.startedAt && timer.pausedAt) {
-      return Math.max(Math.ceil((durationMs - (timer.pausedAt - timer.startedAt)) / 1000), 0);
-    }
+      if (timer.startedAt && timer.pausedAt) {
+        return Math.max(
+          Math.ceil((durationMs - (timer.pausedAt - timer.startedAt)) / 1000),
+          0,
+        );
+      }
 
-    return Math.max(Math.ceil(durationMs / 1000), 0);
-  }, [getDuration]);
+      return Math.max(Math.ceil(durationMs / 1000), 0);
+    },
+    [getDuration],
+  );
 
-  const calculateSessionElapsedSeconds = useCallback((timer: TimerState | null, currentNowMs: number) => {
-    if (!timer) return 0;
+  const calculateSessionElapsedSeconds = useCallback(
+    (timer: TimerState | null, currentNowMs: number) => {
+      if (!timer) return 0;
 
-    const adjustedNowMs = currentNowMs - (timer.serverClockOffsetMs || 0);
-    const runningSegmentMs =
-      timer.isRunning && timer.sessionStartedAt
-        ? Math.max(adjustedNowMs - timer.sessionStartedAt, 0)
-        : 0;
+      const adjustedNowMs = currentNowMs - (timer.serverClockOffsetMs || 0);
+      const runningSegmentMs =
+        timer.isRunning && timer.sessionStartedAt
+          ? Math.max(adjustedNowMs - timer.sessionStartedAt, 0)
+          : 0;
 
-    return Math.floor((timer.sessionElapsedMs + runningSegmentMs) / 1000);
-  }, []);
-
+      return Math.floor((timer.sessionElapsedMs + runningSegmentMs) / 1000);
+    },
+    [],
+  );
 
   const validate = (newSettings: TimerSettings) => {
     const e: Record<string, string> = {};
@@ -181,13 +209,19 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
 
     if (!newSettings.shortBreakDuration) {
       e.shortBreakDuration = pomodoroTimerText.errors.writeNumber;
-    } else if (newSettings.shortBreakDuration < 1 || newSettings.shortBreakDuration > 900) {
+    } else if (
+      newSettings.shortBreakDuration < 1 ||
+      newSettings.shortBreakDuration > 900
+    ) {
       e.shortBreakDuration = pomodoroTimerText.errors.inputNumber;
     }
 
     if (!newSettings.longBreakDuration) {
       e.longBreakDuration = pomodoroTimerText.errors.writeNumber;
-    } else if (newSettings.longBreakDuration < 1 || newSettings.longBreakDuration > 900) {
+    } else if (
+      newSettings.longBreakDuration < 1 ||
+      newSettings.longBreakDuration > 900
+    ) {
       e.longBreakDuration = pomodoroTimerText.errors.inputNumber;
     }
 
@@ -206,8 +240,10 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
       newSettings.cyclesBeforeLongBreak < MIN_CYCLE_BEFORE_LONG_BREAK ||
       newSettings.cyclesBeforeLongBreak > MAX_CYCLE_BEFORE_LONG_BREAK
     ) {
-      e.cyclesBeforeLongBreak =
-        pomodoroTimerText.errors.cyclesBeforeLongBreak(MIN_CYCLE_BEFORE_LONG_BREAK, MAX_CYCLE_BEFORE_LONG_BREAK);
+      e.cyclesBeforeLongBreak = pomodoroTimerText.errors.cyclesBeforeLongBreak(
+        MIN_CYCLE_BEFORE_LONG_BREAK,
+        MAX_CYCLE_BEFORE_LONG_BREAK,
+      );
     }
 
     return e;
@@ -224,11 +260,23 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   const getModeInfo = () => {
     switch (mode) {
       case "work":
-        return { label: pomodoroTimerText.work, icon: Brain, color: "text-sky-500" }
+        return {
+          label: pomodoroTimerText.work,
+          icon: Brain,
+          color: "text-sky-500",
+        };
       case "shortBreak":
-        return { label: pomodoroTimerText.shortBreak, icon: Coffee, color: "text-green-500" }
+        return {
+          label: pomodoroTimerText.shortBreak,
+          icon: Coffee,
+          color: "text-green-500",
+        };
       case "longBreak":
-        return { label: pomodoroTimerText.longBreak, icon: Sparkles, color: "text-yellow-500" }
+        return {
+          label: pomodoroTimerText.longBreak,
+          icon: Sparkles,
+          color: "text-yellow-500",
+        };
     }
   };
 
@@ -236,21 +284,24 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   // TIMER LOGIC & HANDLERS
   // ============================================================================
 
-  const handleTimerComplete = useCallback((completedMode: TimerMode | null) => {
-    if (!completedMode) return;
+  const handleTimerComplete = useCallback(
+    (completedMode: TimerMode | null) => {
+      if (!completedMode) return;
 
-    if (completedMode === "work") {
-      if (soundEnabled && soundEndWork.current) {
-        soundEndWork.current.currentTime = 0;
-        soundEndWork.current.play();
+      if (completedMode === "work") {
+        if (soundEnabled && soundEndWork.current) {
+          soundEndWork.current.currentTime = 0;
+          soundEndWork.current.play();
+        }
+      } else {
+        if (soundEnabled && soundEndBreak.current) {
+          soundEndBreak.current.currentTime = 0;
+          soundEndBreak.current.play();
+        }
       }
-    } else {
-      if (soundEnabled && soundEndBreak.current) {
-        soundEndBreak.current.currentTime = 0;
-        soundEndBreak.current.play();
-      }
-    }
-  }, [soundEnabled]);
+    },
+    [soundEnabled],
+  );
 
   const handleStart = () => {
     if (!chatId || !settings) return;
@@ -305,7 +356,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
       timerId,
       chatId,
       chatType,
-      toPayloadConfig(settings)
+      toPayloadConfig(settings),
     );
   };
 
@@ -315,34 +366,40 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     requestPomodoroStateAction(addEvent, chatId, chatType);
   }, [addEvent, chatId, chatType]);
 
-  const syncTimerState = useCallback((timer: TimerState | undefined) => {
-    if (!timer) return;
+  const syncTimerState = useCallback(
+    (timer: TimerState | undefined) => {
+      if (!timer) return;
 
-    const completionStamp = `${timer.lastCompletedMode || "none"}:${timer.lastUpdated}`;
-    const shouldPlayCompletionSound = hasSyncedInitialTimerRef.current;
+      const completionStamp = `${timer.lastCompletedMode || "none"}:${timer.lastUpdated}`;
+      const shouldPlayCompletionSound = hasSyncedInitialTimerRef.current;
 
-    setTimerSnapshot(timer);
-    setMode(timer.mode);
-    setIsRunning(timer.isRunning);
-    setCyclesCompleted(timer.cyclesCompleted);
-    setHasPendingWorkHalfCycle(timer.hasPendingWorkHalfCycle);
+      setTimerSnapshot(timer);
+      setMode(timer.mode);
+      setIsRunning(timer.isRunning);
+      setCyclesCompleted(timer.cyclesCompleted);
+      setHasPendingWorkHalfCycle(timer.hasPendingWorkHalfCycle);
 
-    if (timer.settings) {
-      setSettings(timer.settings);
-    }
-
-    if (timer.lastCompletedMode && completionStamp !== lastCompletionStampRef.current) {
-      lastCompletionStampRef.current = completionStamp;
-
-      if (shouldPlayCompletionSound) {
-        handleTimerComplete(timer.lastCompletedMode);
+      if (timer.settings) {
+        setSettings(timer.settings);
       }
-    }
 
-    if (!hasSyncedInitialTimerRef.current) {
-      hasSyncedInitialTimerRef.current = true;
-    }
-  }, [handleTimerComplete]);
+      if (
+        timer.lastCompletedMode &&
+        completionStamp !== lastCompletionStampRef.current
+      ) {
+        lastCompletionStampRef.current = completionStamp;
+
+        if (shouldPlayCompletionSound) {
+          handleTimerComplete(timer.lastCompletedMode);
+        }
+      }
+
+      if (!hasSyncedInitialTimerRef.current) {
+        hasSyncedInitialTimerRef.current = true;
+      }
+    },
+    [handleTimerComplete],
+  );
 
   useEffect(() => {
     if (!timerSnapshot?.isRunning) {
@@ -354,14 +411,26 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     }, 1000);
 
     return () => window.clearInterval(interval);
-  }, [timerSnapshot?.isRunning, timerSnapshot?.startedAt, timerSnapshot?.pausedAt, timerSnapshot?.durationMs]);
+  }, [
+    timerSnapshot?.isRunning,
+    timerSnapshot?.startedAt,
+    timerSnapshot?.pausedAt,
+    timerSnapshot?.durationMs,
+  ]);
 
   useEffect(() => {
     if (!timerSnapshot) return;
 
     setTimeLeft(calculateRemainingSeconds(timerSnapshot, nowMs));
-    setSessionElapsedSeconds(calculateSessionElapsedSeconds(timerSnapshot, nowMs));
-  }, [timerSnapshot, nowMs, calculateRemainingSeconds, calculateSessionElapsedSeconds]);
+    setSessionElapsedSeconds(
+      calculateSessionElapsedSeconds(timerSnapshot, nowMs),
+    );
+  }, [
+    timerSnapshot,
+    nowMs,
+    calculateRemainingSeconds,
+    calculateSessionElapsedSeconds,
+  ]);
 
   useEffect(() => {
     if (!chatId || !chatType) return;
@@ -414,14 +483,19 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
 
   // Handle config loaded
   useEffect(() => {
-    if (!configLoadedEvent ||
+    if (
+      !configLoadedEvent ||
       configLoadedEvent.chat_id !== chatId ||
-      configLoadedEvent.chat_type !== chatType) {
+      configLoadedEvent.chat_type !== chatType
+    ) {
       return;
     }
 
     if (!hasCompleteConfig(configLoadedEvent.config)) {
-      console.error("pomodoro_state_loaded llegó sin config completo", configLoadedEvent);
+      console.error(
+        "pomodoro_state_loaded llegó sin config completo",
+        configLoadedEvent,
+      );
       removeEvent("pomodoro_state_loaded");
       return;
     }
@@ -437,18 +511,30 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     applyIncomingConfig(configLoadedEvent.config);
     applyIncomingTimerState(configLoadedEvent);
     removeEvent("pomodoro_state_loaded");
-  }, [configLoadedEvent, chatId, chatType, applyIncomingConfig, applyIncomingTimerState, removeEvent]);
+  }, [
+    configLoadedEvent,
+    chatId,
+    chatType,
+    applyIncomingConfig,
+    applyIncomingTimerState,
+    removeEvent,
+  ]);
 
   // Handle config updated (after save)
   useEffect(() => {
-    if (!configUpdatedEvent ||
+    if (
+      !configUpdatedEvent ||
       configUpdatedEvent.chat_id !== chatId ||
-      configUpdatedEvent.chat_type !== chatType) {
+      configUpdatedEvent.chat_type !== chatType
+    ) {
       return;
     }
 
     if (!hasCompleteConfig(configUpdatedEvent.config)) {
-      console.error("update_config llegó sin config completo", configUpdatedEvent);
+      console.error(
+        "update_config llegó sin config completo",
+        configUpdatedEvent,
+      );
       removeEvent("update_config");
       return;
     }
@@ -469,13 +555,23 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
       text: pomodoroTimerText.settingsSaved,
     });
     removeEvent("update_config");
-  }, [configUpdatedEvent, chatId, chatType, timerId, applyIncomingConfig, applyIncomingTimerState, removeEvent]);
+  }, [
+    configUpdatedEvent,
+    chatId,
+    chatType,
+    timerId,
+    applyIncomingConfig,
+    applyIncomingTimerState,
+    removeEvent,
+  ]);
 
   // Handle config error
   useEffect(() => {
-    if (!configErrorEvent ||
+    if (
+      !configErrorEvent ||
       configErrorEvent.chat_id !== chatId ||
-      configErrorEvent.chat_type !== chatType) {
+      configErrorEvent.chat_type !== chatType
+    ) {
       return;
     }
 
@@ -520,8 +616,10 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   // ============================================================================
 
   const hasErrors = Object.keys(errors).length > 0;
-  const totalDuration = (timerSnapshot?.durationMs || getDuration(mode) * 1000) / 1000;
-  const progress = totalDuration > 0 ? ((totalDuration - timeLeft) / totalDuration) * 100 : 0;
+  const totalDuration =
+    (timerSnapshot?.durationMs || getDuration(mode) * 1000) / 1000;
+  const progress =
+    totalDuration > 0 ? ((totalDuration - timeLeft) / totalDuration) * 100 : 0;
   const modeInfo = getModeInfo();
   const ModeIcon = modeInfo.icon;
 
@@ -538,205 +636,221 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full min-h-0 overflow-y-auto bg-gray-50 p-4 sm:p-6">
-      {/* Mode selector */}
-      <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mb-6 sm:mb-8">
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "h-8 sm:h-9 text-xs font-medium",
-            isRunning && "cursor-not-allowed opacity-50",
-            mode === "work"
-              ? "bg-sky-100 text-sky-600 hover:bg-sky-200 border border-sky-400"
-              : "text-muted-foreground hover:bg-sky-300 border border-gray-200"
-          )}
-          disabled={isRunning}
-          onClick={() => handleModeChange("work")}
-        >
-          <Brain className="h-3.5 w-3.5 mr-1.5" />
-          {pomodoroTimerText.work}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "h-8 sm:h-9 text-xs font-medium",
-            isRunning && "cursor-not-allowed opacity-50",
-            mode === "shortBreak"
-              ? "bg-green-100 text-green-700 hover:bg-green-200 border border-green-400"
-              : "text-muted-foreground hover:bg-green-300 border border-gray-200"
-          )}
-          disabled={isRunning}
-          onClick={() => handleModeChange("shortBreak")}
-        >
-          <Coffee className="h-3.5 w-3.5 mr-1.5" />
-          {pomodoroTimerText.shortBreak}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "h-8 sm:h-9 text-xs font-medium",
-            isRunning && "cursor-not-allowed opacity-50",
-            mode === "longBreak"
-              ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border border-yellow-400"
-              : "text-muted-foreground hover:bg-yellow-300 border border-gray-200"
-          )}
-          disabled={isRunning}
-          onClick={() => handleModeChange("longBreak")}
-        >
-          <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-          {pomodoroTimerText.longBreak}
-        </Button>
-      </div>
-
-      {/* Timer display */}
-      <div className="relative flex items-center justify-center mb-6 sm:mb-8">
-        <svg className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 -rotate-90" viewBox="0 0 200 200">
-          <circle
-            cx="100"
-            cy="100"
-            r="90"
-            fill="none"
-            stroke="#dedee2"
-            strokeWidth="8"
-          />
-          <circle
-            cx="100"
-            cy="100"
-            r="90"
-            fill="none"
-            stroke={
-              mode === "work"
-                ? "#41aff4"
-                : mode === "shortBreak"
-                  ? "#2fd850"
-                  : "#fffc4d"
-            }
-            strokeWidth="8"
-            strokeLinecap="round"
-            strokeDasharray={2 * Math.PI * 90}
-            strokeDashoffset={2 * Math.PI * 90 * (1 - progress / 100)}
+    <div className="flex h-full w-full min-h-0 overflow-y-auto bg-gray-50">
+      <div className="flex flex-col items-center w-full p-4 sm:p-6 m-auto">
+        {/* Mode selector */}
+        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mb-6 sm:mb-8 landscape-sm:mb-3">
+          <Button
+            variant="ghost"
+            size="sm"
             className={cn(
-              timerSnapshot?.isRunning
-                ? "transition-[stroke-dashoffset] duration-1000 ease-linear"
-                : "transition-none"
+              "h-8 sm:h-9 text-xs font-medium",
+              isRunning && "cursor-not-allowed opacity-50",
+              mode === "work"
+                ? "bg-sky-100 text-sky-600 hover:bg-sky-200 border border-sky-400"
+                : "text-muted-foreground hover:bg-sky-300 border border-gray-200",
             )}
-          />
-        </svg>
-
-        <div className="absolute flex flex-col items-center px-2">
-          <div className={cn("flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2", modeInfo.color)}>
-            <ModeIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-            <span className="text-xs sm:text-sm font-medium">{modeInfo.label}</span>
-          </div>
-          <span className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground font-mono tracking-tight">
-            {formatDuration(timeLeft)}
-          </span>
-          <span className="text-xs sm:text-sm text-slate-500 mt-1.5 sm:mt-2">
-            {pomodoroTimerText.cycle} {cyclesCompleted + 1}
-          </span>
+            disabled={isRunning}
+            onClick={() => handleModeChange("work")}
+          >
+            <Brain className="h-3.5 w-3.5 mr-1.5" />
+            {pomodoroTimerText.work}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "h-8 sm:h-9 text-xs font-medium",
+              isRunning && "cursor-not-allowed opacity-50",
+              mode === "shortBreak"
+                ? "bg-green-100 text-green-700 hover:bg-green-200 border border-green-400"
+                : "text-muted-foreground hover:bg-green-300 border border-gray-200",
+            )}
+            disabled={isRunning}
+            onClick={() => handleModeChange("shortBreak")}
+          >
+            <Coffee className="h-3.5 w-3.5 mr-1.5" />
+            {pomodoroTimerText.shortBreak}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "h-8 sm:h-9 text-xs font-medium",
+              isRunning && "cursor-not-allowed opacity-50",
+              mode === "longBreak"
+                ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border border-yellow-400"
+                : "text-muted-foreground hover:bg-yellow-300 border border-gray-200",
+            )}
+            disabled={isRunning}
+            onClick={() => handleModeChange("longBreak")}
+          >
+            <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+            {pomodoroTimerText.longBreak}
+          </Button>
         </div>
-      </div>
 
-      {/* Controls */}
-      <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <Button
-          variant="outline"
-          size="icon"
-          className={cn(
-            "h-10 w-10 sm:h-12 sm:w-12 rounded-full",
-            mode === "work"
-              ? "hover:bg-sky-200"
-              : mode === "shortBreak"
-                ? "hover:bg-green-200"
-                : "hover:bg-yellow-200"
-          )}
-          onClick={handleReset}
-          aria-label="Reset timer"
-        >
-          <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
-        </Button>
-        <Button
-          size="icon"
-          className={cn(
-            "h-14 w-14 sm:h-16 sm:w-16 rounded-full",
-            mode === "work"
-              ? "bg-sky-300 hover:bg-sky-200"
-              : mode === "shortBreak"
-                ? "bg-green-300 hover:bg-green-200"
-                : "bg-yellow-300 hover:bg-yellow-200"
-          )}
-          onClick={isRunning ? handlePause : handleStart}
-          aria-label={isRunning ? "Pause timer" : "Start timer"}
-        >
-          {isRunning ? (
-            <Pause className="h-10 w-10 sm:h-12 sm:w-12" />
-          ) : (
-            <Play className="h-10 w-10 sm:h-12 sm:w-12" />
-          )}
-        </Button>
+        {/* Timer display */}
+        <div className="relative flex items-center justify-center mb-6 sm:mb-8 landscape-sm:mb-3">
+          <svg
+            className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 -rotate-90 landscape-sm:h-32 landscape-sm:w-32"
+            viewBox="0 0 200 200"
+          >
+            <circle
+              cx="100"
+              cy="100"
+              r="90"
+              fill="none"
+              stroke="#dedee2"
+              strokeWidth="8"
+            />
+            <circle
+              cx="100"
+              cy="100"
+              r="90"
+              fill="none"
+              stroke={
+                mode === "work"
+                  ? "#41aff4"
+                  : mode === "shortBreak"
+                    ? "#2fd850"
+                    : "#fffc4d"
+              }
+              strokeWidth="8"
+              strokeLinecap="round"
+              strokeDasharray={2 * Math.PI * 90}
+              strokeDashoffset={2 * Math.PI * 90 * (1 - progress / 100)}
+              className={cn(
+                timerSnapshot?.isRunning
+                  ? "transition-[stroke-dashoffset] duration-1000 ease-linear"
+                  : "transition-none",
+              )}
+            />
+          </svg>
 
-        <PomodoroSettingsPopover
-          mode={mode}
-          settings={settings}
-          errors={errors}
-          soundEnabled={soundEnabled}
-          saveState={saveState}
-          hasErrors={hasErrors}
-          disabled={isRunning}
-          onChange={handleChange}
-          onToggleSound={setSoundEnabled}
-          onSave={handleSaveSettings}
-        />
-      </div>
+          <div className="absolute flex flex-col items-center px-2">
+            <div
+              className={cn(
+                "flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2 landscape-sm:mb-0 landscape-sm:gap-1",
+                modeInfo.color,
+              )}
+            >
+              <ModeIcon className="h-4 w-4 sm:h-5 sm:w-5 landscape-sm:h-3 landscape-sm:w-3" />
+              <span className="text-xs sm:text-sm font-medium landscape-sm:text-[10px]">
+                {modeInfo.label}
+              </span>
+            </div>
+            <span className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground font-mono tracking-tight landscape-sm:text-2xl">
+              {formatDuration(timeLeft)}
+            </span>
+            <span className="text-xs sm:text-sm text-slate-500 mt-1.5 sm:mt-2 landscape-sm:mt-0 landscape-sm:text-[10px]">
+              {pomodoroTimerText.cycle} {cyclesCompleted + 1}
+            </span>
+          </div>
+        </div>
 
-      {/* Stats: session time + completed cycles */}
-      <div className="grid grid-cols-[auto_auto_auto] items-center justify-center gap-x-4 sm:gap-x-8 gap-y-0.5">
-        <span className="self-start text-xs sm:text-sm text-slate-500 text-center justify-self-center">
-          {pomodoroTimerText.sessionTime}
-        </span>
-        <div className="row-span-2 h-full w-px bg-slate-200 justify-self-center" />
-        <p className="self-start text-xs sm:text-sm text-slate-500 text-center justify-self-center">
-          {pomodoroTimerText.cyclesCompleted(cyclesCompleted)}
-        </p>
+        {/* Controls */}
+        <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8 landscape-sm:mb-3">
+          <Button
+            variant="outline"
+            size="icon"
+            className={cn(
+              "h-10 w-10 sm:h-12 sm:w-12 rounded-full",
+              mode === "work"
+                ? "hover:bg-sky-200"
+                : mode === "shortBreak"
+                  ? "hover:bg-green-200"
+                  : "hover:bg-yellow-200",
+            )}
+            onClick={handleReset}
+            aria-label="Reset timer"
+          >
+            <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
+          </Button>
+          <Button
+            size="icon"
+            className={cn(
+              "h-14 w-14 sm:h-16 sm:w-16 rounded-full",
+              mode === "work"
+                ? "bg-sky-300 hover:bg-sky-200"
+                : mode === "shortBreak"
+                  ? "bg-green-300 hover:bg-green-200"
+                  : "bg-yellow-300 hover:bg-yellow-200",
+            )}
+            onClick={isRunning ? handlePause : handleStart}
+            aria-label={isRunning ? "Pause timer" : "Start timer"}
+          >
+            {isRunning ? (
+              <Pause className="h-10 w-10 sm:h-12 sm:w-12" />
+            ) : (
+              <Play className="h-10 w-10 sm:h-12 sm:w-12" />
+            )}
+          </Button>
 
-        <span className="text-base sm:text-lg font-mono font-semibold text-slate-600 justify-self-center">
-          {formatSessionDuration(sessionElapsedSeconds)}
-        </span>
-        <div className="flex items-center gap-1.5 sm:gap-2 justify-self-center">
-          {Array.from({ length: settings.cyclesBeforeLongBreak }).map((_, i) => {
-            const remainder = cyclesCompleted % settings.cyclesBeforeLongBreak;
-            const filledCount =
-              remainder === 0
-                ? cyclesCompleted > 0 && !hasPendingWorkHalfCycle
-                  ? settings.cyclesBeforeLongBreak
-                  : 0
-                : remainder;
+          <PomodoroSettingsPopover
+            mode={mode}
+            settings={settings}
+            errors={errors}
+            soundEnabled={soundEnabled}
+            saveState={saveState}
+            saveMessage={saveMessage}
+            hasErrors={hasErrors}
+            disabled={isRunning}
+            onChange={handleChange}
+            onToggleSound={setSoundEnabled}
+            onSave={handleSaveSettings}
+          />
+        </div>
 
-            const isFull = i < filledCount;
-            const isHalf = hasPendingWorkHalfCycle && i === filledCount;
+        {/* Stats: session time + completed cycles */}
+        <div className="grid grid-cols-[auto_auto_auto] items-center justify-center gap-x-4 sm:gap-x-8 gap-y-0.5">
+          <span className="self-start text-xs sm:text-sm text-slate-500 text-center justify-self-center">
+            {pomodoroTimerText.sessionTime}
+          </span>
+          <div className="row-span-2 h-full w-px bg-slate-200 justify-self-center" />
+          <p className="self-start text-xs sm:text-sm text-slate-500 text-center justify-self-center">
+            {pomodoroTimerText.cyclesCompleted(cyclesCompleted)}
+          </p>
 
-            return (
-              <div
-                key={i}
-                className={cn(
-                  "relative h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-slate-300 overflow-hidden",
-                  "transition-colors"
-                )}
-              >
-                {(isFull || isHalf) && (
+          <span className="text-base sm:text-lg font-mono font-semibold text-slate-600 justify-self-center">
+            {formatSessionDuration(sessionElapsedSeconds)}
+          </span>
+          <div className="flex items-center gap-1.5 sm:gap-2 justify-self-center">
+            {Array.from({ length: settings.cyclesBeforeLongBreak }).map(
+              (_, i) => {
+                const remainder =
+                  cyclesCompleted % settings.cyclesBeforeLongBreak;
+                const filledCount =
+                  remainder === 0
+                    ? cyclesCompleted > 0 && !hasPendingWorkHalfCycle
+                      ? settings.cyclesBeforeLongBreak
+                      : 0
+                    : remainder;
+
+                const isFull = i < filledCount;
+                const isHalf = hasPendingWorkHalfCycle && i === filledCount;
+
+                return (
                   <div
+                    key={i}
                     className={cn(
-                      "absolute inset-y-0 left-0 bg-slate-600",
-                      isFull ? "w-full" : "w-1/2"
+                      "relative h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-slate-300 overflow-hidden",
+                      "transition-colors",
                     )}
-                  />
-                )}
-              </div>
-            );
-          })}
+                  >
+                    {(isFull || isHalf) && (
+                      <div
+                        className={cn(
+                          "absolute inset-y-0 left-0 bg-slate-600",
+                          isFull ? "w-full" : "w-1/2",
+                        )}
+                      />
+                    )}
+                  </div>
+                );
+              },
+            )}
+          </div>
         </div>
       </div>
     </div>

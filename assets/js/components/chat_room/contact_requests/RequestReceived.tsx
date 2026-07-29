@@ -24,13 +24,13 @@ export default function RequestReceived({ imageNumber }: { imageNumber: number }
   };
 
   return (
-    <div className="flex flex-col flex-1 justify-center items-center">
+    <div className="flex flex-col flex-1 relative justify-center items-center">
       <img
         src={`/images/background2/background-${imageNumber}.svg`}
         alt="background"
-        className="object-cover w-full h-full opacity-45"
+        className="absolute inset-0 object-cover w-full h-full opacity-45"
       />
-      <div className="flex flex-col absolute justify-center items-center bg-white p-4 rounded-lg">
+      <div className="flex flex-col items-center bg-white p-4 rounded-lg max-w-[80vw] sm:max-w-none text-center z-10">
         <Text className="text-base sm:text-base md:text-lg lg:text-xl">
           {requestData ? (
             <>
