@@ -17,7 +17,10 @@ module.exports = {
     extend: {
       colors: {
         brand: "#FD4F00",
-      }
+      },
+      screens: {
+        "landscape-sm": { raw: "(max-height: 500px) and (orientation: landscape)" },
+      },
     },
   },
   daisyui: {

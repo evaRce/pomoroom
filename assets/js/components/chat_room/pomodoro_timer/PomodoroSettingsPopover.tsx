@@ -35,6 +35,7 @@ interface PomodoroSettingsPopoverProps {
   errors: Record<string, string>;
   soundEnabled: boolean;
   saveState: SaveState;
+  saveMessage?: SaveMessage | null;
   hasErrors: boolean;
   disabled?: boolean;
   onChange: (field: keyof TimerSettings, value: string) => void;
@@ -48,6 +49,7 @@ export function PomodoroSettingsPopover({
   errors,
   soundEnabled,
   saveState,
+  saveMessage,
   hasErrors,
   disabled,
   onChange,
@@ -66,7 +68,7 @@ export function PomodoroSettingsPopover({
               ? "hover:bg-sky-200"
               : mode === "shortBreak"
                 ? "hover:bg-green-200"
-                : "hover:bg-yellow-200"
+                : "hover:bg-yellow-200",
           )}
           disabled={disabled}
           aria-label="Timer settings"
@@ -113,7 +115,9 @@ export function PomodoroSettingsPopover({
                   min={1}
                   max={900}
                   value={settings.shortBreakDuration}
-                  onChange={(e) => onChange("shortBreakDuration", e.target.value)}
+                  onChange={(e) =>
+                    onChange("shortBreakDuration", e.target.value)
+                  }
                   className="w-20 h-8 text-sm text-center focus:border-blue-400"
                 />
               </div>
@@ -134,7 +138,9 @@ export function PomodoroSettingsPopover({
                   min={1}
                   max={900}
                   value={settings.longBreakDuration}
-                  onChange={(e) => onChange("longBreakDuration", e.target.value)}
+                  onChange={(e) =>
+                    onChange("longBreakDuration", e.target.value)
+                  }
                   className="w-20 h-8 text-sm text-center focus:border-blue-400"
                 />
               </div>
@@ -155,7 +161,9 @@ export function PomodoroSettingsPopover({
                   min={MIN_CYCLE_BEFORE_LONG_BREAK}
                   max={MAX_CYCLE_BEFORE_LONG_BREAK}
                   value={settings.cyclesBeforeLongBreak}
-                  onChange={(e) => onChange("cyclesBeforeLongBreak", e.target.value)}
+                  onChange={(e) =>
+                    onChange("cyclesBeforeLongBreak", e.target.value)
+                  }
                   className="w-20 h-8 text-sm text-center focus:border-blue-400"
                 />
               </div>
@@ -178,10 +186,24 @@ export function PomodoroSettingsPopover({
             />
           </div>
 
+          {saveMessage && (
+            <p
+              className={cn(
+                "text-xs pl-1",
+                saveMessage.type === "error"
+                  ? "text-red-500"
+                  : "text-green-600",
+              )}
+            >
+              {saveMessage.text}
+            </p>
+          )}
+
           <div className="mt-3 flex items-center justify-end gap-3">
             <Button
               size="sm"
               className="h-8 bg-sky-400 hover:bg-sky-600 text-stone-700"
+              onPointerDown={(e) => e.preventDefault()}
               onClick={onSave}
               disabled={saveState === "saving" || hasErrors}
             >
