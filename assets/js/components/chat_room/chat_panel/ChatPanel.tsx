@@ -21,6 +21,7 @@ import {
 } from "../pomodoro_timer/pomodoroNotificationStore";
 import type { TimerMode } from "../pomodoro_timer/PomodoroSettingsPopover";
 import type { ChatMessage, EventBusPayload, PomodoroServerPayload } from "../../../types/events";
+import chatPanelText from "./chatPanelText";
 
 interface ChatPanelProps {
   isVisibleDetail: boolean;
@@ -239,8 +240,8 @@ export default function ChatPanel({ isVisibleDetail, onBack }: ChatPanelProps) {
       const finishingCount = pendingChats.length;
       const toastMessage =
         finishingCount === 1
-          ? "Un Pomodoro terminó en otro chat"
-          : `${finishingCount} Pomodoros terminaron en otros chats`;
+          ? chatPanelText.pomodoroFinishedElsewhere.single
+          : chatPanelText.pomodoroFinishedElsewhere.multiple(finishingCount);
 
       message.info({ content: toastMessage });
       pomodoroToastTimerRef.current = null;

@@ -8,6 +8,7 @@ import pomodoroTimerText from "../pomodoro_timer/pomodoroTimerText";
 import { selectPrivateChatAction } from "../../../services/contactService";
 import { selectGroupChatAction } from "../../../services/groupService";
 import type { NormalizedContact } from "./ConversationTargetsList";
+import conversationSidebarText from "./conversationSidebarText";
 
 interface ConversationTargetItemProps {
   contact: NormalizedContact;
@@ -70,9 +71,9 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
     {
       label: contact.is_group
         ? (contact.is_group_member_removed || contact.is_group_admin)
-          ? "Eliminar grupo"
-          : "Dejar grupo"
-        : "Eliminar conversación",
+          ? conversationSidebarText.deleteGroup
+          : conversationSidebarText.leaveGroup
+        : conversationSidebarText.deleteConversation,
       key: "deleteChat",
       icon: <DeleteOutlined />,
     },
@@ -170,8 +171,8 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
                   className="hover:bg-gray-700 ml-1"
                   icon={<DownOutlined />}
                   onClick={handleButtonClick}
-                  title="Más opciones"
-                  aria-label="Más opciones"
+                  title={conversationSidebarText.moreOptions}
+                  aria-label={conversationSidebarText.moreOptions}
                 />
               </Dropdown>
             )}

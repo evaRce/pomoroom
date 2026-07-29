@@ -630,7 +630,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   if (!settings) {
     return (
       <div className="flex items-center justify-center h-full w-full text-gray-500">
-        Loading settings...
+        {pomodoroTimerText.loadingSettings}
       </div>
     );
   }

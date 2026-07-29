@@ -15,20 +15,13 @@ import {
 import { toggleDetailVisibilityAction } from "../../../../services/contactService";
 import { requestGroupContactsAction } from "../../../../services/groupService";
 import type { ChatPluginRef, ChatSessionData, EventBusPayload } from "../../../../types/events";
-
-const PLUGIN_ERROR_MESSAGES: Record<string, string> = {
-  unauthorized: "No tienes acceso a este chat.",
-  plugin_already_installed: "Este plugin ya está instalado.",
-  plugin_not_installed: "Este plugin no está instalado.",
-  unsupported_plugin: "Este plugin no está soportado.",
-  chat_not_found: "El chat no existe.",
-};
+import chatHeaderText from "./chatHeaderText";
 
 function getPluginErrorMessage(reason: unknown): string {
-  if (typeof reason === "string" && PLUGIN_ERROR_MESSAGES[reason]) {
-    return PLUGIN_ERROR_MESSAGES[reason];
+  if (typeof reason === "string" && chatHeaderText.pluginErrors[reason as keyof typeof chatHeaderText.pluginErrors]) {
+    return chatHeaderText.pluginErrors[reason as keyof typeof chatHeaderText.pluginErrors];
   }
-  return "No se ha podido completar la operación con el plugin.";
+  return chatHeaderText.pluginErrors.fallback;
 }
 
 interface ChatHeaderProps {
@@ -474,7 +467,7 @@ export default function ChatHeader({
                   type="button"
                   onClick={onBack}
                   className="sm:hidden -ml-1 shrink-0 rounded-lg p-1.5 text-gray-600 hover:bg-gray-100"
-                  title="Volver"
+                  title={chatHeaderText.back}
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
@@ -503,14 +496,14 @@ export default function ChatHeader({
                 <button
                   type="button"
                   onClick={() => togglePluginTab(null)}
-                  title="Chat"
+                  title={chatHeaderText.chatTab}
                   className={`inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-md border px-2 sm:px-3 text-xs font-medium transition-all ${activePluginId === null
                     ? "border-sky-200 bg-sky-100 text-sky-800"
                     : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
                     }`}
                 >
                   <span className="shrink-0">💬</span>
-                  <span>Chat</span>
+                  <span>{chatHeaderText.chatTab}</span>
                 </button>
                 {installedPlugins.map((plugin) => (
                   <button
@@ -551,8 +544,8 @@ export default function ChatHeader({
                 className="!h-9 !w-9 !rounded-lg text-gray-600 hover:!bg-blue-50 hover:!text-blue-600"
                 icon={<UserPlus className="h-5 w-5" />}
                 onClick={openAddMembersModal}
-                title="Añadir miembros"
-                aria-label="Añadir miembros"
+                title={chatHeaderText.addMembers}
+                aria-label={chatHeaderText.addMembers}
               />
             )}
 
@@ -565,8 +558,8 @@ export default function ChatHeader({
               className="!h-9 !w-9 !rounded-lg text-gray-600 hover:!bg-blue-50 hover:!text-blue-600"
               icon={<Puzzle className="h-5 w-5" />}
               onClick={openPluginMarketplace}
-              title="Plugins"
-              aria-label="Plugins"
+              title={chatHeaderText.plugins}
+              aria-label={chatHeaderText.plugins}
               disabled={isGroupChat && isGroupMemberRemoved}
             />
 
@@ -579,7 +572,7 @@ export default function ChatHeader({
                   }`}
                 icon={<Info className="h-5 w-5" />}
                 onClick={showUserDetails}
-                title="Detalles del grupo"
+                title={chatHeaderText.groupDetails}
                 disabled={isGroupMemberRemoved}
               />
             )}
@@ -601,7 +594,7 @@ export default function ChatHeader({
                     className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
                   >
                     <UserPlus className="h-4 w-4 shrink-0" />
-                    Añadir miembros
+                    {chatHeaderText.addMembers}
                   </button>
                 )}
 
@@ -627,7 +620,7 @@ export default function ChatHeader({
                   className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400 disabled:hover:bg-transparent"
                 >
                   <Puzzle className="h-4 w-4 shrink-0" />
-                  Plugins
+                  {chatHeaderText.plugins}
                 </button>
 
                 {isGroupChat && (
@@ -642,7 +635,7 @@ export default function ChatHeader({
                       }`}
                   >
                     <Info className="h-4 w-4 shrink-0" />
-                    Detalles del grupo
+                    {chatHeaderText.groupDetails}
                   </button>
                 )}
               </div>
@@ -653,7 +646,7 @@ export default function ChatHeader({
               type="text"
               className="!h-9 !w-9 !rounded-lg shrink-0 text-gray-600 hover:!bg-gray-100"
               icon={<MoreVertical className="h-5 w-5" />}
-              title="Más opciones"
+              title={chatHeaderText.moreOptions}
             />
           </Dropdown>
         </div>

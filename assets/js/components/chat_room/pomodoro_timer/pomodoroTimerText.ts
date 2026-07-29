@@ -16,6 +16,7 @@ const pomodoroTimerText = {
   cycle: "Ciclo",
   cyclesCompleted: (count: number) => `${count} ${count === 1 ? "ciclo completado" : "ciclos completados"} hoy`,
   sessionTime: "Tiempo de sesión",
+  loadingSettings: "Cargando configuración...",
   errors: {
     shortBreakDuration: "Debe ser menor que el descanso largo",
     longBreakDuration: "Debe ser mayor que el descanso corto",

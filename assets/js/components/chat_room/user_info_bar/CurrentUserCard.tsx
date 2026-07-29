@@ -5,6 +5,7 @@ import { useEventContext, useEvent } from "../EventContext";
 import AddContactOrGroup from "./AddContactOrGroup";
 import { logoutAction } from "../../../services/userService";
 import { EventBusPayload } from "../../../types/events";
+import userInfoBarText from "./userInfoBarText";
 
 export default function CurrentUserCard() {
 	const [userLogin, setUserLogin] = useState<EventBusPayload<"show_user_info"> | null>(null);
@@ -42,17 +43,17 @@ export default function CurrentUserCard() {
 
 	const items = [
 		{
-			label: "Añadir contacto",
+			label: userInfoBarText.menu.addContact,
 			key: "add_contact",
 			icon: <UserAddOutlined />,
 		},
 		{
-			label: "Crear grupo",
+			label: userInfoBarText.menu.createGroup,
 			key: "create_group",
 			icon: <UsergroupAddOutlined />,
 		},
 		{
-			label: "Cerrar sesión",
+			label: userInfoBarText.menu.logout,
 			key: "logout",
 			icon:
 				<svg
@@ -100,7 +101,7 @@ export default function CurrentUserCard() {
 						<img
 							className="h-10 w-10 landscape-sm:h-8 landscape-sm:w-8 rounded-full bg-white"
 							src={userLogin.image_profile}
-							alt="default"
+							alt={userInfoBarText.defaultAvatarAlt}
 							title={userLogin.nickname}
 						/>
 					</div>
@@ -120,8 +121,8 @@ export default function CurrentUserCard() {
 									className="bg-white"
 									icon={<MoreOutlined />}
 									onClick={handleButtonClick}
-									title="Otros"
-									aria-label="Otros"
+									title={userInfoBarText.others}
+									aria-label={userInfoBarText.others}
 								/>
 							</Dropdown>
 						</div>

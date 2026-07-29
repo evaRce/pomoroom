@@ -25,6 +25,7 @@ import { useGroupMembershipEvents } from "../../hooks/useGroupMemberEvents";
 import { useErrorNotificationEvents } from "../../hooks/useErrorNotificationEvents";
 import { getRandomBackgroundImageNumber } from "../../utils/randomBackgroundImage";
 import { PushEventToLiveView } from "../../types/events";
+import chatRoomText from "./chatRoomText";
 export interface ChatRoomProps {
   eventName: string;
   eventData: Record<string, unknown>;
@@ -152,7 +153,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
               icon={<ArrowLeft className="h-5 w-5" />}
               onClick={handleBackToList}
               size="large"
-              title="Volver"
+              title={chatRoomText.back}
             />
           )}
           <div className="flex flex-1 min-h-0 flex-col">

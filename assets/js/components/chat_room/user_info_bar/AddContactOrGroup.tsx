@@ -4,6 +4,7 @@ import { useEventContext, useEvent } from "../EventContext";
 import { sendFriendRequestAction } from "../../../services/contactService";
 import { addGroupAction } from "../../../services/groupService";
 import { ConversationEntry } from "../../../types/events";
+import userInfoBarText from "./userInfoBarText";
 
 interface AddContactOrGroupProps {
   sendDataToParent: (isVisible: boolean) => void;
@@ -77,7 +78,7 @@ export default function AddContactOrGroup({ sendDataToParent, receiveDataFromPar
 
   useEffect(() => {
     if (addGroupToListEvent) {
-      message.success('Grupo creado exitosamente!', 2);
+      message.success(userInfoBarText.groupCreatedSuccess, 2);
       removeEvent("add_group_to_list");
       setLoading(false);
     }
@@ -85,18 +86,18 @@ export default function AddContactOrGroup({ sendDataToParent, receiveDataFromPar
 
   const handleContactMessage = (data: ContactListEntry) => {
     if (data.request.status === "accepted") {
-      return 'Añade petición de amistad ya aceptada';
+      return userInfoBarText.contactMessages.alreadyAccepted;
     } else if (data.request.status === "rejected") {
       if (data.contact_data.nickname === data.request.to_user) {
-        return 'Añade petición de amistad que ya le rechazaron';
+        return userInfoBarText.contactMessages.rejectedByThem;
       } else {
-        return 'Añade petición de amistad que ya rechazo';
+        return userInfoBarText.contactMessages.rejectedByMe;
       }
     } else {
       if (data.contact_data.nickname === data.request.from_user) {
-        return 'Petición de amistad recibida!';
+        return userInfoBarText.contactMessages.received;
       } else {
-        return 'Petición de amistad enviada!';
+        return userInfoBarText.contactMessages.sent;
       }
     }
   };
@@ -111,28 +112,28 @@ export default function AddContactOrGroup({ sendDataToParent, receiveDataFromPar
 
   return (
     <Modal
-      title={entryType === "contact" ? "Añadir contacto" : "Crear grupo"}
+      title={entryType === "contact" ? userInfoBarText.modal.addContactTitle : userInfoBarText.modal.createGroupTitle}
       open={receiveDataFromParent}
       onCancel={handleCancel}
       footer={[
         <Button key="cancel" onClick={handleCancel}>
-          Cancelar
+          {userInfoBarText.modal.cancel}
         </Button>,
         <Button key="add" onClick={handleAddEntry} disabled={loading}>
-          {loading ? <Spin /> : (entryType === "contact" ? "Añadir" : "Crear")}
+          {loading ? <Spin /> : (entryType === "contact" ? userInfoBarText.modal.addAction : userInfoBarText.modal.createAction)}
         </Button>
       ]}
     >
       <Form form={form} onFinish={sendNewEntry}>
         <Form.Item
           name="newContactName"
-          rules={[{ required: true, message: 'Introduce un nombre!' }]}
+          rules={[{ required: true, message: userInfoBarText.modal.nameRequired }]}
         >
           <Input
             type="text"
             onChange={e => setInputStr(e.target.value)}
             value={inputStr}
-            placeholder={entryType === "contact" ? "Añade tu próximo contacto" : "Añade tu próxima sala"}
+            placeholder={entryType === "contact" ? userInfoBarText.modal.addContactPlaceholder : userInfoBarText.modal.createGroupPlaceholder}
           />
         </Form.Item>
       </Form>

@@ -6,6 +6,7 @@ import { useEventContext, useEvent } from "../EventContext";
 import { deleteContactAction } from "../../../services/contactService";
 import { deleteGroupAction } from "../../../services/groupService";
 import type { ChatGroupData, ChatUserRef, ConversationEntry } from "../../../types/events";
+import conversationSidebarText from "./conversationSidebarText";
 
 export interface NormalizedContact {
   name: string;
@@ -334,7 +335,7 @@ export default function ConversationTargetsList() {
         <Input
           className="my-2 ml-2 mr-1 sm:my-1.5 sm:ml-1.5 lg:my-2 lg:ml-2 landscape-sm:my-1 flex-1 min-w-0"
           type="text"
-          placeholder="Buscar a mis panas"
+          placeholder={conversationSidebarText.searchPlaceholder}
           value={searchTerm}
           onChange={handleSearch}
         />
@@ -343,15 +344,15 @@ export default function ConversationTargetsList() {
             className="bg-red-300 mr-2 sm:mr-1.5 lg:mr-2 shrink-0"
             icon={<CloseOutlined />}
             onClick={clearSearch}
-            title="Limpiar búsqueda"
-            aria-label="Limpiar búsqueda"
+            title={conversationSidebarText.clearSearch}
+            aria-label={conversationSidebarText.clearSearch}
           />
         ) : (
           <Button
             className="bg-sky-400 mr-2 sm:mr-1.5 lg:mr-2 shrink-0"
             icon={<SearchOutlined />}
-            title="Buscar"
-            aria-label="Buscar"
+            title={conversationSidebarText.search}
+            aria-label={conversationSidebarText.search}
           />
         )}
       </div>

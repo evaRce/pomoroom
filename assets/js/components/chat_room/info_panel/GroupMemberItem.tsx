@@ -6,6 +6,7 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import type { ChatMember } from "../../../types/events";
+import infoPanelText from "./infoPanelText";
 
 interface GroupMemberItemProps {
   contact: ChatMember;
@@ -42,19 +43,19 @@ export default function GroupMemberItem({
   const items = isCurrentUser
     ? [
         {
-          label: "Dejar grupo",
+          label: infoPanelText.leaveGroup,
           key: "deleteMember",
           icon: <DeleteOutlined />,
         },
       ]
     : [
         {
-          label: contact.is_admin ? "Eliminar como admin" : "Establecer como admin",
+          label: contact.is_admin ? infoPanelText.removeAsAdmin : infoPanelText.setAsAdmin,
           key: contact.is_admin ? "deleteAdmin" : "addAdmin",
           icon: <ThunderboltOutlined />,
         },
         {
-          label: "Eliminar miembro",
+          label: infoPanelText.removeMember,
           key: "deleteMember",
           icon: <DeleteOutlined />,
         },
@@ -80,7 +81,7 @@ export default function GroupMemberItem({
       <div className="flex items-center space-x-2">
         {contact.is_admin && (
           <span className="text-white font-bold text-xs rounded-full px-2 py-1 bg-gray-500">
-            Admin
+            {infoPanelText.adminBadge}
           </span>
         )}
         {imAdmin && (
@@ -93,14 +94,14 @@ export default function GroupMemberItem({
             <Button
               icon={<DownOutlined />}
               onClick={() => setDropdownVisible(!dropdownVisible)}
-              title="Más opciones"
-              aria-label="Más opciones"
+              title={infoPanelText.moreOptions}
+              aria-label={infoPanelText.moreOptions}
             />
           </Dropdown>
         )}
         {isInModal && (
           <Button className="bg-lime-400" onClick={onSelect}>
-            Invitar
+            {infoPanelText.invite}
           </Button>
         )}
       </div>

@@ -9,6 +9,7 @@ import {
   deleteMemberAction,
 } from "../../../services/groupService";
 import type { ChatMember, EventBusPayload } from "../../../types/events";
+import infoPanelText from "./infoPanelText";
 
 export default function ChatDetailPanel() {
   const { addEvent, removeEvent } = useEventContext();
@@ -126,15 +127,15 @@ export default function ChatDetailPanel() {
           className="top-0 left-0 bg-white"
           icon={<CloseOutlined />}
           onClick={hideUserDetails}
-          title="Cerrar detalles"
-          aria-label="Cerrar detalles"
+          title={infoPanelText.closeDetails}
+          aria-label={infoPanelText.closeDetails}
         />
         {chatData && (
           <div className="text-center w-full mb-10">
             <Avatar
               src={chatData.image}
               size={150}
-              alt="default"
+              alt={infoPanelText.defaultAvatarAlt}
               className="bg-white"
             />
             <h2 className="text-2xl mt-2">{chatData.chat_name}</h2>
@@ -142,7 +143,7 @@ export default function ChatDetailPanel() {
         )}
         {chatData?.is_group && (
           <div className="my-4">
-            <span>{members.length} Miembros</span>
+            <span>{infoPanelText.members(members.length)}</span>
           </div>
         )}
         {chatData?.is_group && (

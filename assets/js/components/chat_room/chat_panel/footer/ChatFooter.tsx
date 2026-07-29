@@ -9,6 +9,7 @@ import { useEventContext, useEvent } from "../../EventContext";
 import { sendMessageToGroupAction, sendMessageToUserAction } from "../../../../services/messageService";
 import { selectGroupChatAction } from "../../../../services/groupService";
 import type { ChatSessionData } from "../../../../types/events";
+import chatFooterText from "./chatFooterText";
 
 export default function ChatFooter() {
   const [inputStr, setInputStr] = useState("");
@@ -61,10 +62,7 @@ export default function ChatFooter() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showPicker]);
 
-  const buildRemovedMessage = (groupName?: string) =>
-    groupName
-      ? `Has sido eliminado del grupo ${groupName}`
-      : "Has sido eliminado del grupo";
+  const buildRemovedMessage = (groupName?: string) => chatFooterText.removedFromGroup(groupName);
 
   useEffect(() => {
     if (openPrivateChatEvent) {
@@ -167,7 +165,7 @@ export default function ChatFooter() {
     <footer className={`shrink-0 flex min-h-16 justify-between ${isGroupMemberRemoved && chatData.group_data ? '' : 'bg-gray-300'} ${footerPadding}`}>
       {isGroupMemberRemoved && chatData.group_data ? (
         <div className="flex h-full w-full items-center justify-center bg-yellow-300 text-yellow-900 text-2xl font-bold tracking-wide" style={{ padding: 0, borderRadius: 0 }}>
-          <span className="mx-3" role="img" aria-label="warning">⚠️</span>
+          <span className="mx-3" role="img" aria-label={chatFooterText.warningIconLabel}>⚠️</span>
           {groupMemberRemovedMessage}
         </div>
       ) : (
@@ -184,7 +182,7 @@ export default function ChatFooter() {
                   setModalVisible(true);
                 }
               }}
-              placeholder="Escribe un mensaje"
+              placeholder={chatFooterText.inputPlaceholder}
               maxLength={5001}
             />
             <div className="flex items-center shrink-0">
@@ -194,8 +192,8 @@ export default function ChatFooter() {
                   className="bg-transparent border-none h-9 w-9 flex items-center justify-center hover:bg-gray-200 transition-colors duration-200"
                   onClick={() => setShowPicker((prev) => !prev)}
                   icon={<SmileOutlined />}
-                  title="Elegir emoji"
-                  aria-label="Elegir emoji"
+                  title={chatFooterText.emojiButton}
+                  aria-label={chatFooterText.emojiButton}
                 />
                 {showPicker && (
                   <div
@@ -217,20 +215,20 @@ export default function ChatFooter() {
                 className="bg-sky-400 hover:bg-sky-500 border-none text-white h-9 w-9 flex items-center justify-center rounded-full mr-1 transition-colors duration-200"
                 icon={<SendOutlined />}
                 onClick={(e) => handleSendMessage(e)}
-                title="Enviar mensaje"
-                aria-label="Enviar mensaje"
+                title={chatFooterText.sendMessageButton}
+                aria-label={chatFooterText.sendMessageButton}
               />
             </div>
           </div>
         </form>
       )}
       <Modal
-        title="Límite de caracteres excedido"
+        title={chatFooterText.characterLimitModal.title}
         open={modalVisible}
         onOk={() => setModalVisible(false)}
         onCancel={() => setModalVisible(false)}
       >
-        <p>Se ha excedido el límite de 5000 caracteres.</p>
+        <p>{chatFooterText.characterLimitModal.message}</p>
       </Modal>
     </footer>
   );
