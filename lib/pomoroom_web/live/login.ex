@@ -20,7 +20,7 @@ defmodule PomoroomWeb.HomeLive.Login do
       {:deny, _retry_after} ->
         {:noreply,
          push_event(socket, "react.error_login_user", %{
-           errors: %{email: "Demasiados intentos. Inténtalo de nuevo en un minuto"}
+           errors: %{email: gettext("Demasiados intentos. Inténtalo de nuevo en un minuto")}
          })}
 
       {:allow, _count} ->
@@ -31,7 +31,7 @@ defmodule PomoroomWeb.HomeLive.Login do
   def handle_event("action.log_user", _params, socket) do
     {:noreply,
      push_event(socket, "react.error_login_user", %{
-       errors: %{email: "El email o la contraseña no son válidos"}
+       errors: %{email: gettext("El email o la contraseña no son válidos")}
      })}
   end
 
@@ -40,7 +40,7 @@ defmodule PomoroomWeb.HomeLive.Login do
       {:error, :not_found} ->
         {:noreply,
          push_event(socket, "react.error_login_user", %{
-           errors: %{email: "El email o la contraseña no son válidos"}
+           errors: %{email: gettext("El email o la contraseña no son válidos")}
          })}
 
       {:ok, user_changes} ->
@@ -53,13 +53,13 @@ defmodule PomoroomWeb.HomeLive.Login do
             {:error, _reason} ->
               {:noreply,
                push_event(socket, "react.error_login_user", %{
-                 errors: %{email: "No se pudo iniciar sesión. Inténtalo de nuevo"}
+                 errors: %{email: gettext("No se pudo iniciar sesión. Inténtalo de nuevo")}
                })}
           end
         else
           {:noreply,
            push_event(socket, "react.error_login_user", %{
-             errors: %{password: "El email o la contraseña no son válidos"}
+             errors: %{password: gettext("El email o la contraseña no son válidos")}
            })}
         end
     end

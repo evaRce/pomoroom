@@ -3,9 +3,10 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
   alias Pomoroom.FriendRequests.{FriendRequestSchema, FriendRequestRepository}
   alias Pomoroom.Users
   import Ecto.Changeset
+  import PomoroomWeb.Gettext
 
   def send_friend_request(to_user, from_user) when to_user == from_user do
-    {:error, %{error: "No puedes añadirte a ti mismo como un contacto"}}
+    {:error, %{error: gettext("No puedes añadirte a ti mismo como un contacto")}}
   end
 
   def send_friend_request(to_user, from_user) do
@@ -20,11 +21,18 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
             {:ok, friend_request_changeset.changes}
 
           {:error, %Mongo.WriteError{write_errors: [%{"code" => 11000, "errmsg" => _errmsg}]}} ->
-            {:error, %{error: "Ya hay una petición de amistad entre #{to_user} y #{from_user}"}}
+            {:error,
+             %{
+               error:
+                 gettext("Ya hay una petición de amistad entre %{to_user} y %{from_user}",
+                   to_user: to_user,
+                   from_user: from_user
+                 )
+             }}
         end
 
       false ->
-        {:error, %{error: "El usuario #{to_user} no existe"}}
+        {:error, %{error: gettext("El usuario %{user} no existe", user: to_user)}}
     end
   end
 
@@ -38,12 +46,12 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
 
     case Mongo.find_one(:mongo, "private_chats", query) do
       nil ->
-        {:error, %{error: "El chat no existe o no fue eliminado por este usuario"}}
+        {:error, %{error: gettext("El chat no existe o no fue eliminado por este usuario")}}
 
       chat ->
         case get(to_user, from_user) do
           {:error, :not_found} ->
-            {:error, "No hay una solicitud de amistad pendiente"}
+            {:error, gettext("No hay una solicitud de amistad pendiente")}
 
           {:ok, request} ->
             PrivateChats.update_restore_deleted_contact(chat, who_restore)
@@ -67,11 +75,11 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
               {:error, reason}
           end
         else
-          {:error, %{error: "No autorizado para aceptar esta solicitud de amistad"}}
+          {:error, %{error: gettext("No autorizado para aceptar esta solicitud de amistad")}}
         end
 
       {:ok, _request} ->
-        {:error, %{error: "Petición de amistad ya aceptada"}}
+        {:error, %{error: gettext("Petición de amistad ya aceptada")}}
 
       {:error, reason} ->
         {:error, reason}
@@ -97,11 +105,11 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
           FriendRequestRepository.update_request_status(request.to_user, request.from_user, "rejected")
           {:ok, %{request | status: "rejected"}}
         else
-          {:error, %{error: "No autorizado para rechazar esta solicitud de amistad"}}
+          {:error, %{error: gettext("No autorizado para rechazar esta solicitud de amistad")}}
         end
 
       {:ok, _request} ->
-        {:error, %{error: "Petición de amistad ya rechazada"}}
+        {:error, %{error: gettext("Petición de amistad ya rechazada")}}
 
       {:error, reason} ->
         {:error, reason}

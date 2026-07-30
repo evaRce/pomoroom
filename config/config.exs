@@ -60,6 +60,10 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+# Configure Gettext: the app's source strings are already written in
+# Spanish, so "es" is the default locale (no translation needed for it).
+config :gettext, default_locale: "es"
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"

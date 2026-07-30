@@ -3,6 +3,7 @@ defmodule Pomoroom.Users.UserService do
   alias Pomoroom.ChangesetErrors
   alias Pomoroom.Users.{UserSchema, UserRepository}
   import Ecto.Changeset
+  import PomoroomWeb.Gettext
 
   def register_user(args) do
     changeset = UserSchema.changeset(args)
@@ -123,10 +124,10 @@ defmodule Pomoroom.Users.UserService do
   defp parse_duplicate_key_error(errmsg) do
     cond do
       String.contains?(errmsg, "email") ->
-        %{email: "Este email ya está siendo usado"}
+        %{email: gettext("Este email ya está siendo usado")}
 
       String.contains?(errmsg, "nickname") ->
-        %{nickname: "Este nickname ya está asociado a otra cuenta"}
+        %{nickname: gettext("Este nickname ya está asociado a otra cuenta")}
     end
   end
 

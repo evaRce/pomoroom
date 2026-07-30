@@ -1,5 +1,6 @@
 defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
   import Phoenix.LiveView, only: [push_event: 3]
+  import PomoroomWeb.Gettext
 
   alias Phoenix.PubSub
   alias Pomoroom.ChatRoom.ChatServer
@@ -105,7 +106,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
       {:deny, _retry_after} ->
         payload = %{
           event_name: "error_adding_contact",
-          event_data: %{error: "Demasiadas solicitudes enviadas. Inténtalo de nuevo en un minuto"}
+          event_data: %{
+            error: gettext("Demasiadas solicitudes enviadas. Inténtalo de nuevo en un minuto")
+          }
         }
 
         {:noreply, push_event(socket, "react", payload)}
@@ -127,7 +130,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
       not Users.exists_nickname?(to_user_arg) ->
         payload = %{
           event_name: "error_adding_contact",
-          event_data: %{error: "El usuario #{to_user_arg} no existe"}
+          event_data: %{error: gettext("El usuario %{user} no existe", user: to_user_arg)}
         }
         {:noreply, push_event(socket, "react", payload)}
 
@@ -170,14 +173,17 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
               "pending" ->
                 payload = %{
                   event_name: "error_adding_contact",
-                  event_data: %{error: "Ya hay una petición de amistad pendiente entre ambos usuarios"}
+                  event_data: %{
+                    error:
+                      gettext("Ya hay una petición de amistad pendiente entre ambos usuarios")
+                  }
                 }
                 {:noreply, push_event(socket, "react", payload)}
 
               "rejected" ->
                 payload = %{
                   event_name: "error_adding_contact",
-                  event_data: %{error: "La petición fue rechazada previamente"}
+                  event_data: %{error: gettext("La petición fue rechazada previamente")}
                 }
                 {:noreply, push_event(socket, "react", payload)}
 
@@ -210,14 +216,17 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
                       else
                         %{
                           event_name: "error_adding_contact",
-                          event_data: %{error: "El contacto ya está añadido"}
+                          event_data: %{error: gettext("El contacto ya está añadido")}
                         }
                       end
                     {:noreply, push_event(socket, "react", payload)}
                   {:error, _reason} ->
                     payload = %{
                       event_name: "error_adding_contact",
-                      event_data: %{error: "Inconsistencia detectada: solicitud aceptada sin chat privado"}
+                      event_data: %{
+                        error:
+                          gettext("Inconsistencia detectada: solicitud aceptada sin chat privado")
+                      }
                     }
                     {:noreply, push_event(socket, "react", payload)}
                 end

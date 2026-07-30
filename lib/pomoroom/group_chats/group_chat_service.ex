@@ -4,6 +4,7 @@ defmodule Pomoroom.GroupChats.GroupChatService do
   alias Pomoroom.GroupChats.{GroupChatRepository, GroupChatSchema}
   alias Pomoroom.Messages
   alias Pomoroom.Users
+  import PomoroomWeb.Gettext
 
   def create_group_chat(from_user, name) do
     chat_id = Chats.generate_chat_id()
@@ -27,7 +28,7 @@ defmodule Pomoroom.GroupChats.GroupChatService do
             {:ok, group_chat_changes}
 
           {:error, %Mongo.WriteError{write_errors: [%{"code" => 11000, "errmsg" => _errmsg}]}} ->
-            {:error, %{error: "El grupo `#{name}` ya está creado"}}
+            {:error, %{error: gettext("El grupo `%{name}` ya está creado", name: name)}}
         end
 
       false ->
@@ -58,13 +59,14 @@ defmodule Pomoroom.GroupChats.GroupChatService do
                 %{members: %{"user_id" => new_member, "joined_at" => now, "removed_at" => nil}}
               )
 
-              {:ok, "Usuario #{new_member} añadido al grupo"}
+              {:ok, gettext("Usuario %{member} añadido al grupo", member: new_member)}
 
             member when is_map(member) ->
               removed_at = get_member_removed_at(member)
 
               if is_nil(removed_at) do
-                {:error, "El usuario #{new_member} ya es miembro del grupo"}
+                {:error,
+                 gettext("El usuario %{member} ya es miembro del grupo", member: new_member)}
               else
                 updated_members =
                   Enum.map(members, fn current_member ->
@@ -78,11 +80,14 @@ defmodule Pomoroom.GroupChats.GroupChatService do
                   end)
 
                 GroupChatRepository.update_members(group_chat.chat_id, updated_members)
-                {:ok, "Usuario #{new_member} reañadido al grupo"}
+                {:ok, gettext("Usuario %{member} reañadido al grupo", member: new_member)}
               end
           end
         else
-          {:error, "El usuario #{user} no tiene permiso para añadir miembros al grupo"}
+          {:error,
+           gettext("El usuario %{user} no tiene permiso para añadir miembros al grupo",
+             user: user
+           )}
         end
     end
   end
@@ -111,7 +116,7 @@ defmodule Pomoroom.GroupChats.GroupChatService do
         remove_member_and_cleanup(
           group_chat,
           user,
-          "Contacto eliminado del grupo #{group_name}"
+          gettext("Contacto eliminado del grupo %{group_name}", group_name: group_name)
         )
     end
   end
@@ -130,12 +135,19 @@ defmodule Pomoroom.GroupChats.GroupChatService do
           member_ids = get_member_ids(group_chat.members)
 
           if member in member_ids do
-            remove_member_and_cleanup(group_chat, member, "Usuario #{member} eliminado del grupo")
+            remove_member_and_cleanup(
+              group_chat,
+              member,
+              gettext("Usuario %{member} eliminado del grupo", member: member)
+            )
           else
-            {:error, "El usuario #{member} no es miembro del grupo"}
+            {:error, gettext("El usuario %{member} no es miembro del grupo", member: member)}
           end
         else
-          {:error, "El usuario #{user} no tiene permiso para eliminar miembros del grupo"}
+          {:error,
+           gettext("El usuario %{user} no tiene permiso para eliminar miembros del grupo",
+             user: user
+           )}
         end
     end
   end
@@ -243,12 +255,13 @@ defmodule Pomoroom.GroupChats.GroupChatService do
               admin: member
             })
 
-            {:ok, "Usuario #{member} añadido como admin al grupo"}
+            {:ok, gettext("Usuario %{member} añadido como admin al grupo", member: member)}
           else
-            {:error, "El usuario #{member} no es miembro del grupo"}
+            {:error, gettext("El usuario %{member} no es miembro del grupo", member: member)}
           end
         else
-          {:error, "El usuario #{user} no tiene permiso para añadir admins al grupo"}
+          {:error,
+           gettext("El usuario %{user} no tiene permiso para añadir admins al grupo", user: user)}
         end
     end
   end
@@ -276,19 +289,26 @@ defmodule Pomoroom.GroupChats.GroupChatService do
                 })
 
                 {:ok,
-                 "Usuario #{member} eliminado como admin del grupo y #{new_admin} asignado como nuevo admin."}
+                 gettext(
+                   "Usuario %{member} eliminado como admin del grupo y %{new_admin} asignado como nuevo admin.",
+                   member: member,
+                   new_admin: new_admin
+                 )}
               else
-                {:error, "No hay otros miembros disponibles para ser administradores."}
+                {:error, gettext("No hay otros miembros disponibles para ser administradores.")}
               end
             else
               GroupChatRepository.update_by_chat_id(group_chat.chat_id, "$pull", %{admin: member})
-              {:ok, "Usuario #{member} eliminado como admin del grupo"}
+              {:ok, gettext("Usuario %{member} eliminado como admin del grupo", member: member)}
             end
           else
-            {:error, "El usuario #{member} no es miembro del grupo"}
+            {:error, gettext("El usuario %{member} no es miembro del grupo", member: member)}
           end
         else
-          {:error, "El usuario #{user} no tiene permiso para eliminar admins del grupo"}
+          {:error,
+           gettext("El usuario %{user} no tiene permiso para eliminar admins del grupo",
+             user: user
+           )}
         end
     end
   end
@@ -346,11 +366,17 @@ defmodule Pomoroom.GroupChats.GroupChatService do
             {:ok, chat_id}
 
           false ->
-            {:error, %{error: "El chat del enlace `#{invite_link}` no existe"}}
+            {:error,
+             %{
+               error:
+                 gettext("El chat del enlace `%{invite_link}` no existe",
+                   invite_link: invite_link
+                 )
+             }}
         end
 
       :error ->
-        {:error, %{error: "Enlace de invitación inválido"}}
+        {:error, %{error: gettext("Enlace de invitación inválido")}}
     end
   end
 

@@ -1,6 +1,7 @@
 defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
   import Phoenix.Component, only: [assign: 3]
   import Phoenix.LiveView, only: [push_event: 3]
+  import PomoroomWeb.Gettext
 
   alias Phoenix.PubSub
   alias Pomoroom.ChatRoom.ChatServer
@@ -225,9 +226,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
 
     added_message =
       if group_name do
-        "Has sido añadido al grupo #{group_name}"
+        gettext("Has sido añadido al grupo %{group_name}", group_name: group_name)
       else
-        "Has sido añadido al grupo"
+        gettext("Has sido añadido al grupo")
       end
 
     socket =
@@ -266,7 +267,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
             chat_id: group_chat.chat_id,
             group_name: group_name,
             is_admin: is_admin,
-            message: "Has sido añadido al grupo #{group_name}"
+            message: gettext("Has sido añadido al grupo %{group_name}", group_name: group_name)
           }
         }
 
