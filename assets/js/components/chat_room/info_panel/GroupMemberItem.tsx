@@ -6,7 +6,7 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import type { ChatMember } from "../../../types/events";
-import infoPanelText from "./infoPanelText";
+import useInfoPanelText from "./infoPanelText";
 
 interface GroupMemberItemProps {
   contact: ChatMember;
@@ -27,6 +27,7 @@ export default function GroupMemberItem({
   imAdmin,
   isCurrentUser = false,
 }: GroupMemberItemProps) {
+  const infoPanelText = useInfoPanelText();
   const [dropdownVisible, setDropdownVisible] = useState(false);
 
   const handleMenuClick = (key: string) => {

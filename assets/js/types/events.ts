@@ -19,6 +19,7 @@ export interface EventBusPayloads {
   set_admin: { member_name: string; group_name: string; operation: string };
   refresh_conversations: Record<string, never>;
   logout: boolean;
+  set_locale: string;
   group_deleted: { chat_id: string; group_name: string };
   show_user_info: ChatUserRef;
   add_contact_to_list: ConversationEntry;
@@ -270,6 +271,7 @@ export interface OutgoingActionPayloads {
   "action.set_admin": { member_name: string; group_name: string; operation: string };
   "action.get_list_contact": Record<string, never>;
   "action.logout": Record<string, never>;
+  "action.set_locale": { locale: string };
 
   // Kanban
   "action.get_kanban_board": EventBusPayloads["get_kanban_board"];

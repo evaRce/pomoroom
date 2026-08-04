@@ -3,6 +3,7 @@ import { Root, createRoot } from "react-dom/client";
 import { SignUp, SignUpProps} from "./SignUp";
 import { saveUserAction } from "../../services/userService";
 import { LiveViewHook, FormErrors } from "../../types/liveview";
+import { initI18n } from "../../i18n";
 
 interface SignUpHookThis extends LiveViewHook {
 	submitUser(email: string, password: string, nickname: string): void;
@@ -17,6 +18,7 @@ const SignUpHook: {
 } = {
 	mounted() {
 		const domNode = document.getElementById('signup') as Element;
+		initI18n(domNode?.getAttribute("data-locale"));
 		const rootElement = createRoot(domNode);
 
 		render(rootElement, this.opts());

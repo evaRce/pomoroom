@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Button, Form, Input, Statistic} from "antd";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { HomeOutlined } from '@ant-design/icons';
-import loginText from "./loginText";
+import useLoginText from "./loginText";
 import { FormErrors } from "../../types/liveview";
 import { getRandomBackgroundImageNumber } from "../../utils/randomBackgroundImage";
 
@@ -13,6 +13,7 @@ export interface LoginProps {
 
 export const Login: React.FC<LoginProps> = (props: LoginProps) => {
   const { searchUser, errors } = props;
+  const loginText = useLoginText();
   const [form] = Form.useForm();
   const [imageNumber, setImageNumber] = useState(1);
 

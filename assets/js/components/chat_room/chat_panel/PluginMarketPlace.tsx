@@ -3,7 +3,7 @@ import { Puzzle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, } from "../../../../components-shadcn/ui/dialog";
 import { Button } from "../../../../components-shadcn/ui/button"
 import { cn } from "../../../../lib/utils";
-import pluginMarketPlaceText from "./pluginMarketPlaceText";
+import usePluginMarketPlaceText from "./pluginMarketPlaceText";
 
 export interface AvailablePlugin {
   type: string;
@@ -41,6 +41,7 @@ export default function PluginMarketPlace({
   onUninstallPlugin,
   pendingPluginId = null,
 }: PluginMarketPlaceProps) {
+  const pluginMarketPlaceText = usePluginMarketPlaceText();
   const [availablePlugins, setAvailablePlugins] = useState<AvailablePlugin[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { KANBAN_TEXT } from "./kanbanText";
+import { useKanbanText } from "./kanbanText";
 import {
   Plus,
   MoreVertical,
@@ -191,6 +191,7 @@ function KanbanDialog({
 }
 
 function TaskCard({ task, columnId, onDelete, onRename }: TaskCardProps) {
+  const KANBAN_TEXT = useKanbanText();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(task.title);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -367,6 +368,7 @@ export function KanbanColumn({
   onRenameColumn,
   onDeleteColumn,
 }: KanbanColumnProps) {
+  const KANBAN_TEXT = useKanbanText();
   const { setNodeRef, isOver } = useDroppable({
     id: `column-${column.id}`,
     data: {
@@ -601,13 +603,14 @@ export function KanbanTaskLimitWarningModal({
   content,
   buttonText,
 }: KanbanTaskLimitWarningModalProps) {
+  const KANBAN_TEXT = useKanbanText();
   return (
     <KanbanDialog
       open={open}
       variant="warning"
       title={title}
       content={content}
-      confirmLabel={buttonText || "Entendido"}
+      confirmLabel={buttonText || KANBAN_TEXT.task.understood}
       onConfirm={onClose}
       onClose={onClose}
     />

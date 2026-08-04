@@ -5,7 +5,7 @@ import { useEventContext, useEvent } from "../../EventContext";
 import GroupMemberItem from "../../info_panel/GroupMemberItem";
 import { addMemberToGroupAction } from "../../../../services/groupService";
 import { ChatSessionData, ConversationEntry } from "../../../../types/events";
-import addMembersModalText from "./addMembersModalText";
+import useAddMembersModalText from "./addMembersModalText";
 
 interface AddMembersModalProps {
   chatData: ChatSessionData;
@@ -18,6 +18,7 @@ export default function AddMembersModal({
   isModalVisibleFromAddContacts,
   isModalVisibleFromHeader,
 }: AddMembersModalProps) {
+  const addMembersModalText = useAddMembersModalText();
   const { addEvent, removeEvent } = useEventContext();
   const [contacts, setContacts] = useState<ConversationEntry[]>([]);
   const [searchTerm, setSearchTerm] = useState("");

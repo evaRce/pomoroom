@@ -1,45 +1,49 @@
-const callText = {
-  button: {
-    showRoom: "Mostrar sala",
-    anotherCallActive: "Ya estás en otra llamada",
-    joinRoom: "Entrar a la sala",
-    connecting: "Conectando...",
-  },
+import { useTranslation } from "react-i18next";
 
-  connection: {
-    joinNotAllowed: "No se pudo entrar a la llamada: acceso no autorizado.",
-    joinUnreachable:
-      "No se pudo contactar con el servidor de llamadas. Revisa tu conexión a internet e inténtalo de nuevo.",
-    joinFailed: "No se pudo conectar a la llamada. Inténtalo de nuevo.",
-    callDropped: "Se perdió la conexión con la llamada.",
-  },
+export default function useCallText() {
+  const { t } = useTranslation();
 
-  screen: {
-    roomTitle: (roomName: string) => (roomName ? `Sala con ${roomName}` : "Sala de llamada"),
-    participantsCount: (count: number) => `${count} participante${count === 1 ? "" : "s"}`,
-    you: "Tú",
-    muteMic: "Silenciar micrófono",
-    unmuteMic: "Activar micrófono",
-    turnOffCamera: "Apagar cámara",
-    turnOnCamera: "Encender cámara",
-    switchCamera: "Cambiar de cámara",
-    startScreenShare: "Compartir pantalla",
-    stopScreenShare: "Dejar de compartir pantalla",
-    screenShareBlocked:
-      "Otro usuario está compartiendo pantalla actualmente. Debe dejar de compartir para que puedas hacerlo tú",
-    screenShareConflict:
-      "Otro participante ha empezado a compartir pantalla justo antes que tú. Se ha detenido tu recurso compartido.",
-    screenShareFailed: "No se pudo compartir la pantalla. Inténtalo de nuevo.",
-    endCall: "Finalizar llamada",
-    enterFullscreen: "Pantalla completa",
-    exitFullscreen: "Salir de pantalla completa",
-    close: "Cerrar",
-    overflowUnit: (count: number) => `usuario${count === 1 ? "" : "s"}`,
-  },
+  return {
+    button: {
+      showRoom: t("callText.button.showRoom"),
+      anotherCallActive: t("callText.button.anotherCallActive"),
+      joinRoom: t("callText.button.joinRoom"),
+      connecting: t("callText.button.connecting"),
+    },
 
-  minibar: {
-    callInProgress: "En llamada",
-  },
-};
+    connection: {
+      joinNotAllowed: t("callText.connection.joinNotAllowed"),
+      joinUnreachable: t("callText.connection.joinUnreachable"),
+      joinFailed: t("callText.connection.joinFailed"),
+      callDropped: t("callText.connection.callDropped"),
+    },
 
-export default callText;
+    screen: {
+      roomTitle: (roomName: string) =>
+        roomName
+          ? t("callText.screen.roomTitleWithName", { roomName })
+          : t("callText.screen.roomTitleDefault"),
+      participantsCount: (count: number) => t("callText.screen.participantsCount", { count }),
+      you: t("callText.screen.you"),
+      muteMic: t("callText.screen.muteMic"),
+      unmuteMic: t("callText.screen.unmuteMic"),
+      turnOffCamera: t("callText.screen.turnOffCamera"),
+      turnOnCamera: t("callText.screen.turnOnCamera"),
+      switchCamera: t("callText.screen.switchCamera"),
+      startScreenShare: t("callText.screen.startScreenShare"),
+      stopScreenShare: t("callText.screen.stopScreenShare"),
+      screenShareBlocked: t("callText.screen.screenShareBlocked"),
+      screenShareConflict: t("callText.screen.screenShareConflict"),
+      screenShareFailed: t("callText.screen.screenShareFailed"),
+      endCall: t("callText.screen.endCall"),
+      enterFullscreen: t("callText.screen.enterFullscreen"),
+      exitFullscreen: t("callText.screen.exitFullscreen"),
+      close: t("callText.screen.close"),
+      overflowUnit: (count: number) => t("callText.screen.overflowUnit", { count }),
+    },
+
+    minibar: {
+      callInProgress: t("callText.minibar.callInProgress"),
+    },
+  };
+}

@@ -6,7 +6,11 @@ defmodule PomoroomWeb.HomeLive.Login do
   @scale_ms :timer.minutes(1)
 
   def mount(_params, session, socket) do
-    socket = assign(socket, :client_ip, client_ip(socket))
+    socket =
+      socket
+      |> assign(:client_ip, client_ip(socket))
+      |> assign(:locale, Map.get(session, "locale", "es"))
+
     {:ok, PhoenixLiveSession.maybe_subscribe(socket, session), layout: false}
   end
 

@@ -2,11 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useEventContext, useEvent } from "../EventContext";
 import { Typography } from 'antd';
 import { FriendRequestRef } from "../../../types/events";
-import contactRequestsText from "./contactRequestsText";
+import useContactRequestsText from "./contactRequestsText";
 
 const { Text } = Typography;
 
 export default function RequestSend({ imageNumber }: { imageNumber: number }) {
+  const contactRequestsText = useContactRequestsText();
   const { removeEvent } = useEventContext();
   const [requestData, setRequestData] = useState<FriendRequestRef | null>(null);
   const requestSendEvent = useEvent("open_chat_request_send");

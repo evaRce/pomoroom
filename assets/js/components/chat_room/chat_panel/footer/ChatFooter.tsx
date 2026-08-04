@@ -9,9 +9,10 @@ import { useEventContext, useEvent } from "../../EventContext";
 import { sendMessageToGroupAction, sendMessageToUserAction } from "../../../../services/messageService";
 import { selectGroupChatAction } from "../../../../services/groupService";
 import type { ChatSessionData } from "../../../../types/events";
-import chatFooterText from "./chatFooterText";
+import useChatFooterText from "./chatFooterText";
 
 export default function ChatFooter() {
+  const chatFooterText = useChatFooterText();
   const [inputStr, setInputStr] = useState("");
   const [showPicker, setShowPicker] = useState(false);
   const { addEvent, removeEvent } = useEventContext();

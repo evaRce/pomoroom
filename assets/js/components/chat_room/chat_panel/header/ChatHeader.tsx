@@ -5,7 +5,7 @@ import { useEventContext, useEvent } from "../../EventContext";
 import AddMembersModal from "./AddMembersModal";
 import CallButton from "../../call_panel/CallButton";
 import { useCallContext } from "../../call_panel/CallContext";
-import callText from "../../call_panel/callText";
+import useCallText from "../../call_panel/callText";
 import PluginMarketPlace, { AvailablePlugin, InstalledPlugin } from "../PluginMarketPlace";
 import { getTimer, subscribeTimer, type TimerState } from "../../pomodoro_timer/pomodoroTimerStore";
 import {
@@ -15,13 +15,16 @@ import {
 import { toggleDetailVisibilityAction } from "../../../../services/contactService";
 import { requestGroupContactsAction } from "../../../../services/groupService";
 import type { ChatPluginRef, ChatSessionData, EventBusPayload } from "../../../../types/events";
-import chatHeaderText from "./chatHeaderText";
+import useChatHeaderText from "./chatHeaderText";
 
-function getPluginErrorMessage(reason: unknown): string {
-  if (typeof reason === "string" && chatHeaderText.pluginErrors[reason as keyof typeof chatHeaderText.pluginErrors]) {
-    return chatHeaderText.pluginErrors[reason as keyof typeof chatHeaderText.pluginErrors];
+function getPluginErrorMessage(
+  pluginErrors: ReturnType<typeof useChatHeaderText>["pluginErrors"],
+  reason: unknown
+): string {
+  if (typeof reason === "string" && pluginErrors[reason as keyof typeof pluginErrors]) {
+    return pluginErrors[reason as keyof typeof pluginErrors];
   }
-  return chatHeaderText.pluginErrors.fallback;
+  return pluginErrors.fallback;
 }
 
 interface ChatHeaderProps {
@@ -39,6 +42,8 @@ export default function ChatHeader({
   onTogglePluginTab,
   onBack,
 }: ChatHeaderProps) {
+  const callText = useCallText();
+  const chatHeaderText = useChatHeaderText();
   const { addEvent, removeEvent } = useEventContext();
   const [pluginDisplayMap, setPluginDisplayMap] = useState<Record<string, { name: string; icon: string }>>({});
 
@@ -246,7 +251,7 @@ export default function ChatHeader({
       return;
     }
 
-    message.error(getPluginErrorMessage(chatPluginInstallFailedEvent.reason));
+    message.error(getPluginErrorMessage(chatHeaderText.pluginErrors, chatPluginInstallFailedEvent.reason));
     setPendingPluginId(null);
     removeEvent("chat_plugin_install_failed");
   }, [chatPluginInstallFailedEvent, currentChatId]);
@@ -286,7 +291,7 @@ export default function ChatHeader({
       return;
     }
 
-    message.error(getPluginErrorMessage(chatPluginUninstallFailedEvent.reason));
+    message.error(getPluginErrorMessage(chatHeaderText.pluginErrors, chatPluginUninstallFailedEvent.reason));
     setPendingPluginId(null);
     removeEvent("chat_plugin_uninstall_failed");
   }, [chatPluginUninstallFailedEvent, currentChatId]);

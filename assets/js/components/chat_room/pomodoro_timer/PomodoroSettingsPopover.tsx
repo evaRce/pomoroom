@@ -9,7 +9,7 @@ import {
   PopoverTrigger,
 } from "../../../../components-shadcn/ui/popover";
 import { cn } from "../../../../lib/utils";
-import pomodoroTimerText from "./pomodoroTimerText";
+import usePomodoroTimerText from "./pomodoroTimerText";
 export type TimerMode = "work" | "shortBreak" | "longBreak";
 
 export interface TimerSettings {
@@ -56,6 +56,7 @@ export function PomodoroSettingsPopover({
   onToggleSound,
   onSave,
 }: PomodoroSettingsPopoverProps) {
+  const pomodoroTimerText = usePomodoroTimerText();
   return (
     <Popover>
       <PopoverTrigger asChild>

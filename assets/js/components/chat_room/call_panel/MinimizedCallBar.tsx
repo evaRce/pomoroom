@@ -4,11 +4,12 @@ import { Mic, MicOff, PhoneOff } from "lucide-react";
 import { useLocalParticipant } from "@livekit/components-react";
 import { useCallContext } from "./CallContext";
 import { useEventContext } from "../EventContext";
-import callText from "./callText";
+import useCallText from "./callText";
 import { selectPrivateChatAction } from "../../../services/contactService";
 import { selectGroupChatAction } from "../../../services/groupService";
 
 export default function MinimizedCallBar() {
+  const callText = useCallText();
   const {
     activeCallChatId,
     activeCallRoomName,

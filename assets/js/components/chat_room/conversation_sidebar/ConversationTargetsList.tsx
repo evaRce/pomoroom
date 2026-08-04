@@ -6,7 +6,7 @@ import { useEventContext, useEvent } from "../EventContext";
 import { deleteContactAction } from "../../../services/contactService";
 import { deleteGroupAction } from "../../../services/groupService";
 import type { ChatGroupData, ChatUserRef, ConversationEntry } from "../../../types/events";
-import conversationSidebarText from "./conversationSidebarText";
+import useConversationSidebarText from "./conversationSidebarText";
 
 export interface NormalizedContact {
   name: string;
@@ -23,6 +23,7 @@ const INITIAL_BATCH_SIZE = 15;
 const BATCH_SIZE = 10;
 
 export default function ConversationTargetsList() {
+  const conversationSidebarText = useConversationSidebarText();
   const { addEvent, removeEvent } = useEventContext();
   const [contacts, setContacts] = useState<NormalizedContact[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<NormalizedContact[]>([]);

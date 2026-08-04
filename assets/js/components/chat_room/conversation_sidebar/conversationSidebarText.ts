@@ -1,11 +1,15 @@
-const conversationSidebarText = {
-  searchPlaceholder: "Buscar a mis panas",
-  clearSearch: "Limpiar búsqueda",
-  search: "Buscar",
-  moreOptions: "Más opciones",
-  deleteGroup: "Eliminar grupo",
-  leaveGroup: "Dejar grupo",
-  deleteConversation: "Eliminar conversación",
-};
+import { useTranslation } from "react-i18next";
 
-export default conversationSidebarText;
+export default function useConversationSidebarText() {
+  const { t } = useTranslation();
+
+  return {
+    searchPlaceholder: t("conversationSidebarText.searchPlaceholder"),
+    clearSearch: t("conversationSidebarText.clearSearch"),
+    search: t("conversationSidebarText.search"),
+    moreOptions: t("conversationSidebarText.moreOptions"),
+    deleteGroup: t("conversationSidebarText.deleteGroup"),
+    leaveGroup: t("conversationSidebarText.leaveGroup"),
+    deleteConversation: t("conversationSidebarText.deleteConversation"),
+  };
+}

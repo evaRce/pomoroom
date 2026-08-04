@@ -1,10 +1,14 @@
-const addMembersModalText = {
-  title: (groupName?: string) => `Añade a tus panas a ${groupName}`,
-  searchPlaceholder: "Buscar a mis panas",
-  clearSearch: "Limpiar búsqueda",
-  search: "Buscar",
-  shareLink: "O comparte este enlace para invitar a algún pana",
-  copyLink: "Copiar enlace",
-};
+import { useTranslation } from "react-i18next";
 
-export default addMembersModalText;
+export default function useAddMembersModalText() {
+  const { t } = useTranslation();
+
+  return {
+    title: (groupName?: string) => t("addMembersModalText.titleWithGroup", { groupName }),
+    searchPlaceholder: t("addMembersModalText.searchPlaceholder"),
+    clearSearch: t("addMembersModalText.clearSearch"),
+    search: t("addMembersModalText.search"),
+    shareLink: t("addMembersModalText.shareLink"),
+    copyLink: t("addMembersModalText.copyLink"),
+  };
+}

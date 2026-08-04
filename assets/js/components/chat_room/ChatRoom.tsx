@@ -25,7 +25,7 @@ import { useGroupMembershipEvents } from "../../hooks/useGroupMemberEvents";
 import { useErrorNotificationEvents } from "../../hooks/useErrorNotificationEvents";
 import { getRandomBackgroundImageNumber } from "../../utils/randomBackgroundImage";
 import { PushEventToLiveView } from "../../types/events";
-import chatRoomText from "./chatRoomText";
+import useChatRoomText from "./chatRoomText";
 export interface ChatRoomProps {
   eventName: string;
   eventData: Record<string, unknown>;
@@ -34,6 +34,7 @@ export interface ChatRoomProps {
 
 export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
   const { eventName, eventData, pushEventToLiveView } = props;
+  const chatRoomText = useChatRoomText();
   const { addEvent, removeEvent } = useEventContext();
   const [component, setComponent] = useState("");
   const [imageNumber, setImageNumber] = useState(1);

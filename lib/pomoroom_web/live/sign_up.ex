@@ -3,6 +3,7 @@ defmodule PomoroomWeb.HomeLive.SignUp do
   alias Pomoroom.Users
 
   def mount(_params, session, socket) do
+    socket = assign(socket, :locale, Map.get(session, "locale", "es"))
     {:ok, PhoenixLiveSession.maybe_subscribe(socket, session), layout: false}
   end
 

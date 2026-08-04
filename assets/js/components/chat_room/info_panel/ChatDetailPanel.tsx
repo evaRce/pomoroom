@@ -9,9 +9,10 @@ import {
   deleteMemberAction,
 } from "../../../services/groupService";
 import type { ChatMember, EventBusPayload } from "../../../types/events";
-import infoPanelText from "./infoPanelText";
+import useInfoPanelText from "./infoPanelText";
 
 export default function ChatDetailPanel() {
+  const infoPanelText = useInfoPanelText();
   const { addEvent, removeEvent } = useEventContext();
   const [chatData, setChatData] = useState<EventBusPayload<"show_detail"> | null>(null);
   const [members, setMembers] = useState<ChatMember[]>([]);

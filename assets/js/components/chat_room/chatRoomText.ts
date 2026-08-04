@@ -1,5 +1,9 @@
-const chatRoomText = {
-  back: "Volver",
-};
+import { useTranslation } from "react-i18next";
 
-export default chatRoomText;
+export default function useChatRoomText() {
+  const { t } = useTranslation();
+
+  return {
+    back: t("chatRoomText.back"),
+  };
+}

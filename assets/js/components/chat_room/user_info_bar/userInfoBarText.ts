@@ -1,29 +1,33 @@
-const userInfoBarText = {
-  menu: {
-    addContact: "Añadir contacto",
-    createGroup: "Crear grupo",
-    logout: "Cerrar sesión",
-  },
-  others: "Otros",
-  defaultAvatarAlt: "default",
-  groupCreatedSuccess: "Grupo creado exitosamente!",
-  contactMessages: {
-    alreadyAccepted: "Añade petición de amistad ya aceptada",
-    rejectedByThem: "Añade petición de amistad que ya le rechazaron",
-    rejectedByMe: "Añade petición de amistad que ya rechazo",
-    received: "Petición de amistad recibida!",
-    sent: "Petición de amistad enviada!",
-  },
-  modal: {
-    addContactTitle: "Añadir contacto",
-    createGroupTitle: "Crear grupo",
-    cancel: "Cancelar",
-    addAction: "Añadir",
-    createAction: "Crear",
-    nameRequired: "Introduce un nombre!",
-    addContactPlaceholder: "Añade tu próximo contacto",
-    createGroupPlaceholder: "Añade tu próxima sala",
-  },
-};
+import { useTranslation } from "react-i18next";
 
-export default userInfoBarText;
+export default function useUserInfoBarText() {
+  const { t } = useTranslation();
+
+  return {
+    menu: {
+      addContact: t("userInfoBarText.menuAddContact"),
+      createGroup: t("userInfoBarText.menuCreateGroup"),
+      logout: t("userInfoBarText.menuLogout"),
+    },
+    others: t("userInfoBarText.others"),
+    defaultAvatarAlt: t("userInfoBarText.defaultAvatarAlt"),
+    groupCreatedSuccess: t("userInfoBarText.groupCreatedSuccess"),
+    contactMessages: {
+      alreadyAccepted: t("userInfoBarText.contactMessageAlreadyAccepted"),
+      rejectedByThem: t("userInfoBarText.contactMessageRejectedByThem"),
+      rejectedByMe: t("userInfoBarText.contactMessageRejectedByMe"),
+      received: t("userInfoBarText.contactMessageReceived"),
+      sent: t("userInfoBarText.contactMessageSent"),
+    },
+    modal: {
+      addContactTitle: t("userInfoBarText.modalAddContactTitle"),
+      createGroupTitle: t("userInfoBarText.modalCreateGroupTitle"),
+      cancel: t("userInfoBarText.modalCancel"),
+      addAction: t("userInfoBarText.modalAddAction"),
+      createAction: t("userInfoBarText.modalCreateAction"),
+      nameRequired: t("userInfoBarText.modalNameRequired"),
+      addContactPlaceholder: t("userInfoBarText.modalAddContactPlaceholder"),
+      createGroupPlaceholder: t("userInfoBarText.modalCreateGroupPlaceholder"),
+    },
+  };
+}

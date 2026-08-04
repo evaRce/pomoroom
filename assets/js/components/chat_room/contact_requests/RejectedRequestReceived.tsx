@@ -2,11 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useEventContext, useEvent } from "../EventContext";
 import { Button, Typography } from 'antd';
 import { FriendRequestRef } from "../../../types/events";
-import contactRequestsText from "./contactRequestsText";
+import useContactRequestsText from "./contactRequestsText";
 
 const { Text } = Typography;
 
 export default function RejectedRequestReceived({ imageNumber }: { imageNumber: number }) {
+  const contactRequestsText = useContactRequestsText();
   const { addEvent, removeEvent } = useEventContext();
   const [requestData, setRequestData] = useState<FriendRequestRef | null>(null);
   const rejectedRequestReceivedEvent = useEvent("open_rejected_request_received");

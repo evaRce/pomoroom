@@ -4,7 +4,7 @@ import { useEventContext, useEvent } from "../EventContext";
 import { sendFriendRequestAction } from "../../../services/contactService";
 import { addGroupAction } from "../../../services/groupService";
 import { ConversationEntry } from "../../../types/events";
-import userInfoBarText from "./userInfoBarText";
+import useUserInfoBarText from "./userInfoBarText";
 
 interface AddContactOrGroupProps {
   sendDataToParent: (isVisible: boolean) => void;
@@ -18,6 +18,7 @@ type ContactListEntry = ConversationEntry & {
 };
 
 export default function AddContactOrGroup({ sendDataToParent, receiveDataFromParent, entryType }: AddContactOrGroupProps) {
+  const userInfoBarText = useUserInfoBarText();
   const [form] = Form.useForm();
   const [inputStr, setInputStr] = useState("");
   const { addEvent, removeEvent } = useEventContext();

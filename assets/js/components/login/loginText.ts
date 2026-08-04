@@ -1,21 +1,25 @@
-const loginText = {
-  homeButtonTitle: "Página de inicio",
-  brand: {
-    pomo: "Pomo",
-    room: "room",
-  },
-  welcome: "¡Nos alegra verte otra vez!",
-  subtitle: "Ingresa tus datos para comenzar.",
-  form: {
-    emailLabel: "Email",
-    emailRequired: "¡Por favor ingrese su correo electrónico!",
-    passwordLabel: "Contraseña",
-    passwordRequired: "¡Por favor ingrese su contraseña!",
-    forgotPassword: "Olvidaste tu contraseña?",
-    submit: "Iniciar sesión",
-    noAccount: "¿No tienes una cuenta?",
-    signupLink: "Registrate aquí",
-  },
-};
+import { useTranslation } from "react-i18next";
 
-export default loginText;
+export default function useLoginText() {
+  const { t } = useTranslation();
+
+  return {
+    homeButtonTitle: t("loginText.homeButtonTitle"),
+    brand: {
+      pomo: t("loginText.brandPomo"),
+      room: t("loginText.brandRoom"),
+    },
+    welcome: t("loginText.welcome"),
+    subtitle: t("loginText.subtitle"),
+    form: {
+      emailLabel: t("loginText.formEmailLabel"),
+      emailRequired: t("loginText.formEmailRequired"),
+      passwordLabel: t("loginText.formPasswordLabel"),
+      passwordRequired: t("loginText.formPasswordRequired"),
+      forgotPassword: t("loginText.formForgotPassword"),
+      submit: t("loginText.formSubmit"),
+      noAccount: t("loginText.formNoAccount"),
+      signupLink: t("loginText.formSignupLink"),
+    },
+  };
+}

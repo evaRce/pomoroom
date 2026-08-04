@@ -21,3 +21,7 @@ export function loginUserAction(
 export function logoutAction(addEvent: AddEvent): void {
   addEvent("logout", true);
 }
+
+export function setLocaleAction(addEvent: AddEvent, locale: string): void {
+  addEvent("set_locale", locale);
+}

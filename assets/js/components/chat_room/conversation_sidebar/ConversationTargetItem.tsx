@@ -4,11 +4,11 @@ import { Brain, Coffee, RotateCcw } from "lucide-react";
 import { useEventContext } from "../EventContext";
 import { DownOutlined, DeleteOutlined } from "@ant-design/icons";
 import { usePomodoroNotification } from "../pomodoro_timer/pomodoroNotificationStore";
-import pomodoroTimerText from "../pomodoro_timer/pomodoroTimerText";
+import usePomodoroTimerText from "../pomodoro_timer/pomodoroTimerText";
 import { selectPrivateChatAction } from "../../../services/contactService";
 import { selectGroupChatAction } from "../../../services/groupService";
 import type { NormalizedContact } from "./ConversationTargetsList";
-import conversationSidebarText from "./conversationSidebarText";
+import useConversationSidebarText from "./conversationSidebarText";
 
 interface ConversationTargetItemProps {
   contact: NormalizedContact;
@@ -18,6 +18,8 @@ interface ConversationTargetItemProps {
 }
 
 export default function ConversationTargetItem({ contact, isSelected, onSelect, onDelete }: ConversationTargetItemProps) {
+  const conversationSidebarText = useConversationSidebarText();
+  const pomodoroTimerText = usePomodoroTimerText();
   const { addEvent } = useEventContext();
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const notification = usePomodoroNotification(contact?.chat_id || "");

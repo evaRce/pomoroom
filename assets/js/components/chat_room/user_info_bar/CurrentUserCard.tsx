@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { Button, Modal, Dropdown, type MenuProps } from "antd";
-import { UserAddOutlined, UsergroupAddOutlined, MoreOutlined } from '@ant-design/icons';
+import { UserAddOutlined, UsergroupAddOutlined, MoreOutlined, GlobalOutlined } from '@ant-design/icons';
+import { useTranslation } from "react-i18next";
 import { useEventContext, useEvent } from "../EventContext";
 import AddContactOrGroup from "./AddContactOrGroup";
-import { logoutAction } from "../../../services/userService";
+import { logoutAction, setLocaleAction } from "../../../services/userService";
 import { EventBusPayload } from "../../../types/events";
-import userInfoBarText from "./userInfoBarText";
+import useUserInfoBarText from "./userInfoBarText";
+import { SUPPORTED_LOCALES, normalizeLocale } from "../../../i18n";
 
 export default function CurrentUserCard() {
+	const userInfoBarText = useUserInfoBarText();
+	const { t, i18n } = useTranslation();
 	const [userLogin, setUserLogin] = useState<EventBusPayload<"show_user_info"> | null>(null);
 	const [showModal, setShowModal] = useState(false);
 	const [entryType, setEntryType] = useState("contact");
@@ -30,6 +34,9 @@ export default function CurrentUserCard() {
 		setShowModal(showModal);
 	};
 
+	const currentLocale = normalizeLocale(i18n.language);
+	const nextLocale = SUPPORTED_LOCALES.find((locale) => locale !== currentLocale) || currentLocale;
+
 	const handleMenuClick = (key: string) => {
 		if (key === "logout") {
 			logoutAction(addEvent);
@@ -37,6 +44,9 @@ export default function CurrentUserCard() {
 			showAddEntryModal("contact");
 		} else if (key === "create_group") {
 			showAddEntryModal("group");
+		} else if (key === "change_language") {
+			i18n.changeLanguage(nextLocale);
+			setLocaleAction(addEvent, nextLocale);
 		}
 		setDropdownVisible(false);
 	};
@@ -51,6 +61,11 @@ export default function CurrentUserCard() {
 			label: userInfoBarText.menu.createGroup,
 			key: "create_group",
 			icon: <UsergroupAddOutlined />,
+		},
+		{
+			label: `${t("common.changeLanguage")} (${currentLocale.toUpperCase()})`,
+			key: "change_language",
+			icon: <GlobalOutlined />,
 		},
 		{
 			label: userInfoBarText.menu.logout,

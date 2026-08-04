@@ -3,7 +3,7 @@ import { message } from "antd";
 import { ConnectionError, ConnectionErrorReason, DisconnectReason, Room, RoomEvent } from "livekit-client";
 import { RoomContext, RoomAudioRenderer } from "@livekit/components-react";
 import { useEventContext, useEvent } from "../EventContext";
-import callText from "./callText";
+import useCallText from "./callText";
 import { joinCallRoomAction } from "../../../services/callService";
 
 interface CallContextValue {
@@ -40,6 +40,7 @@ export const useCallContext = () => useContext(CallContext);
 // (and audio) survives navigating between chats, while CallScreen/CallButton
 // (mounted deeper in the tree) drive it purely through this context.
 export function CallSessionProvider({ children }: { children: React.ReactNode }) {
+  const callText = useCallText();
   const { addEvent, removeEvent } = useEventContext();
   const livekitTokenEvent = useEvent("livekit_token");
   const callRoomNameEvent = useEvent("call_room_name");
@@ -74,7 +75,7 @@ export function CallSessionProvider({ children }: { children: React.ReactNode })
       room.off(RoomEvent.Connected, handleConnected);
       room.off(RoomEvent.Disconnected, handleDisconnected);
     };
-  }, [room, removeEvent]);
+  }, [room, removeEvent, callText]);
 
   useEffect(() => {
     if (!livekitTokenEvent) return;
@@ -101,7 +102,7 @@ export function CallSessionProvider({ children }: { children: React.ReactNode })
       removeEvent("livekit_token");
       removeEvent("call_room_name");
     });
-  }, [livekitTokenEvent, connectingChatId, room, removeEvent]);
+  }, [livekitTokenEvent, connectingChatId, room, removeEvent, callText]);
 
   const joinCall = (chatId: string, chatName: string, isGroupChat: boolean) => {
     if (livekitTokenEvent?.chat_id || connectingChatId) return;

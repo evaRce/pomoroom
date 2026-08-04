@@ -1,24 +1,28 @@
-const contactRequestsText = {
-  background: {
-    alt: "background",
-  },
-  understood: "Entendido",
-  rejectedReceived: {
-    prefix: "Tu solicitud de amistad ha sido rechazada por",
-  },
-  rejectedSend: {
-    prefix: "Has rechazado la solicitud de amistad de",
-  },
-  requestReceived: {
-    suffix: "te ha enviado una solicitud de amistad.",
-    loading: "Cargando...",
-    accept: "Aceptar",
-    reject: "Rechazar",
-  },
-  requestSend: {
-    prefix: "Has enviado una solicitud de amistad a",
-    waitingResponse: "Esperando respuesta.",
-  },
-};
+import { useTranslation } from "react-i18next";
 
-export default contactRequestsText;
+export default function useContactRequestsText() {
+  const { t } = useTranslation();
+
+  return {
+    background: {
+      alt: t("contactRequestsText.backgroundAlt"),
+    },
+    understood: t("contactRequestsText.understood"),
+    rejectedReceived: {
+      prefix: t("contactRequestsText.rejectedReceivedPrefix"),
+    },
+    rejectedSend: {
+      prefix: t("contactRequestsText.rejectedSendPrefix"),
+    },
+    requestReceived: {
+      suffix: t("contactRequestsText.requestReceivedSuffix"),
+      loading: t("contactRequestsText.requestReceivedLoading"),
+      accept: t("contactRequestsText.accept"),
+      reject: t("contactRequestsText.reject"),
+    },
+    requestSend: {
+      prefix: t("contactRequestsText.requestSendPrefix"),
+      waitingResponse: t("contactRequestsText.waitingResponse"),
+    },
+  };
+}

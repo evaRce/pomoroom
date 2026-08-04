@@ -4,6 +4,7 @@ import { EventProvider } from "./EventContext";
 import { ChatRoom, ChatRoomProps } from "./ChatRoom";
 import { LiveViewHook } from "../../types/liveview";
 import { PushEventToLiveView } from "../../types/events";
+import { initI18n } from "../../i18n";
 
 interface ChatRoomHookThis extends LiveViewHook {
 	pushEventToLiveView: PushEventToLiveView;
@@ -24,6 +25,8 @@ const ChatRoomHook: {
 			window.location.replace("/login");
 			return;
 		}
+
+		initI18n(chatDomNode?.getAttribute("data-locale"));
 
 		const rootElementChat = createRoot(chatDomNode);
 

@@ -1,7 +1,8 @@
 import React from "react";
-import chatPanelText from "./chatPanelText";
+import useChatPanelText from "./chatPanelText";
 
 export default function BackGround({ imageNumber }: { imageNumber: number }) {
+  const chatPanelText = useChatPanelText();
   return (
     <div className="flex flex-col flex-grow w-full border-l border-r justify-center items-center">
       <img

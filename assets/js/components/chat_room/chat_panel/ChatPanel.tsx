@@ -21,7 +21,7 @@ import {
 } from "../pomodoro_timer/pomodoroNotificationStore";
 import type { TimerMode } from "../pomodoro_timer/PomodoroSettingsPopover";
 import type { ChatMessage, EventBusPayload, PomodoroServerPayload } from "../../../types/events";
-import chatPanelText from "./chatPanelText";
+import useChatPanelText from "./chatPanelText";
 
 interface ChatPanelProps {
   isVisibleDetail: boolean;
@@ -31,6 +31,7 @@ interface ChatPanelProps {
 const TOP_SCROLL_THRESHOLD_PX = 12;
 
 export default function ChatPanel({ isVisibleDetail, onBack }: ChatPanelProps) {
+  const chatPanelText = useChatPanelText();
   const { addEvent, removeEvent } = useEventContext();
   const { activeCallChatId, activeCallRoomName, connectedAt, isMinimized, setMinimized, setViewingChatId, leaveCall } =
     useCallContext();
@@ -248,7 +249,7 @@ export default function ChatPanel({ isVisibleDetail, onBack }: ChatPanelProps) {
     }, 1500);
 
     removeEvent("timer_finished");
-  }, [activePluginId, currentChatId, timerFinishedEvent]);
+  }, [activePluginId, currentChatId, timerFinishedEvent, chatPanelText]);
 
   useEffect(() => {
     syncPomodoroStore("start_timer", startTimerEvent);

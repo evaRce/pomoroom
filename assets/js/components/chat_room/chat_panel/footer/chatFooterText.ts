@@ -1,14 +1,20 @@
-const chatFooterText = {
-  removedFromGroup: (groupName?: string) =>
-    groupName ? `Has sido eliminado del grupo ${groupName}` : "Has sido eliminado del grupo",
-  warningIconLabel: "warning",
-  inputPlaceholder: "Escribe un mensaje",
-  emojiButton: "Elegir emoji",
-  sendMessageButton: "Enviar mensaje",
-  characterLimitModal: {
-    title: "Límite de caracteres excedido",
-    message: "Se ha excedido el límite de 5000 caracteres.",
-  },
-};
+import { useTranslation } from "react-i18next";
 
-export default chatFooterText;
+export default function useChatFooterText() {
+  const { t } = useTranslation();
+
+  return {
+    removedFromGroup: (groupName?: string) =>
+      groupName
+        ? t("chatFooterText.removedFromGroupWithName", { groupName })
+        : t("chatFooterText.removedFromGroupGeneric"),
+    warningIconLabel: t("chatFooterText.warningIconLabel"),
+    inputPlaceholder: t("chatFooterText.inputPlaceholder"),
+    emojiButton: t("chatFooterText.emojiButton"),
+    sendMessageButton: t("chatFooterText.sendMessageButton"),
+    characterLimitModal: {
+      title: t("chatFooterText.characterLimitModalTitle"),
+      message: t("chatFooterText.characterLimitModalMessage"),
+    },
+  };
+}
