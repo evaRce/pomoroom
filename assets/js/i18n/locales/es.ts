@@ -75,11 +75,11 @@ const es = {
     moreOptions: "Más opciones",
   },
   addMembersModalText: {
-    titleWithGroup: "Añade a tus panas a {{groupName}}",
-    searchPlaceholder: "Buscar a mis panas",
+    titleWithGroup: "Añade a tus colegas a {{groupName}}",
+    searchPlaceholder: "Buscar a mis colegas",
     clearSearch: "Limpiar búsqueda",
     search: "Buscar",
-    shareLink: "O comparte este enlace para invitar a algún pana",
+    shareLink: "O comparte este enlace para invitar a algún colega",
     copyLink: "Copiar enlace",
   },
   pluginMarketPlaceText: {
@@ -111,13 +111,15 @@ const es = {
     waitingResponse: "Esperando respuesta.",
   },
   conversationSidebarText: {
-    searchPlaceholder: "Buscar a mis panas",
+    searchPlaceholder: "Buscar a mis colegas",
     clearSearch: "Limpiar búsqueda",
     search: "Buscar",
     moreOptions: "Más opciones",
     deleteGroup: "Eliminar grupo",
     leaveGroup: "Dejar grupo",
     deleteConversation: "Eliminar conversación",
+    statusPending: "Pendiente",
+    statusRejected: "Rechazada",
   },
   infoPanelText: {
     closeDetails: "Cerrar detalles",

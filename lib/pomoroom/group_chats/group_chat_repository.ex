@@ -1,4 +1,6 @@
 defmodule Pomoroom.GroupChats.GroupChatRepository do
+  import PomoroomWeb.Gettext
+
   alias Pomoroom.GroupChats.GroupChatSchema
 
   def create(changes) do
@@ -14,7 +16,7 @@ defmodule Pomoroom.GroupChats.GroupChatRepository do
 
     case Mongo.find_one(:mongo, "group_chats", query) do
       nil ->
-        {:error, "Chat no encontrado"}
+        {:error, gettext("Chat no encontrado")}
 
       {:error, reason} ->
         {:error, reason}

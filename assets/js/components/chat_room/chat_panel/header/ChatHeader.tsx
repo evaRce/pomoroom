@@ -12,6 +12,7 @@ import {
   installChatPluginAction,
   uninstallChatPluginAction,
 } from "../../../../services/chatPluginService";
+import { useTranslation } from "react-i18next";
 import { toggleDetailVisibilityAction } from "../../../../services/contactService";
 import { requestGroupContactsAction } from "../../../../services/groupService";
 import type { ChatPluginRef, ChatSessionData, EventBusPayload } from "../../../../types/events";
@@ -44,6 +45,7 @@ export default function ChatHeader({
 }: ChatHeaderProps) {
   const callText = useCallText();
   const chatHeaderText = useChatHeaderText();
+  const { i18n } = useTranslation();
   const { addEvent, removeEvent } = useEventContext();
   const [pluginDisplayMap, setPluginDisplayMap] = useState<Record<string, { name: string; icon: string }>>({});
 
@@ -135,7 +137,7 @@ export default function ChatHeader({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [i18n.language]);
 
   const normalizePlugin = (plugin: ChatPluginRef | undefined) => {
     const normalizedType = plugin?.type;

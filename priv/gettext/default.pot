@@ -16,12 +16,12 @@ msgstr ""
 msgid "Actions"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:45
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:51
 #, elixir-autogen, elixir-format
 msgid "Ampliar imagen"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:40
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:46
 #, elixir-autogen, elixir-format
 msgid "Así se ve Pomoroom"
 msgstr ""
@@ -31,42 +31,42 @@ msgstr ""
 msgid "Attempting to reconnect"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:12
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:18
 #, elixir-autogen, elixir-format
 msgid "Cambiar idioma"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:43
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:49
 #, elixir-autogen, elixir-format
 msgid "Captura de Pomoroom"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:44
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:50
 #, elixir-autogen, elixir-format
 msgid "Captura de Pomoroom ampliada"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:46
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:52
 #, elixir-autogen, elixir-format
 msgid "Cerrar"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:30
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:36
 #, elixir-autogen, elixir-format
 msgid "Chats Grupales"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:26
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:32
 #, elixir-autogen, elixir-format
 msgid "Chats Privados"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:31
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:37
 #, elixir-autogen, elixir-format
 msgid "Colabora con tu equipo"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:18
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:24
 #, elixir-autogen, elixir-format
 msgid "Conecta. Colabora. Crea."
 msgstr ""
@@ -81,7 +81,7 @@ msgstr ""
 msgid "Contacto eliminado del grupo %{group_name}"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:27
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:33
 #, elixir-autogen, elixir-format
 msgid "Conversaciones seguras 1 a 1"
 msgstr ""
@@ -91,7 +91,7 @@ msgstr ""
 msgid "Demasiadas solicitudes enviadas. Inténtalo de nuevo en un minuto"
 msgstr ""
 
-#: lib/pomoroom_web/live/login.ex:23
+#: lib/pomoroom_web/live/login.ex:27
 #, elixir-autogen, elixir-format
 msgid "Demasiados intentos. Inténtalo de nuevo en un minuto"
 msgstr ""
@@ -112,9 +112,9 @@ msgstr ""
 msgid "El contacto ya está añadido"
 msgstr ""
 
-#: lib/pomoroom_web/live/login.ex:34
-#: lib/pomoroom_web/live/login.ex:43
-#: lib/pomoroom_web/live/login.ex:62
+#: lib/pomoroom_web/live/login.ex:38
+#: lib/pomoroom_web/live/login.ex:47
+#: lib/pomoroom_web/live/login.ex:66
 #, elixir-autogen, elixir-format
 msgid "El email o la contraseña no son válidos"
 msgstr ""
@@ -208,7 +208,7 @@ msgstr ""
 msgid "Inconsistencia detectada: solicitud aceptada sin chat privado"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:13
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:19
 #, elixir-autogen, elixir-format
 msgid "Iniciar sesión"
 msgstr ""
@@ -218,12 +218,12 @@ msgstr ""
 msgid "La petición fue rechazada previamente"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:33
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:39
 #, elixir-autogen, elixir-format
 msgid "Llamadas WebRTC"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:42
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:48
 #, elixir-autogen, elixir-format
 msgid "Next"
 msgstr ""
@@ -253,12 +253,12 @@ msgstr ""
 msgid "No puedes añadirte a ti mismo como un contacto"
 msgstr ""
 
-#: lib/pomoroom_web/live/login.ex:56
+#: lib/pomoroom_web/live/login.ex:60
 #, elixir-autogen, elixir-format
 msgid "No se pudo iniciar sesión. Inténtalo de nuevo"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:20
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:26
 #, elixir-autogen, elixir-format
 msgid "POMOROOM es tu espacio para estudiar y/o trabajar con enfoque, ya sea"
 msgstr ""
@@ -273,17 +273,17 @@ msgstr ""
 msgid "Petición de amistad ya rechazada"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:35
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:41
 #, elixir-autogen, elixir-format
 msgid "Plugins"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:41
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:47
 #, elixir-autogen, elixir-format
 msgid "Previous"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:14
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:20
 #, elixir-autogen, elixir-format
 msgid "Registrarse"
 msgstr ""
@@ -298,12 +298,12 @@ msgstr ""
 msgid "Success!"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:36
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:42
 #, elixir-autogen, elixir-format
 msgid "Temporizador Pomodoro y tablero Kanban"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:19
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:25
 #, elixir-autogen, elixir-format
 msgid "Una plataforma de mensajería moderna con herramientas de productividad"
 msgstr ""
@@ -338,7 +338,7 @@ msgstr ""
 msgid "Usuario %{member} reañadido al grupo"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:33
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:39
 #, elixir-autogen, elixir-format
 msgid "Voz y Video"
 msgstr ""
@@ -374,7 +374,49 @@ msgstr ""
 msgid "no es un email válido"
 msgstr ""
 
-#: lib/pomoroom_web/controllers/page_html/home_texts.ex:21
+#: lib/pomoroom_web/controllers/page_html/home_texts.ex:27
 #, elixir-autogen, elixir-format
 msgid "o en grupo."
+msgstr ""
+
+#: lib/pomoroom/group_chats/group_chat_repository.ex:19
+#: lib/pomoroom/private_chats/private_chat_repository.ex:19
+#: lib/pomoroom/private_chats/private_chat_repository.ex:31
+#, elixir-autogen, elixir-format
+msgid "Chat no encontrado"
+msgstr ""
+
+#: lib/pomoroom/chat_plugins/kanban/kanban_service.ex:41
+#, elixir-autogen, elixir-format
+msgid "En progreso"
+msgstr ""
+
+#: lib/pomoroom/chat_plugins/kanban/kanban_service.ex:42
+#, elixir-autogen, elixir-format
+msgid "Hecho"
+msgstr ""
+
+#: lib/pomoroom/chat_plugins/kanban/kanban_service.ex:40
+#, elixir-autogen, elixir-format
+msgid "Por hacer"
+msgstr ""
+
+#: lib/pomoroom/chat_plugins/chat_plugin_service.ex:304
+#, elixir-autogen, elixir-format
+msgid "Tablero Kanban"
+msgstr ""
+
+#: lib/pomoroom/chat_plugins/chat_plugin_service.ex:311
+#, elixir-autogen, elixir-format
+msgid "Tablero compartido para organizar tareas en columnas To Do, In Progress y Done."
+msgstr ""
+
+#: lib/pomoroom/chat_plugins/chat_plugin_service.ex:303
+#, elixir-autogen, elixir-format
+msgid "Temporizador Pomodoro"
+msgstr ""
+
+#: lib/pomoroom/chat_plugins/chat_plugin_service.ex:307
+#, elixir-autogen, elixir-format
+msgid "Temporizador compartido para sesiones de trabajo y descanso dentro del chat."
 msgstr ""

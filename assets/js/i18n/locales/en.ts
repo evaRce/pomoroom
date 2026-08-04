@@ -75,11 +75,11 @@ const en = {
     moreOptions: "More options",
   },
   addMembersModalText: {
-    titleWithGroup: "Add your buddies to {{groupName}}",
-    searchPlaceholder: "Search my buddies",
+    titleWithGroup: "Add your contacts to {{groupName}}",
+    searchPlaceholder: "Search my contacts",
     clearSearch: "Clear search",
     search: "Search",
-    shareLink: "Or share this link to invite a buddy",
+    shareLink: "Or share this link to invite a contact",
     copyLink: "Copy link",
   },
   pluginMarketPlaceText: {
@@ -111,13 +111,15 @@ const en = {
     waitingResponse: "Waiting for response.",
   },
   conversationSidebarText: {
-    searchPlaceholder: "Search my buddies",
+    searchPlaceholder: "Search my contacts",
     clearSearch: "Clear search",
     search: "Search",
     moreOptions: "More options",
     deleteGroup: "Delete group",
     leaveGroup: "Leave group",
     deleteConversation: "Delete conversation",
+    statusPending: "Pending",
+    statusRejected: "Rejected",
   },
   infoPanelText: {
     closeDetails: "Close details",

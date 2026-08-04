@@ -1,9 +1,5 @@
 defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
-  @default_columns [
-    %{column_id: "todo", title: "Por hacer"},
-    %{column_id: "inProgress", title: "En progreso"},
-    %{column_id: "done", title: "Hecho"}
-  ]
+  import PomoroomWeb.Gettext
 
   alias Pomoroom.ChatPlugins.Kanban.{
     ColumnSchema,
@@ -40,7 +36,12 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
   end
 
   def default_columns do
-    Enum.map(@default_columns, fn column -> Map.put(column, :task_ids, []) end)
+    [
+      %{column_id: "todo", title: gettext("Por hacer")},
+      %{column_id: "inProgress", title: gettext("En progreso")},
+      %{column_id: "done", title: gettext("Hecho")}
+    ]
+    |> Enum.map(fn column -> Map.put(column, :task_ids, []) end)
   end
 
   def ensure_started(chat_id, chat_type) do

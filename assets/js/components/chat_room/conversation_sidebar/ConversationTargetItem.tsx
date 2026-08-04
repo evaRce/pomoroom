@@ -62,6 +62,17 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
     }
   };
 
+  const getStatusLabel = () => {
+    switch (contact.status_request) {
+      case "pending":
+        return conversationSidebarText.statusPending;
+      case "rejected":
+        return conversationSidebarText.statusRejected;
+      default:
+        return "";
+    }
+  };
+
   const handleMenuClick = (key: string) => {
     if (key === "deleteChat") {
       onDelete();
@@ -159,7 +170,7 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
             </div>
             {(contact.status_request === "pending" || contact.status_request === "rejected") && (
               <span className={`text-white font-bold text-xs sm:text-[10px] lg:text-xs rounded-full px-2 py-1 sm:px-1.5 sm:py-0.5 lg:px-2 lg:py-1 ${getBackgroundStatus()}`}>
-                {contact.status_request}
+                {getStatusLabel()}
               </span>
             )}
             {contact.status_request === "accepted" && (

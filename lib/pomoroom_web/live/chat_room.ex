@@ -59,6 +59,12 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     end
   end
 
+  def handle_info({:live_session_updated, session}, socket) do
+    locale = Map.get(session, "locale", socket.assigns.locale)
+    Gettext.put_locale(PomoroomWeb.Gettext, locale)
+    {:noreply, assign(socket, :locale, locale)}
+  end
+
   def handle_info({:new_message, args}, socket) do
     current_chat_id = Map.get(socket.assigns, :chat_id)
     message_chat_id = get_in(args, [:data, :chat_id]) || get_in(args, ["data", "chat_id"])

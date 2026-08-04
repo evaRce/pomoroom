@@ -63,7 +63,7 @@ export default function CurrentUserCard() {
 			icon: <UsergroupAddOutlined />,
 		},
 		{
-			label: `${t("common.changeLanguage")} (${currentLocale.toUpperCase()})`,
+			label: `${t("common.changeLanguage")} (${nextLocale.toUpperCase()})`,
 			key: "change_language",
 			icon: <GlobalOutlined />,
 		},

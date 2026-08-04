@@ -11,5 +11,7 @@ export default function useConversationSidebarText() {
     deleteGroup: t("conversationSidebarText.deleteGroup"),
     leaveGroup: t("conversationSidebarText.leaveGroup"),
     deleteConversation: t("conversationSidebarText.deleteConversation"),
+    statusPending: t("conversationSidebarText.statusPending"),
+    statusRejected: t("conversationSidebarText.statusRejected"),
   };
 }

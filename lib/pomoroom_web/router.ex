@@ -13,6 +13,8 @@ defmodule PomoroomWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug :fetch_session
+    plug PomoroomWeb.Plugs.Locale
   end
 
   pipeline :require_authenticated_user do
