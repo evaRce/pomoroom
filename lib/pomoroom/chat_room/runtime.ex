@@ -1,4 +1,4 @@
-defmodule PomoroomWeb.ChatLive.ChatRoom.Runtime do
+defmodule Pomoroom.ChatRoom.Runtime do
   alias Pomoroom.ChatRoom.ChatServer
 
   def ensure_chat_server_exists(chat_id) do
