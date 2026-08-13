@@ -5,7 +5,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
   alias Phoenix.PubSub
 
   alias Pomoroom.ChatPlugins.ChatPluginService
-  alias Pomoroom.ChatRoom.{ChatServer, Runtime}
+  alias Pomoroom.Chats.Runtime.{ChatServer, Runtime}
   alias Pomoroom.FriendRequests
   alias Pomoroom.GroupChats
   alias Pomoroom.PrivateChats

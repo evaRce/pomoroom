@@ -3,7 +3,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
   import Phoenix.LiveView, only: [push_event: 3]
 
   alias Phoenix.PubSub
-  alias Pomoroom.ChatRoom.{ChatServer, Runtime}
+  alias Pomoroom.Chats.Runtime.{ChatServer, Runtime}
   alias Pomoroom.FriendRequests
   alias Pomoroom.GroupChats
   alias Pomoroom.Users

@@ -1,5 +1,5 @@
 defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerNotifier do
-  alias Pomoroom.ChatRoom.ChatServer
+  alias Pomoroom.Chats.Runtime.ChatServer
 
   def timer_finished(%{last_completed_mode: mode} = state) do
     case pomodoro_text(mode) do

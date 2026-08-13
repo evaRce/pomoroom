@@ -10,7 +10,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
   alias Phoenix.Socket.Broadcast
   alias Phoenix.PubSub
-  alias Pomoroom.ChatRoom.{ChatServer, Runtime}
+  alias Pomoroom.Chats.Runtime.{ChatServer, Runtime}
   alias Pomoroom.Users
   alias PomoroomWeb.Presence
 

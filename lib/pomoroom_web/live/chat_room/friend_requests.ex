@@ -2,7 +2,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
   import Phoenix.LiveView, only: [push_event: 3]
 
   alias Phoenix.PubSub
-  alias Pomoroom.ChatRoom.ChatServer
+  alias Pomoroom.Chats.Runtime.ChatServer
   alias Pomoroom.FriendRequests
   alias Pomoroom.PrivateChats
   alias Pomoroom.Users

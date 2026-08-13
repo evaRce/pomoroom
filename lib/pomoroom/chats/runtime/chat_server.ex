@@ -1,4 +1,4 @@
-defmodule Pomoroom.ChatRoom.ChatServer do
+defmodule Pomoroom.Chats.Runtime.ChatServer do
   use GenServer
   alias Phoenix.PubSub
   alias Pomoroom.Messages
