@@ -3,7 +3,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
   import PomoroomWeb.Gettext
 
   alias Phoenix.PubSub
-  alias Pomoroom.ChatRoom.ChatServer
+  alias Pomoroom.Chats.Runtime.ChatServer
   alias Pomoroom.FriendRequests
   alias Pomoroom.PrivateChats
   alias Pomoroom.Users

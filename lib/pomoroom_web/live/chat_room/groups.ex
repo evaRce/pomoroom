@@ -4,7 +4,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
   import PomoroomWeb.Gettext
 
   alias Phoenix.PubSub
-  alias Pomoroom.ChatRoom.{ChatServer, Runtime}
+  alias Pomoroom.Chats.Runtime.{ChatServer, Runtime}
   alias Pomoroom.FriendRequests
   alias Pomoroom.GroupChats
   alias Pomoroom.Users

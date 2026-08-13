@@ -27,7 +27,7 @@ defmodule Pomoroom.Application do
       # {Pomoroom.Worker, arg},
       # Start to serve requests, typically the last entry
       PomoroomWeb.Endpoint,
-      {DynamicSupervisor, strategy: :one_for_one, name: Pomoroom.ChatRoom.ChatSupervisor},
+      {DynamicSupervisor, strategy: :one_for_one, name: Pomoroom.Chats.ChatSupervisor},
       {Registry, keys: :unique, name: Registry.Chat},
       {DynamicSupervisor,
        strategy: :one_for_one, name: Pomoroom.ChatPlugins.PomodoroTimerSupervisor},
