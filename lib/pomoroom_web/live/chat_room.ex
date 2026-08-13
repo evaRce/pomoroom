@@ -5,13 +5,12 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     Contacts,
     FriendRequests,
     Groups,
-    Plugins,
-    Runtime
+    Plugins
   }
 
   alias Phoenix.Socket.Broadcast
   alias Phoenix.PubSub
-  alias Pomoroom.ChatRoom.ChatServer
+  alias Pomoroom.ChatRoom.{ChatServer, Runtime}
   alias Pomoroom.Users
   alias PomoroomWeb.Presence
 

@@ -5,12 +5,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
   alias Phoenix.PubSub
 
   alias Pomoroom.ChatPlugins.ChatPluginService
-  alias Pomoroom.ChatRoom.ChatServer
+  alias Pomoroom.ChatRoom.{ChatServer, Runtime}
   alias Pomoroom.FriendRequests
   alias Pomoroom.GroupChats
   alias Pomoroom.PrivateChats
   alias Pomoroom.Users
-  alias PomoroomWeb.ChatLive.ChatRoom.Runtime
 
   @initial_messages_limit 20
   @older_messages_limit 15
