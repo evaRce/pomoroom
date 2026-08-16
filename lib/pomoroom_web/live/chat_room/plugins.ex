@@ -355,8 +355,18 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
     {:noreply, push_event(socket, "react", payload)}
   end
 
-  defp maybe_terminate_timer_process(_chat_id) do
-    :ok
+  defp maybe_terminate_timer_process(chat_id) do
+    case chat_context(chat_id) do
+      {:ok, chat_type, members} ->
+        if any_member_connected?(members) do
+          :ok
+        else
+          PomodoroTimers.terminate_timer_process(chat_id, chat_type)
+        end
+
+      {:error, _reason} ->
+        :ok
+    end
   end
 
   defp maybe_terminate_kanban_process(chat_id) do
