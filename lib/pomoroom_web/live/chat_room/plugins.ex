@@ -289,14 +289,6 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
     handle_kanban_operation(chat_id, chat_type, user, socket, :delete_task, task_id)
   end
 
-  def handle_presence_diff(socket) do
-    user_nickname = socket.assigns.user_info.nickname
-    terminate_timer_process_for_user(user_nickname)
-    terminate_kanban_process_for_user(user_nickname)
-
-    {:noreply, socket}
-  end
-
   def handle_disconnect_cleanup(socket) do
     user_nickname = socket.assigns.user_info.nickname
 
@@ -369,12 +361,22 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
 
   defp maybe_terminate_kanban_process(chat_id) do
     case chat_context(chat_id) do
-      {:ok, chat_type, _members} ->
-        Kanbans.terminate_kanban_process(chat_id, chat_type)
+      {:ok, chat_type, members} ->
+        if any_member_connected?(members) do
+          :ok
+        else
+          Kanbans.terminate_kanban_process(chat_id, chat_type)
+        end
 
       {:error, _reason} ->
         :ok
     end
+  end
+
+  defp any_member_connected?(members) do
+    Enum.any?(members, fn member ->
+      Presence.get_by_key("online_users", member) != []
+    end)
   end
 
   defp handle_kanban_operation(chat_id, chat_type, user, socket, operation, args) do

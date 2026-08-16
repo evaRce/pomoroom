@@ -8,7 +8,6 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     Plugins
   }
 
-  alias Phoenix.Socket.Broadcast
   alias Phoenix.PubSub
   alias Pomoroom.Chats.Runtime.{ChatServer, Runtime}
   alias Pomoroom.Users
@@ -197,10 +196,6 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         socket
       ) do
     FriendRequests.handle_friend_request_rejected(payload, socket)
-  end
-
-  def handle_info(%Broadcast{topic: "online_users", event: "presence_diff"}, socket) do
-    Plugins.handle_presence_diff(socket)
   end
 
   def handle_event("action.get_user_info", _args, %{assigns: %{user_info: user}} = socket) do
