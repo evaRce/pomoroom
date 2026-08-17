@@ -107,7 +107,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
         {:noreply, socket}
 
       {:ok, private_chat} ->
-        send_message_to_chat(private_chat.chat_id, message, user, socket)
+        if FriendRequests.get_status(to_user, from_user) == "accepted" do
+          send_message_to_chat(private_chat.chat_id, message, user, socket)
+        else
+          {:noreply, socket}
+        end
     end
   end
 
