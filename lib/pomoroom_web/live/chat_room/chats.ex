@@ -32,40 +32,35 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
     {to_user, from_user} =
       FriendRequests.determine_friend_request_users(contact_name, user.nickname)
 
-    case PrivateChats.ensure_exists(to_user, from_user) do
-      {:ok, private_chat} ->
-        Runtime.ensure_chat_server_exists(private_chat.chat_id)
-        PubSub.subscribe(Pomoroom.PubSub, pomodoro_topic(private_chat.chat_id))
-        PubSub.subscribe(Pomoroom.PubSub, kanban_topic(private_chat.chat_id))
+    case FriendRequests.get(to_user, from_user) do
+      {:error, :not_found} ->
+        {:noreply, socket}
 
-        case FriendRequests.get(to_user, from_user) do
-          {:ok, request} ->
-            is_owner_request = FriendRequests.is_owner_request?(contact_name, user.nickname)
+      {:ok, request} ->
+        is_owner_request = FriendRequests.is_owner_request?(contact_name, user.nickname)
 
-            case request.status do
-              "accepted" ->
+        case request.status do
+          "accepted" ->
+            case PrivateChats.ensure_exists(to_user, from_user) do
+              {:ok, private_chat} ->
+                Runtime.ensure_chat_server_exists(private_chat.chat_id)
+                PubSub.subscribe(Pomoroom.PubSub, pomodoro_topic(private_chat.chat_id))
+                PubSub.subscribe(Pomoroom.PubSub, kanban_topic(private_chat.chat_id))
                 open_accepted_private_chat(private_chat, contact_name, user, socket)
 
-              "pending" ->
-                payload =
-                  build_private_chat_request_payload("pending", request, is_owner_request)
-
-                {:noreply, push_event(socket, "react", payload)}
-
-              "rejected" ->
-                payload =
-                  build_private_chat_request_payload("rejected", request, is_owner_request)
-
+              {:error, reason} ->
+                payload = %{event_name: "error_opening_private_chat", event_data: reason}
                 {:noreply, push_event(socket, "react", payload)}
             end
 
-          {:error, :not_found} ->
-            {:noreply, socket}
-        end
+          "pending" ->
+            payload = build_private_chat_request_payload("pending", request, is_owner_request)
+            {:noreply, push_event(socket, "react", payload)}
 
-      {:error, reason} ->
-        payload = %{event_name: "error_opening_private_chat", event_data: reason}
-        {:noreply, push_event(socket, "react", payload)}
+          "rejected" ->
+            payload = build_private_chat_request_payload("rejected", request, is_owner_request)
+            {:noreply, push_event(socket, "react", payload)}
+        end
     end
   end
 
