@@ -3,7 +3,14 @@ defmodule PomoroomWeb.HomeLive.SignUp do
   alias Pomoroom.Users
 
   def mount(_params, session, socket) do
+    socket = assign(socket, :locale, Map.get(session, "locale", "es"))
     {:ok, PhoenixLiveSession.maybe_subscribe(socket, session), layout: false}
+  end
+
+  def handle_info({:live_session_updated, session}, socket) do
+    locale = Map.get(session, "locale", socket.assigns.locale)
+    Gettext.put_locale(PomoroomWeb.Gettext, locale)
+    {:noreply, assign(socket, :locale, locale)}
   end
 
   def handle_event("action.save_user", params, socket) do

@@ -16,7 +16,7 @@ import { useLocalParticipant, useParticipants, useTracks, VideoTrack } from "@li
 import type { TrackReference } from "@livekit/components-core";
 import { Track, type Participant, type TrackPublication, type VideoCaptureOptions } from "livekit-client";
 import { formatDuration } from "../../../utils/formatDuration";
-import callText from "./callText";
+import useCallText from "./callText";
 
 interface CallScreenProps {
   roomName: string;
@@ -114,6 +114,7 @@ function ParticipantTile({
   onSwitchCamera?: () => void;
   className?: string;
 }) {
+  const callText = useCallText();
   const displayName = isLocal ? callText.screen.you : participant.name || participant.identity;
 
   return (
@@ -171,6 +172,7 @@ function ParticipantGrid({
   participants: Participant[];
   renderTile: (participant: Participant, className: string) => React.ReactNode;
 }) {
+  const callText = useCallText();
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const count = participants.length;
@@ -254,6 +256,7 @@ export default function CallScreen({
   onEndCall,
   onClose,
 }: CallScreenProps) {
+  const callText = useCallText();
   const { localParticipant, isMicrophoneEnabled, isCameraEnabled, isScreenShareEnabled } =
     useLocalParticipant();
   const participants = useParticipants();
@@ -347,7 +350,7 @@ export default function CallScreen({
       void localParticipant.setScreenShareEnabled(false);
       message.warning(callText.screen.screenShareConflict);
     }
-  }, [screenShareTrackRefs, screenShareTrackRef, isScreenShareEnabled, localParticipant]);
+  }, [screenShareTrackRefs, screenShareTrackRef, isScreenShareEnabled, localParticipant, callText]);
 
   const enterFullscreen = () => {
     containerRef.current?.requestFullscreen().catch(() => { });

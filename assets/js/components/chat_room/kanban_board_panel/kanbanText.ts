@@ -1,50 +1,54 @@
-export const KANBAN_TEXT = {
-  task: {
-    delete: {
-      title: "Eliminar tarea",
-      confirmMessage: "¿Deseas eliminar esta tarea?",
-      irreversibleWarning:
-        "Esta acción es irreversible y no se podrá recuperar la tarea eliminada.",
-      okButton: "Eliminar",
-    },
-    editButton: "Editar",
-    addButton: "Agregar tarea",
-    saveButton: "Guardar",
-    inputPlaceholder: "Título de la tarea...",
-    emptyListMessage: "No hay tareas todavía",
-    limitReached: {
-      title: (max: number) => `Límite de ${max} tareas por columna`,
-      content: (max: number) =>
-        `No puedes añadir más de ${max} tareas en esta columna.`,
-    },
-    cancelButton: "Cancelar",
-  },
+import { useTranslation } from "react-i18next";
 
-  column: {
-    delete: {
-      title: "Eliminar columna",
-      confirmMessage: (colTitle: string, hasTasks: boolean) =>
-        hasTasks
-          ? `¿Deseas eliminar la columna "${colTitle}" y todas sus tareas?`
-          : `¿Deseas eliminar la columna "${colTitle}"?`,
-      irreversibleWarning: (hasTasks: boolean) =>
-        hasTasks
-          ? "Esta acción es irreversible y no se podrá recuperar la columna ni sus tareas"
-          : "Esta acción es irreversible y no se podrá recuperar la columna",
-      okButton: "Eliminar",
+export function useKanbanText() {
+  const { t } = useTranslation();
+
+  return {
+    task: {
+      delete: {
+        title: t("kanbanText.taskDeleteTitle"),
+        confirmMessage: t("kanbanText.taskDeleteConfirmMessage"),
+        irreversibleWarning: t("kanbanText.taskDeleteIrreversibleWarning"),
+        okButton: t("kanbanText.taskDeleteOkButton"),
+      },
+      editButton: t("kanbanText.taskEditButton"),
+      addButton: t("kanbanText.taskAddButton"),
+      saveButton: t("kanbanText.taskSaveButton"),
+      inputPlaceholder: t("kanbanText.taskInputPlaceholder"),
+      emptyListMessage: t("kanbanText.taskEmptyListMessage"),
+      limitReached: {
+        title: (max: number) => t("kanbanText.taskLimitReachedTitle", { max }),
+        content: (max: number) => t("kanbanText.taskLimitReachedContent", { max }),
+      },
+      cancelButton: t("kanbanText.taskCancelButton"),
+      understood: t("kanbanText.taskUnderstood"),
     },
-    rename: {
-      button: "Renombrar columna",
-      prompt: "Nuevo nombre de la columna:",
+
+    column: {
+      delete: {
+        title: t("kanbanText.columnDeleteTitle"),
+        confirmMessage: (colTitle: string, hasTasks: boolean) =>
+          hasTasks
+            ? t("kanbanText.columnDeleteConfirmMessageWithTasks", { colTitle })
+            : t("kanbanText.columnDeleteConfirmMessageNoTasks", { colTitle }),
+        irreversibleWarning: (hasTasks: boolean) =>
+          hasTasks
+            ? t("kanbanText.columnDeleteIrreversibleWarningWithTasks")
+            : t("kanbanText.columnDeleteIrreversibleWarningNoTasks"),
+        okButton: t("kanbanText.columnDeleteOkButton"),
+      },
+      rename: {
+        button: t("kanbanText.columnRenameButton"),
+        prompt: t("kanbanText.columnRenamePrompt"),
+      },
+      add: {
+        button: t("kanbanText.columnAddButton"),
+        inputPlaceholder: t("kanbanText.columnAddInputPlaceholder"),
+        taskLabel: (colTitle: string) => t("kanbanText.columnAddTaskLabel", { colTitle }),
+      },
+      limitReachedMessage: (max: number) => t("kanbanText.columnLimitReachedMessage", { max }),
+      cancelButton: t("kanbanText.columnCancelButton"),
+      createButton: t("kanbanText.columnCreateButton"),
     },
-    add: {
-      button: "Agregar columna",
-      inputPlaceholder: "Nombre de la columna...",
-      taskLabel: (colTitle: string) => `Agregar tarea a ${colTitle}`,
-    },
-    limitReachedMessage: (max: number) => `Límite de ${max} columnas alcanzado`,
-    optionsLabel: (colTitle: string) => `Opciones de columna para ${colTitle}`,
-    cancelButton: "Cancelar",
-    createButton: "Crear",
-  },
-};
+  };
+}

@@ -1,32 +1,36 @@
-import { InputNumber } from "antd";
+import { useTranslation } from "react-i18next";
 
-const pomodoroTimerText = {
-  work: "Trabajo",
-  shortBreak: "Descanso corto",
-  longBreak: "Descanso largo",
-  timerSettings: "Configuración del temporizador",
-  workMinutes: "Trabajo (minutos)",
-  shortBreakMinutes: "Descanso corto (minutos)",
-  longBreakMinutes: "Descanso largo (minutos)",
-  cyclesBeforeLongBreak: "Ciclos antes de descanso largo",
-  soundEndPeriod: "Sonido fin de periodo",
-  saveSettings: "Guardar configuración",
-  settingsSaved: "Configuración guardada",
-  syncError: "Error al guardar la configuración. Por favor, inténtalo de nuevo.",
-  cycle: "Ciclo",
-  cyclesCompleted: (count: number) => `${count} ${count === 1 ? "ciclo completado" : "ciclos completados"} hoy`,
-  sessionTime: "Tiempo de sesión",
-  errors: {
-    shortBreakDuration: "Debe ser menor que el descanso largo",
-    longBreakDuration: "Debe ser mayor que el descanso corto",
-    writeNumber: "Escribe un número",
-    inputNumber: "Debe ser un número",
-    cyclesBeforeLongBreak: (min: number, max: number) => `Debe ser un número entre ${min} y ${max}`,
-  },
-  alertShortVsLong: "El tiempo de `descanso corto` debe ser menor que el tiempo de `descanso largo`.",
-  workTimerEnded: "Fin trabajo",
-  shortBreakTimerEnded: "Fin descanso corto",
-  longBreakTimerEnded: "Fin descanso largo",
-};
+export default function usePomodoroTimerText() {
+  const { t } = useTranslation();
 
-export default pomodoroTimerText;
+  return {
+    work: t("pomodoroTimerText.work"),
+    shortBreak: t("pomodoroTimerText.shortBreak"),
+    longBreak: t("pomodoroTimerText.longBreak"),
+    timerSettings: t("pomodoroTimerText.timerSettings"),
+    workMinutes: t("pomodoroTimerText.workMinutes"),
+    shortBreakMinutes: t("pomodoroTimerText.shortBreakMinutes"),
+    longBreakMinutes: t("pomodoroTimerText.longBreakMinutes"),
+    cyclesBeforeLongBreak: t("pomodoroTimerText.cyclesBeforeLongBreak"),
+    soundEndPeriod: t("pomodoroTimerText.soundEndPeriod"),
+    saveSettings: t("pomodoroTimerText.saveSettings"),
+    settingsSaved: t("pomodoroTimerText.settingsSaved"),
+    syncError: t("pomodoroTimerText.syncError"),
+    cycle: t("pomodoroTimerText.cycle"),
+    cyclesCompleted: (count: number) => t("pomodoroTimerText.cyclesCompleted", { count }),
+    sessionTime: t("pomodoroTimerText.sessionTime"),
+    errors: {
+      shortBreakDuration: t("pomodoroTimerText.errorShortBreakDuration"),
+      longBreakDuration: t("pomodoroTimerText.errorLongBreakDuration"),
+      writeNumber: t("pomodoroTimerText.errorWriteNumber"),
+      inputNumber: t("pomodoroTimerText.errorInputNumber"),
+      cyclesBeforeLongBreak: (min: number, max: number) =>
+        t("pomodoroTimerText.errorCyclesBeforeLongBreak", { min, max }),
+    },
+    alertShortVsLong: t("pomodoroTimerText.alertShortVsLong"),
+    workTimerEnded: t("pomodoroTimerText.workTimerEnded"),
+    shortBreakTimerEnded: t("pomodoroTimerText.shortBreakTimerEnded"),
+    longBreakTimerEnded: t("pomodoroTimerText.longBreakTimerEnded"),
+    loadingSettings: t("pomodoroTimerText.loadingSettings"),
+  };
+}

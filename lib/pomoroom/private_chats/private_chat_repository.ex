@@ -1,4 +1,6 @@
 defmodule Pomoroom.PrivateChats.PrivateChatRepository do
+  import PomoroomWeb.Gettext
+
   alias Pomoroom.PrivateChats.PrivateChatSchema
 
   def create(changes) do
@@ -14,7 +16,7 @@ defmodule Pomoroom.PrivateChats.PrivateChatRepository do
 
     case Mongo.find_one(:mongo, "private_chats", query) do
       nil ->
-        {:error, "Chat no encontrado"}
+        {:error, gettext("Chat no encontrado")}
 
       chat when is_map(chat) ->
         {:ok, get_changes_from_changeset(chat)}
@@ -26,7 +28,7 @@ defmodule Pomoroom.PrivateChats.PrivateChatRepository do
 
     case Mongo.find_one(:mongo, "private_chats", query) do
       nil ->
-        {:error, "Chat no encontrado"}
+        {:error, gettext("Chat no encontrado")}
 
       chat when is_map(chat) ->
         {:ok, get_changes_from_changeset(chat)}

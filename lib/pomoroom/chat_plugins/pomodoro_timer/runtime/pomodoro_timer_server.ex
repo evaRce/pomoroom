@@ -23,8 +23,8 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
     GenServer.call(via_tuple(process_id), {:update_config, config})
   end
 
-  def start_timer(process_id) do
-    GenServer.call(via_tuple(process_id), :start)
+  def start_timer(process_id, locale \\ nil) do
+    GenServer.call(via_tuple(process_id), {:start, locale})
   end
 
   def pause_timer(process_id) do
@@ -56,7 +56,8 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
         started_at: nil,
         paused_at: nil,
         session_elapsed_ms: 0,
-        session_started_at: nil
+        session_started_at: nil,
+        locale: nil
       }
       |> apply_persisted_state()
 
@@ -88,7 +89,7 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
   end
 
   @impl true
-  def handle_call(:start, _from, state) do
+  def handle_call({:start, locale}, _from, state) do
     case state.is_running do
       true ->
         {:reply, {:ok, format_payload(state)}, state}
@@ -114,6 +115,7 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
           |> Map.put(:last_updated, now)
           |> Map.put(:started_at, started_at)
           |> Map.put(:paused_at, nil)
+          |> Map.put(:locale, locale || state.locale)
           |> start_session_segment(now)
           |> schedule_tick()
 

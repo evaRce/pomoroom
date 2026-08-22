@@ -1,4 +1,6 @@
 defmodule Pomoroom.ChatPlugins.ChatPluginService do
+  import PomoroomWeb.Gettext
+
   alias Pomoroom.ChatPlugins.Kanban.Kanbans
   alias Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimers
   alias Pomoroom.GroupChats
@@ -6,20 +8,9 @@ defmodule Pomoroom.ChatPlugins.ChatPluginService do
   alias Pomoroom.PrivateChats
   alias Pomoroom.PrivateChats.PrivateChatRepository
 
-  @plugin_catalog %{
-    "pomodoro" => %{
-      name: "Temporizador Pomodoro",
-      description: "Temporizador compartido para sesiones de trabajo y descanso dentro del chat.",
-      icon: "⏱️",
-      installable: true
-    },
-    "kanban" => %{
-      name: "Tablero Kanban",
-      description:
-        "Tablero compartido para organizar tareas en columnas To Do, In Progress y Done.",
-      icon: "📋",
-      installable: true
-    }
+  @plugin_icons %{
+    "pomodoro" => "⏱️",
+    "kanban" => "📋"
   }
 
   def install_plugin(chat_id, chat_type, plugin_type) do
@@ -66,8 +57,16 @@ defmodule Pomoroom.ChatPlugins.ChatPluginService do
   end
 
   def list_available_plugins do
-    @plugin_catalog
-    |> Enum.map(fn {plugin_type, plugin_data} -> Map.put(plugin_data, :type, plugin_type) end)
+    @plugin_icons
+    |> Enum.map(fn {plugin_type, icon} ->
+      %{
+        type: plugin_type,
+        name: plugin_name(plugin_type),
+        description: plugin_description(plugin_type),
+        icon: icon,
+        installable: true
+      }
+    end)
     |> Enum.sort_by(& &1.type)
   end
 
@@ -300,4 +299,14 @@ defmodule Pomoroom.ChatPlugins.ChatPluginService do
   end
 
   defp normalize_plugin_id(_), do: nil
+
+  defp plugin_name("pomodoro"), do: gettext("Temporizador Pomodoro")
+  defp plugin_name("kanban"), do: gettext("Tablero Kanban")
+
+  defp plugin_description("pomodoro"),
+    do: gettext("Temporizador compartido para sesiones de trabajo y descanso dentro del chat.")
+
+  defp plugin_description("kanban"),
+    do:
+      gettext("Tablero compartido para organizar tareas en columnas To Do, In Progress y Done.")
 end

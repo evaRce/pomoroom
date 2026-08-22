@@ -3,4 +3,5 @@
 	phx-hook="ChatRoom"
 	phx-update="ignore"
 	data-authenticated={to_string(not is_nil(@user_info[:nickname]))}
+	data-locale={@locale}
 ></div>

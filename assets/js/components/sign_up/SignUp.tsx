@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Button, Form, Input } from "antd";
 import { LockOutlined, UserOutlined, RobotOutlined, HomeOutlined } from "@ant-design/icons";
-import signupText from "./signupText";
+import useSignupText from "./signupText";
 import { FormErrors } from "../../types/liveview";
 import { getRandomBackgroundImageNumber } from "../../utils/randomBackgroundImage";
 
@@ -16,6 +16,7 @@ export interface SignUpProps {
 
 export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
   const { submitUser, errors } = props;
+  const signupText = useSignupText();
   const [form] = Form.useForm();
   const nicknameRegex = new RegExp(/^\w[\w.]{2,18}\w$/);
 	const [imageNumber, setImageNumber] = useState(1);

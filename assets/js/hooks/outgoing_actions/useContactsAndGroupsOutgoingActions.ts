@@ -40,6 +40,7 @@ export function useContactsAndGroupsOutgoingActions({
   const refreshConversations = useEvent("refresh_conversations");
   const groupDeleted = useEvent("group_deleted");
   const logout = useEvent("logout");
+  const changeLocale = useEvent("set_locale");
 
   useEffect(() => {
     if (contactToDelete) {
@@ -146,6 +147,10 @@ export function useContactsAndGroupsOutgoingActions({
       pushEventToLiveView("action.logout", {});
       removeEvent("logout");
     }
+    if (changeLocale) {
+      pushEventToLiveView("action.set_locale", { locale: changeLocale });
+      removeEvent("set_locale");
+    }
   }, [
     contactToDelete,
     selectedPrivateChat,
@@ -162,6 +167,7 @@ export function useContactsAndGroupsOutgoingActions({
     refreshConversations,
     groupDeleted,
     logout,
+    changeLocale,
     pushEventToLiveView,
     infoChatSelected,
     isVisibleDetail,

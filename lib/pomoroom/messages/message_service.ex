@@ -2,6 +2,7 @@ defmodule Pomoroom.Messages.MessageService do
   alias Pomoroom.ChangesetErrors
   alias Pomoroom.Messages.{MessageSchema, MessageRepository}
   import Ecto.Changeset
+  import PomoroomWeb.Gettext
 
   def new_message(message, from_user, chat_id) do
     msg_changeset =
@@ -54,7 +55,7 @@ defmodule Pomoroom.Messages.MessageService do
   defp parse_duplicate_key_error(errmsg) do
     cond do
       String.contains?(errmsg, "msg_id") ->
-        %{msg_id: "Este public id ya está siendo usado"}
+        %{msg_id: gettext("Este public id ya está siendo usado")}
     end
   end
 

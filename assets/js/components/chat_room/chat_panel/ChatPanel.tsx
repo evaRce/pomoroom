@@ -21,6 +21,7 @@ import {
 } from "../pomodoro_timer/pomodoroNotificationStore";
 import type { TimerMode } from "../pomodoro_timer/PomodoroSettingsPopover";
 import type { ChatMessage, EventBusPayload, PomodoroServerPayload } from "../../../types/events";
+import useChatPanelText from "./chatPanelText";
 
 interface ChatPanelProps {
   isVisibleDetail: boolean;
@@ -30,6 +31,7 @@ interface ChatPanelProps {
 const TOP_SCROLL_THRESHOLD_PX = 12;
 
 export default function ChatPanel({ isVisibleDetail, onBack }: ChatPanelProps) {
+  const chatPanelText = useChatPanelText();
   const { addEvent, removeEvent } = useEventContext();
   const { activeCallChatId, activeCallRoomName, connectedAt, isMinimized, setMinimized, setViewingChatId, leaveCall } =
     useCallContext();
@@ -239,15 +241,15 @@ export default function ChatPanel({ isVisibleDetail, onBack }: ChatPanelProps) {
       const finishingCount = pendingChats.length;
       const toastMessage =
         finishingCount === 1
-          ? "Un Pomodoro terminó en otro chat"
-          : `${finishingCount} Pomodoros terminaron en otros chats`;
+          ? chatPanelText.pomodoroFinishedElsewhere.single
+          : chatPanelText.pomodoroFinishedElsewhere.multiple(finishingCount);
 
       message.info({ content: toastMessage });
       pomodoroToastTimerRef.current = null;
     }, 1500);
 
     removeEvent("timer_finished");
-  }, [activePluginId, currentChatId, timerFinishedEvent]);
+  }, [activePluginId, currentChatId, timerFinishedEvent, chatPanelText]);
 
   useEffect(() => {
     syncPomodoroStore("start_timer", startTimerEvent);

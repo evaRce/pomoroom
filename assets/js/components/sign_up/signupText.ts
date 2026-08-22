@@ -1,30 +1,34 @@
-const signupText = {
-  homeButtonTitle: "Página de inicio",
-  brand: {
-    pomo: "Pomo",
-    room: "room",
-  },
-  welcome: "¡Es fácil empezar!",
-  subtitle: "Crea tu cuenta y empieza a ser más productivo.",
-  form: {
-    emailLabel: "Email",
-    emailRequired: "¡Por favor ingrese su email!",
-    emailInvalid: "¡La entrada no es un email válido!",
-    passwordLabel: "Contraseña",
-    passwordRequired: "¡Por favor ingrese su contraseña!",
-    passwordLength: "¡La contraseña debe tener entre 8 y 64 caracteres!",
-    confirmPasswordLabel: "Confirmar contraseña",
-    confirmPasswordRequired: "¡Por favor, confirme su contraseña!",
-    confirmPasswordMismatch: "¡La contraseña que ingresó no coincide con la anterior!",
-    nicknameLabel: "Apodo",
-    nicknameTooltip: "¿Cómo quieres que te llamen los demás?",
-    nicknameRequired: "¡Por favor ingresa tu apodo!",
-    nicknameInvalid: "¡La entrada no es un apodo válido!",
-    nicknameLength: "El apodo debe tener entre 2 y 64 caracteres",
-    submit: "Crear cuenta",
-    haveAccountPrefix: "Ya",
-    loginLink: "tengo una cuenta",
-  },
-};
+import { useTranslation } from "react-i18next";
 
-export default signupText;
+export default function useSignupText() {
+  const { t } = useTranslation();
+
+  return {
+    homeButtonTitle: t("signupText.homeButtonTitle"),
+    brand: {
+      pomo: t("signupText.brandPomo"),
+      room: t("signupText.brandRoom"),
+    },
+    welcome: t("signupText.welcome"),
+    subtitle: t("signupText.subtitle"),
+    form: {
+      emailLabel: t("signupText.formEmailLabel"),
+      emailRequired: t("signupText.formEmailRequired"),
+      emailInvalid: t("signupText.formEmailInvalid"),
+      passwordLabel: t("signupText.formPasswordLabel"),
+      passwordRequired: t("signupText.formPasswordRequired"),
+      passwordLength: t("signupText.formPasswordLength"),
+      confirmPasswordLabel: t("signupText.formConfirmPasswordLabel"),
+      confirmPasswordRequired: t("signupText.formConfirmPasswordRequired"),
+      confirmPasswordMismatch: t("signupText.formConfirmPasswordMismatch"),
+      nicknameLabel: t("signupText.formNicknameLabel"),
+      nicknameTooltip: t("signupText.formNicknameTooltip"),
+      nicknameRequired: t("signupText.formNicknameRequired"),
+      nicknameInvalid: t("signupText.formNicknameInvalid"),
+      nicknameLength: t("signupText.formNicknameLength"),
+      submit: t("signupText.formSubmit"),
+      haveAccountPrefix: t("signupText.formHaveAccountPrefix"),
+      loginLink: t("signupText.formLoginLink"),
+    },
+  };
+}

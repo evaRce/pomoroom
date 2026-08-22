@@ -66,9 +66,9 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerService do
     end
   end
 
-  def start(chat_id, chat_type) do
+  def start(chat_id, chat_type, locale \\ nil) do
     case ensure_started(chat_id, chat_type) do
-      {:ok, process_id} -> PomodoroTimerServer.start_timer(process_id)
+      {:ok, process_id} -> PomodoroTimerServer.start_timer(process_id, locale)
       {:error, reason} -> {:error, reason}
     end
   end

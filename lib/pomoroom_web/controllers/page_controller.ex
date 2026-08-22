@@ -8,9 +8,12 @@ defmodule PomoroomWeb.PageController do
   end
 
   def logout(conn, _params) do
+    locale = get_session(conn, :locale)
+
     conn
-    |> configure_session(drop: true)
+    |> configure_session(renew: true)
     |> clear_session()
+    |> put_session(:locale, locale)
     |> redirect(to: "/login")
   end
 end

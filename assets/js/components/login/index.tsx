@@ -3,8 +3,8 @@ import { Root, createRoot } from "react-dom/client";
 import { Login, LoginProps } from "./Login";
 import { loginUserAction } from "../../services/userService";
 import { LiveViewHook, FormErrors } from "../../types/liveview";
+import { initI18n } from "../../i18n";
 
-// Contexto que Phoenix inyecta en `this` al invocar cada callback del hook.
 interface LoginHookThis extends LiveViewHook {
 	searchUser(email: string, password: string): void;
 	opts(errorLoginUser?: FormErrors | {}): LoginProps;
@@ -18,6 +18,7 @@ const LoginHook: {
 } = {
 	mounted() {
 		const loginDomNode = document.getElementById('login') as Element;
+		initI18n(loginDomNode?.getAttribute("data-locale"));
 		const rootElement2 = createRoot(loginDomNode);
 
 		render(rootElement2, this.opts());

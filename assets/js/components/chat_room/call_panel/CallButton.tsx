@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "antd";
 import { Phone, PhoneOff, Loader2 } from "lucide-react";
 import { useCallContext } from "./CallContext";
-import callText from "./callText";
+import useCallText from "./callText";
 
 interface CallButtonProps {
   chatId: string;
@@ -11,6 +11,7 @@ interface CallButtonProps {
 }
 
 export default function CallButton({ chatId, chatName, isGroupChat }: CallButtonProps) {
+  const callText = useCallText();
   const { activeCallChatId, connectingChatId, setMinimized, joinCall } = useCallContext();
   const isThisChatInCall = !!activeCallChatId && activeCallChatId === chatId;
   const isThisChatConnecting = !activeCallChatId && connectingChatId === chatId;

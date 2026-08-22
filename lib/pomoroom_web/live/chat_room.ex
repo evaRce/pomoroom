@@ -25,6 +25,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
           socket
           |> PhoenixLiveSession.maybe_subscribe(session)
           |> assign(:user_info, user_info)
+          |> assign(:locale, Map.get(session, "locale", "es"))
 
         subscribed_chat_ids = MapSet.new()
 
@@ -54,6 +55,12 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
           {:ok, socket, layout: false}
         end
     end
+  end
+
+  def handle_info({:live_session_updated, session}, socket) do
+    locale = Map.get(session, "locale", socket.assigns.locale)
+    Gettext.put_locale(PomoroomWeb.Gettext, locale)
+    {:noreply, assign(socket, :locale, locale)}
   end
 
   def handle_info({:new_message, args}, socket) do
@@ -194,6 +201,17 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
   def handle_event("action.get_user_info", _args, %{assigns: %{user_info: user}} = socket) do
     payload = %{event_name: "show_user_info", event_data: user}
     {:noreply, push_event(socket, "react", payload)}
+  end
+
+  def handle_event("action.set_locale", %{"locale" => locale}, socket) when locale in ["es", "en"] do
+    Gettext.put_locale(PomoroomWeb.Gettext, locale)
+
+    socket =
+      socket
+      |> PhoenixLiveSession.put_session("locale", locale)
+      |> assign(:locale, locale)
+
+    {:noreply, socket}
   end
 
   def handle_event("action.get_list_contact", _args, %{assigns: %{user_info: user}} = socket) do

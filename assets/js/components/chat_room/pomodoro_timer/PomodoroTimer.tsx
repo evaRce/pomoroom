@@ -4,7 +4,7 @@ import { message } from "antd";
 import { Button } from "../../../../components-shadcn/ui/button";
 import { cn } from "../../../../lib/utils";
 import { formatDuration } from "../../../utils/formatDuration";
-import pomodoroTimerText from "./pomodoroTimerText";
+import usePomodoroTimerText from "./pomodoroTimerText";
 import { useEventContext, useEvent } from "../EventContext";
 import {
   PomodoroSettingsPopover,
@@ -62,6 +62,7 @@ function hasCompleteConfig(
 }
 
 export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
+  const pomodoroTimerText = usePomodoroTimerText();
   const { addEvent, removeEvent } = useEventContext();
   const [settings, setSettings] = useState<TimerSettings | null>(null);
   const [timerSnapshot, setTimerSnapshot] = useState<TimerState | null>(null);
@@ -630,7 +631,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   if (!settings) {
     return (
       <div className="flex items-center justify-center h-full w-full text-gray-500">
-        Loading settings...
+        {pomodoroTimerText.loadingSettings}
       </div>
     );
   }

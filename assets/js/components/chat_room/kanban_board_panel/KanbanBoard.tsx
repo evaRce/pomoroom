@@ -18,7 +18,7 @@ import type { CollisionDetection, DragEndEvent, DragOverEvent, DragStartEvent } 
 import { Button } from "../../../../components-shadcn/ui/button";
 import { useEventContext, useEvent } from "../EventContext";
 import { KanbanColumn, KanbanTaskLimitWarningModal, type Column, type ColumnId, type Task } from "./KanbanBoardComponents";
-import { KANBAN_TEXT } from "./kanbanText";
+import { useKanbanText } from "./kanbanText";
 import {
   requestKanbanBoardAction,
   addKanbanColumnAction,
@@ -97,6 +97,7 @@ function getInsertionIndex(
 }
 
 export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
+  const KANBAN_TEXT = useKanbanText();
   const { addEvent, removeEvent } = useEventContext();
   const [columns, setColumns] = useState<Column[]>([]);
   const [newTaskInputs, setNewTaskInputs] = useState<Record<ColumnId, string>>({});

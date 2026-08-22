@@ -4,10 +4,11 @@ import { Brain, Coffee, RotateCcw } from "lucide-react";
 import { useEventContext } from "../EventContext";
 import { DownOutlined, DeleteOutlined } from "@ant-design/icons";
 import { usePomodoroNotification } from "../pomodoro_timer/pomodoroNotificationStore";
-import pomodoroTimerText from "../pomodoro_timer/pomodoroTimerText";
+import usePomodoroTimerText from "../pomodoro_timer/pomodoroTimerText";
 import { selectPrivateChatAction } from "../../../services/contactService";
 import { selectGroupChatAction } from "../../../services/groupService";
 import type { NormalizedContact } from "./ConversationTargetsList";
+import useConversationSidebarText from "./conversationSidebarText";
 
 interface ConversationTargetItemProps {
   contact: NormalizedContact;
@@ -17,6 +18,8 @@ interface ConversationTargetItemProps {
 }
 
 export default function ConversationTargetItem({ contact, isSelected, onSelect, onDelete }: ConversationTargetItemProps) {
+  const conversationSidebarText = useConversationSidebarText();
+  const pomodoroTimerText = usePomodoroTimerText();
   const { addEvent } = useEventContext();
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const notification = usePomodoroNotification(contact?.chat_id || "");
@@ -59,6 +62,17 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
     }
   };
 
+  const getStatusLabel = () => {
+    switch (contact.status_request) {
+      case "pending":
+        return conversationSidebarText.statusPending;
+      case "rejected":
+        return conversationSidebarText.statusRejected;
+      default:
+        return "";
+    }
+  };
+
   const handleMenuClick = (key: string) => {
     if (key === "deleteChat") {
       onDelete();
@@ -70,9 +84,9 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
     {
       label: contact.is_group
         ? (contact.is_group_member_removed || contact.is_group_admin)
-          ? "Eliminar grupo"
-          : "Dejar grupo"
-        : "Eliminar conversación",
+          ? conversationSidebarText.deleteGroup
+          : conversationSidebarText.leaveGroup
+        : conversationSidebarText.deleteConversation,
       key: "deleteChat",
       icon: <DeleteOutlined />,
     },
@@ -156,7 +170,7 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
             </div>
             {(contact.status_request === "pending" || contact.status_request === "rejected") && (
               <span className={`text-white font-bold text-xs sm:text-[10px] lg:text-xs rounded-full px-2 py-1 sm:px-1.5 sm:py-0.5 lg:px-2 lg:py-1 ${getBackgroundStatus()}`}>
-                {contact.status_request}
+                {getStatusLabel()}
               </span>
             )}
             {contact.status_request === "accepted" && (
@@ -170,8 +184,8 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
                   className="hover:bg-gray-700 ml-1"
                   icon={<DownOutlined />}
                   onClick={handleButtonClick}
-                  title="Más opciones"
-                  aria-label="Más opciones"
+                  title={conversationSidebarText.moreOptions}
+                  aria-label={conversationSidebarText.moreOptions}
                 />
               </Dropdown>
             )}

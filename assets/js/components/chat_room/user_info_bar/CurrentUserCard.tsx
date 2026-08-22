@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { Button, Modal, Dropdown, type MenuProps } from "antd";
-import { UserAddOutlined, UsergroupAddOutlined, MoreOutlined } from '@ant-design/icons';
+import { UserAddOutlined, UsergroupAddOutlined, MoreOutlined, GlobalOutlined } from '@ant-design/icons';
+import { useTranslation } from "react-i18next";
 import { useEventContext, useEvent } from "../EventContext";
 import AddContactOrGroup from "./AddContactOrGroup";
-import { logoutAction } from "../../../services/userService";
+import { logoutAction, setLocaleAction } from "../../../services/userService";
 import { EventBusPayload } from "../../../types/events";
+import useUserInfoBarText from "./userInfoBarText";
+import { SUPPORTED_LOCALES, normalizeLocale } from "../../../i18n";
 
 export default function CurrentUserCard() {
+	const userInfoBarText = useUserInfoBarText();
+	const { t, i18n } = useTranslation();
 	const [userLogin, setUserLogin] = useState<EventBusPayload<"show_user_info"> | null>(null);
 	const [showModal, setShowModal] = useState(false);
 	const [entryType, setEntryType] = useState("contact");
@@ -29,6 +34,9 @@ export default function CurrentUserCard() {
 		setShowModal(showModal);
 	};
 
+	const currentLocale = normalizeLocale(i18n.language);
+	const nextLocale = SUPPORTED_LOCALES.find((locale) => locale !== currentLocale) || currentLocale;
+
 	const handleMenuClick = (key: string) => {
 		if (key === "logout") {
 			logoutAction(addEvent);
@@ -36,23 +44,31 @@ export default function CurrentUserCard() {
 			showAddEntryModal("contact");
 		} else if (key === "create_group") {
 			showAddEntryModal("group");
+		} else if (key === "change_language") {
+			i18n.changeLanguage(nextLocale);
+			setLocaleAction(addEvent, nextLocale);
 		}
 		setDropdownVisible(false);
 	};
 
 	const items = [
 		{
-			label: "Añadir contacto",
+			label: userInfoBarText.menu.addContact,
 			key: "add_contact",
 			icon: <UserAddOutlined />,
 		},
 		{
-			label: "Crear grupo",
+			label: userInfoBarText.menu.createGroup,
 			key: "create_group",
 			icon: <UsergroupAddOutlined />,
 		},
 		{
-			label: "Cerrar sesión",
+			label: `${t("common.changeLanguage")} (${nextLocale.toUpperCase()})`,
+			key: "change_language",
+			icon: <GlobalOutlined />,
+		},
+		{
+			label: userInfoBarText.menu.logout,
 			key: "logout",
 			icon:
 				<svg
@@ -100,7 +116,7 @@ export default function CurrentUserCard() {
 						<img
 							className="h-10 w-10 landscape-sm:h-8 landscape-sm:w-8 rounded-full bg-white"
 							src={userLogin.image_profile}
-							alt="default"
+							alt={userInfoBarText.defaultAvatarAlt}
 							title={userLogin.nickname}
 						/>
 					</div>
@@ -120,8 +136,8 @@ export default function CurrentUserCard() {
 									className="bg-white"
 									icon={<MoreOutlined />}
 									onClick={handleButtonClick}
-									title="Otros"
-									aria-label="Otros"
+									title={userInfoBarText.others}
+									aria-label={userInfoBarText.others}
 								/>
 							</Dropdown>
 						</div>

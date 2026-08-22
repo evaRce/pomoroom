@@ -1,17 +1,21 @@
-const pluginMarketPlaceText = {
-  title: "Tienda de Plugins",
-  description: "Instala plugins compartidos para esta conversacion.",
-  loading: {
-    listPlugins: "Cargando plugins...",
-    installation: "Instalando...",
-    uninstallation: "Desinstalando...",
-  },
-  loadError: "No se pudo cargar la tienda de plugins.",
-  fetchError: "No se pudieron cargar los plugins",
-  empty: "No hay plugins disponibles por ahora.",
-  uninstall: "Desinstalar",
-  install: "Instalar",
-  comingSoon: "Próximamente",
-};
+import { useTranslation } from "react-i18next";
 
-export default pluginMarketPlaceText;
+export default function usePluginMarketPlaceText() {
+  const { t } = useTranslation();
+
+  return {
+    title: t("pluginMarketPlaceText.title"),
+    description: t("pluginMarketPlaceText.description"),
+    loading: {
+      listPlugins: t("pluginMarketPlaceText.loadingListPlugins"),
+      installation: t("pluginMarketPlaceText.loadingInstallation"),
+      uninstallation: t("pluginMarketPlaceText.loadingUninstallation"),
+    },
+    loadError: t("pluginMarketPlaceText.loadError"),
+    fetchError: t("pluginMarketPlaceText.fetchError"),
+    empty: t("pluginMarketPlaceText.empty"),
+    uninstall: t("pluginMarketPlaceText.uninstall"),
+    install: t("pluginMarketPlaceText.install"),
+    comingSoon: t("pluginMarketPlaceText.comingSoon"),
+  };
+}

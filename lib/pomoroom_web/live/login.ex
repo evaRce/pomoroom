@@ -6,8 +6,18 @@ defmodule PomoroomWeb.HomeLive.Login do
   @scale_ms :timer.minutes(1)
 
   def mount(_params, session, socket) do
-    socket = assign(socket, :client_ip, client_ip(socket))
+    socket =
+      socket
+      |> assign(:client_ip, client_ip(socket))
+      |> assign(:locale, Map.get(session, "locale", "es"))
+
     {:ok, PhoenixLiveSession.maybe_subscribe(socket, session), layout: false}
+  end
+
+  def handle_info({:live_session_updated, session}, socket) do
+    locale = Map.get(session, "locale", socket.assigns.locale)
+    Gettext.put_locale(PomoroomWeb.Gettext, locale)
+    {:noreply, assign(socket, :locale, locale)}
   end
 
   def handle_event(
@@ -20,7 +30,7 @@ defmodule PomoroomWeb.HomeLive.Login do
       {:deny, _retry_after} ->
         {:noreply,
          push_event(socket, "react.error_login_user", %{
-           errors: %{email: "Demasiados intentos. Inténtalo de nuevo en un minuto"}
+           errors: %{email: gettext("Demasiados intentos. Inténtalo de nuevo en un minuto")}
          })}
 
       {:allow, _count} ->
@@ -31,7 +41,7 @@ defmodule PomoroomWeb.HomeLive.Login do
   def handle_event("action.log_user", _params, socket) do
     {:noreply,
      push_event(socket, "react.error_login_user", %{
-       errors: %{email: "El email o la contraseña no son válidos"}
+       errors: %{email: gettext("El email o la contraseña no son válidos")}
      })}
   end
 
@@ -40,7 +50,7 @@ defmodule PomoroomWeb.HomeLive.Login do
       {:error, :not_found} ->
         {:noreply,
          push_event(socket, "react.error_login_user", %{
-           errors: %{email: "El email o la contraseña no son válidos"}
+           errors: %{email: gettext("El email o la contraseña no son válidos")}
          })}
 
       {:ok, user_changes} ->
@@ -53,13 +63,13 @@ defmodule PomoroomWeb.HomeLive.Login do
             {:error, _reason} ->
               {:noreply,
                push_event(socket, "react.error_login_user", %{
-                 errors: %{email: "No se pudo iniciar sesión. Inténtalo de nuevo"}
+                 errors: %{email: gettext("No se pudo iniciar sesión. Inténtalo de nuevo")}
                })}
           end
         else
           {:noreply,
            push_event(socket, "react.error_login_user", %{
-             errors: %{password: "El email o la contraseña no son válidos"}
+             errors: %{password: gettext("El email o la contraseña no son válidos")}
            })}
         end
     end

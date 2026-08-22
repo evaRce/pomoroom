@@ -4,6 +4,7 @@ defmodule Pomoroom.PrivateChats.PrivateChatService do
   alias Pomoroom.FriendRequests
   alias Pomoroom.Messages
   alias Pomoroom.PrivateChats.{PrivateChatRepository, PrivateChatSchema}
+  import PomoroomWeb.Gettext
 
   def create_private_chat(to_user, from_user) do
     private_chat_changeset =
@@ -20,7 +21,7 @@ defmodule Pomoroom.PrivateChats.PrivateChatService do
             {:ok, private_chat_changes}
 
           {:error, _reason} ->
-            {:error, %{error: "El contacto ya está añadido"}}
+            {:error, %{error: gettext("El contacto ya está añadido")}}
         end
 
       false ->
@@ -54,7 +55,7 @@ defmodule Pomoroom.PrivateChats.PrivateChatService do
           Messages.delete_all_belongs_to_chat(chat_id)
         end
 
-        {:ok, "Contacto eliminado"}
+        {:ok, gettext("Contacto eliminado")}
     end
   end
 

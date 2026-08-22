@@ -5,6 +5,7 @@ import { useEventContext, useEvent } from "../../EventContext";
 import GroupMemberItem from "../../info_panel/GroupMemberItem";
 import { addMemberToGroupAction } from "../../../../services/groupService";
 import { ChatSessionData, ConversationEntry } from "../../../../types/events";
+import useAddMembersModalText from "./addMembersModalText";
 
 interface AddMembersModalProps {
   chatData: ChatSessionData;
@@ -17,6 +18,7 @@ export default function AddMembersModal({
   isModalVisibleFromAddContacts,
   isModalVisibleFromHeader,
 }: AddMembersModalProps) {
+  const addMembersModalText = useAddMembersModalText();
   const { addEvent, removeEvent } = useEventContext();
   const [contacts, setContacts] = useState<ConversationEntry[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -59,7 +61,7 @@ export default function AddMembersModal({
 
   return (
     <Modal
-      title={`Añade a tus panas a ${chatData?.group_data?.name}`}
+      title={addMembersModalText.title(chatData?.group_data?.name)}
       open={isModalVisibleFromHeader}
       onCancel={handleModalClose}
       footer={null}
@@ -68,7 +70,7 @@ export default function AddMembersModal({
         <Input
           className="mr-1"
           type="text"
-          placeholder="Buscar a mis panas"
+          placeholder={addMembersModalText.searchPlaceholder}
           value={searchTerm}
           onChange={handleSearch}
         />
@@ -77,15 +79,15 @@ export default function AddMembersModal({
             className="bg-red-300"
             icon={<CloseOutlined />}
             onClick={clearSearch}
-            title="Limpiar búsqueda"
-            aria-label="Limpiar búsqueda"
+            title={addMembersModalText.clearSearch}
+            aria-label={addMembersModalText.clearSearch}
           />
         ) : (
           <Button
             className="bg-sky-400"
             icon={<SearchOutlined />}
-            title="Buscar"
-            aria-label="Buscar"
+            title={addMembersModalText.search}
+            aria-label={addMembersModalText.search}
           />
         )}
       </div>
@@ -113,7 +115,7 @@ export default function AddMembersModal({
       </div>
 
       <p className="ml-2 mt-4">
-        O comparte este enlace para invitar a algún pana
+        {addMembersModalText.shareLink}
       </p>
 
       <div className="flex items-center justify-between mt-2 p-1 bg-gray-300">
@@ -127,7 +129,7 @@ export default function AddMembersModal({
             navigator.clipboard.writeText(`${chatData?.group_data?.invite_link}`)
           }
         >
-          Copiar enlace
+          {addMembersModalText.copyLink}
         </Button>
       </div>
     </Modal>
