@@ -52,7 +52,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
               {:error, _reason} ->
                 payload = %{
                   event_name: "error_accepting_friend_request",
-                  event_data: %{error: "Inconsistencia detectada: solicitud aceptada sin chat privado"}
+                  event_data: %{
+                    error:
+                      gettext("Inconsistencia detectada: solicitud aceptada sin chat privado")
+                  }
                 }
                 {:noreply, push_event(socket, "react", payload)}
             end

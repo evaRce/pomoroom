@@ -86,12 +86,12 @@ msgstr "Contact removed from group %{group_name}"
 msgid "Conversaciones seguras 1 a 1"
 msgstr "Secure 1-to-1 conversations"
 
-#: lib/pomoroom_web/live/chat_room/friend_requests.ex:110
+#: lib/pomoroom_web/live/chat_room/friend_requests.ex:117
 #, elixir-autogen, elixir-format
 msgid "Demasiadas solicitudes enviadas. Inténtalo de nuevo en un minuto"
 msgstr "Too many requests sent. Try again in a minute"
 
-#: lib/pomoroom_web/live/login.ex:27
+#: lib/pomoroom_web/live/login.ex:33
 #, elixir-autogen, elixir-format
 msgid "Demasiados intentos. Inténtalo de nuevo en un minuto"
 msgstr "Too many attempts. Try again in a minute"
@@ -107,14 +107,14 @@ msgid "El chat no existe o no fue eliminado por este usuario"
 msgstr "The chat does not exist or was not deleted by this user"
 
 #: lib/pomoroom/private_chats/private_chat_service.ex:24
-#: lib/pomoroom_web/live/chat_room/friend_requests.ex:219
+#: lib/pomoroom_web/live/chat_room/friend_requests.ex:227
 #, elixir-autogen, elixir-format
 msgid "El contacto ya está añadido"
 msgstr "The contact is already added"
 
-#: lib/pomoroom_web/live/login.ex:38
-#: lib/pomoroom_web/live/login.ex:47
-#: lib/pomoroom_web/live/login.ex:66
+#: lib/pomoroom_web/live/login.ex:44
+#: lib/pomoroom_web/live/login.ex:53
+#: lib/pomoroom_web/live/login.ex:72
 #, elixir-autogen, elixir-format
 msgid "El email o la contraseña no son válidos"
 msgstr "The email or password is invalid"
@@ -137,7 +137,7 @@ msgid "El usuario %{member} ya es miembro del grupo"
 msgstr "User %{member} is already a member of the group"
 
 #: lib/pomoroom/friend_requests/friend_request_service.ex:35
-#: lib/pomoroom_web/live/chat_room/friend_requests.ex:133
+#: lib/pomoroom_web/live/chat_room/friend_requests.ex:140
 #, elixir-autogen, elixir-format
 msgid "El usuario %{user} no existe"
 msgstr "User %{user} does not exist"
@@ -192,18 +192,19 @@ msgstr "This public id is already in use"
 msgid "Hang in there while we get back on track"
 msgstr "Hang in there while we get back on track"
 
-#: lib/pomoroom_web/live/chat_room/groups.ex:231
+#: lib/pomoroom_web/live/chat_room/groups.ex:230
 #, elixir-autogen, elixir-format
 msgid "Has sido añadido al grupo"
 msgstr "You have been added to the group"
 
-#: lib/pomoroom_web/live/chat_room/groups.ex:229
-#: lib/pomoroom_web/live/chat_room/groups.ex:270
+#: lib/pomoroom_web/live/chat_room/groups.ex:228
+#: lib/pomoroom_web/live/chat_room/groups.ex:269
 #, elixir-autogen, elixir-format
 msgid "Has sido añadido al grupo %{group_name}"
 msgstr "You have been added to the group %{group_name}"
 
-#: lib/pomoroom_web/live/chat_room/friend_requests.ex:228
+#: lib/pomoroom_web/live/chat_room/friend_requests.ex:57
+#: lib/pomoroom_web/live/chat_room/friend_requests.ex:236
 #, elixir-autogen, elixir-format
 msgid "Inconsistencia detectada: solicitud aceptada sin chat privado"
 msgstr "Inconsistency detected: request accepted without a private chat"
@@ -213,7 +214,7 @@ msgstr "Inconsistency detected: request accepted without a private chat"
 msgid "Iniciar sesión"
 msgstr "Log in"
 
-#: lib/pomoroom_web/live/chat_room/friend_requests.ex:186
+#: lib/pomoroom_web/live/chat_room/friend_requests.ex:194
 #, elixir-autogen, elixir-format
 msgid "La petición fue rechazada previamente"
 msgstr "The request was previously rejected"
@@ -253,7 +254,7 @@ msgstr "There is no pending friend request"
 msgid "No puedes añadirte a ti mismo como un contacto"
 msgstr "You can't add yourself as a contact"
 
-#: lib/pomoroom_web/live/login.ex:60
+#: lib/pomoroom_web/live/login.ex:66
 #, elixir-autogen, elixir-format
 msgid "No se pudo iniciar sesión. Inténtalo de nuevo"
 msgstr "Could not log in. Please try again"
@@ -353,7 +354,7 @@ msgstr "We can't find the internet"
 msgid "Ya hay una petición de amistad entre %{to_user} y %{from_user}"
 msgstr "There is already a friend request between %{to_user} and %{from_user}"
 
-#: lib/pomoroom_web/live/chat_room/friend_requests.ex:178
+#: lib/pomoroom_web/live/chat_room/friend_requests.ex:186
 #, elixir-autogen, elixir-format
 msgid "Ya hay una petición de amistad pendiente entre ambos usuarios"
 msgstr "There is already a pending friend request between both users"

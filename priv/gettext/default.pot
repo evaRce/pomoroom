@@ -86,12 +86,12 @@ msgstr ""
 msgid "Conversaciones seguras 1 a 1"
 msgstr ""
 
-#: lib/pomoroom_web/live/chat_room/friend_requests.ex:110
+#: lib/pomoroom_web/live/chat_room/friend_requests.ex:117
 #, elixir-autogen, elixir-format
 msgid "Demasiadas solicitudes enviadas. Inténtalo de nuevo en un minuto"
 msgstr ""
 
-#: lib/pomoroom_web/live/login.ex:27
+#: lib/pomoroom_web/live/login.ex:33
 #, elixir-autogen, elixir-format
 msgid "Demasiados intentos. Inténtalo de nuevo en un minuto"
 msgstr ""
@@ -107,14 +107,14 @@ msgid "El chat no existe o no fue eliminado por este usuario"
 msgstr ""
 
 #: lib/pomoroom/private_chats/private_chat_service.ex:24
-#: lib/pomoroom_web/live/chat_room/friend_requests.ex:219
+#: lib/pomoroom_web/live/chat_room/friend_requests.ex:227
 #, elixir-autogen, elixir-format
 msgid "El contacto ya está añadido"
 msgstr ""
 
-#: lib/pomoroom_web/live/login.ex:38
-#: lib/pomoroom_web/live/login.ex:47
-#: lib/pomoroom_web/live/login.ex:66
+#: lib/pomoroom_web/live/login.ex:44
+#: lib/pomoroom_web/live/login.ex:53
+#: lib/pomoroom_web/live/login.ex:72
 #, elixir-autogen, elixir-format
 msgid "El email o la contraseña no son válidos"
 msgstr ""
@@ -137,7 +137,7 @@ msgid "El usuario %{member} ya es miembro del grupo"
 msgstr ""
 
 #: lib/pomoroom/friend_requests/friend_request_service.ex:35
-#: lib/pomoroom_web/live/chat_room/friend_requests.ex:133
+#: lib/pomoroom_web/live/chat_room/friend_requests.ex:140
 #, elixir-autogen, elixir-format
 msgid "El usuario %{user} no existe"
 msgstr ""
@@ -192,18 +192,19 @@ msgstr ""
 msgid "Hang in there while we get back on track"
 msgstr ""
 
-#: lib/pomoroom_web/live/chat_room/groups.ex:231
+#: lib/pomoroom_web/live/chat_room/groups.ex:230
 #, elixir-autogen, elixir-format
 msgid "Has sido añadido al grupo"
 msgstr ""
 
-#: lib/pomoroom_web/live/chat_room/groups.ex:229
-#: lib/pomoroom_web/live/chat_room/groups.ex:270
+#: lib/pomoroom_web/live/chat_room/groups.ex:228
+#: lib/pomoroom_web/live/chat_room/groups.ex:269
 #, elixir-autogen, elixir-format
 msgid "Has sido añadido al grupo %{group_name}"
 msgstr ""
 
-#: lib/pomoroom_web/live/chat_room/friend_requests.ex:228
+#: lib/pomoroom_web/live/chat_room/friend_requests.ex:57
+#: lib/pomoroom_web/live/chat_room/friend_requests.ex:236
 #, elixir-autogen, elixir-format
 msgid "Inconsistencia detectada: solicitud aceptada sin chat privado"
 msgstr ""
@@ -213,7 +214,7 @@ msgstr ""
 msgid "Iniciar sesión"
 msgstr ""
 
-#: lib/pomoroom_web/live/chat_room/friend_requests.ex:186
+#: lib/pomoroom_web/live/chat_room/friend_requests.ex:194
 #, elixir-autogen, elixir-format
 msgid "La petición fue rechazada previamente"
 msgstr ""
@@ -253,7 +254,7 @@ msgstr ""
 msgid "No puedes añadirte a ti mismo como un contacto"
 msgstr ""
 
-#: lib/pomoroom_web/live/login.ex:60
+#: lib/pomoroom_web/live/login.ex:66
 #, elixir-autogen, elixir-format
 msgid "No se pudo iniciar sesión. Inténtalo de nuevo"
 msgstr ""
@@ -353,7 +354,7 @@ msgstr ""
 msgid "Ya hay una petición de amistad entre %{to_user} y %{from_user}"
 msgstr ""
 
-#: lib/pomoroom_web/live/chat_room/friend_requests.ex:178
+#: lib/pomoroom_web/live/chat_room/friend_requests.ex:186
 #, elixir-autogen, elixir-format
 msgid "Ya hay una petición de amistad pendiente entre ambos usuarios"
 msgstr ""
