@@ -97,8 +97,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Contacts do
         PubSub.unsubscribe(Pomoroom.PubSub, "chat:#{private_chat.chat_id}")
         {:noreply, socket}
 
-      {:error, reason} ->
-        notify_react(socket, "error_deleting_contact", reason)
+      {:error, _reason} ->
+        FriendRequests.delete_request(to_user, from_user)
+        {:noreply, socket}
     end
   end
 end
