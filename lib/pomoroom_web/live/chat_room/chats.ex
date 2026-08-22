@@ -1,6 +1,6 @@
 defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
   import Phoenix.Component, only: [assign: 3]
-  import Phoenix.LiveView, only: [push_event: 3]
+  import PomoroomWeb.ChatLive.ChatRoom.ReactEvent
 
   alias Phoenix.PubSub
 
@@ -15,17 +15,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
   @older_messages_limit 15
 
   def handle_new_message_info(args, socket) do
-    payload = %{
-      event_name: "show_message_to_send",
-      event_data: %{
-        message: %{
-          data: args.data,
-          image_user: args.image_user
-        }
-      }
-    }
-
-    {:noreply, push_event(socket, "react", payload)}
+    event_data = %{message: %{data: args.data, image_user: args.image_user}}
+    notify_react(socket, "show_message_to_send", event_data)
   end
 
   def handle_selected_private_chat(contact_name, user, socket) do
@@ -49,17 +40,20 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
                 open_accepted_private_chat(private_chat, contact_name, user, socket)
 
               {:error, reason} ->
-                payload = %{event_name: "error_opening_private_chat", event_data: reason}
-                {:noreply, push_event(socket, "react", payload)}
+                notify_react(socket, "error_opening_private_chat", reason)
             end
 
           "pending" ->
-            payload = build_private_chat_request_payload("pending", request, is_owner_request)
-            {:noreply, push_event(socket, "react", payload)}
+            notify_react(
+              socket,
+              build_private_chat_request_payload("pending", request, is_owner_request)
+            )
 
           "rejected" ->
-            payload = build_private_chat_request_payload("rejected", request, is_owner_request)
-            {:noreply, push_event(socket, "react", payload)}
+            notify_react(
+              socket,
+              build_private_chat_request_payload("rejected", request, is_owner_request)
+            )
         end
     end
   end
@@ -67,13 +61,13 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
   def handle_selected_group_chat(group_name, user, socket) do
     case GroupChats.get_by("name", group_name) do
       {:error, reason} ->
-        payload = %{event_name: "error_opening_group_chat", event_data: reason}
-        {:noreply, push_event(socket, "react", payload)}
+        notify_react(socket, "error_opening_group_chat", reason)
 
       {:ok, group_chat} ->
         Runtime.ensure_chat_server_exists(group_chat.chat_id)
         PubSub.subscribe(Pomoroom.PubSub, pomodoro_topic(group_chat.chat_id))
         PubSub.subscribe(Pomoroom.PubSub, kanban_topic(group_chat.chat_id))
+
         case GroupChats.member_state(group_name, user.nickname) do
           {:active, joined_at} ->
             open_group_chat_with_members(group_name, group_chat, user, joined_at, nil, socket)
@@ -127,16 +121,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
           {:error, _reason} -> nil
         end
 
-      payload = %{
-        event_name: "group_member_removed",
-        event_data: %{
-          chat_id: chat_id,
-          group_name: to_group_name,
-          disable_send: true
-        }
-      }
-
-      {:noreply, push_event(socket, "react", payload)}
+      event_data = %{chat_id: chat_id, group_name: to_group_name, disable_send: true}
+      notify_react(socket, "group_member_removed", event_data)
     end
   end
 
@@ -178,23 +164,20 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
         }
       end)
 
-    payload = %{
-      event_name: "open_group_chat",
-      event_data: %{
-        chat_id: group_chat.chat_id,
-        is_admin: is_admin,
-        group_data: group_chat,
-        plugins: ChatPluginService.get_plugins_from_chat(group_chat),
-        messages: messages_with_images_user,
-        has_more: length(messages_with_images_user) == @initial_messages_limit,
-        removed_at: removed_at,
-        user_avatar_map: avatar_map
-      }
+    event_data = %{
+      chat_id: group_chat.chat_id,
+      is_admin: is_admin,
+      group_data: group_chat,
+      plugins: ChatPluginService.get_plugins_from_chat(group_chat),
+      messages: messages_with_images_user,
+      has_more: length(messages_with_images_user) == @initial_messages_limit,
+      removed_at: removed_at,
+      user_avatar_map: avatar_map
     }
 
     ChatPluginService.start_plugins_for_chat(group_chat.chat_id, "group")
 
-    {:noreply, push_event(socket, "react", payload)}
+    notify_react(socket, "open_group_chat", event_data)
   end
 
   def handle_load_older_messages(chat_id, before_inserted_at, socket) do
@@ -227,15 +210,12 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
             }
           end)
 
-        payload = %{
-          event_name: "show_older_messages",
-          event_data: %{
-            messages: older_messages_with_images_user,
-            has_more: length(older_messages_with_images_user) == @older_messages_limit
-          }
+        event_data = %{
+          messages: older_messages_with_images_user,
+          has_more: length(older_messages_with_images_user) == @older_messages_limit
         }
 
-        {:noreply, push_event(socket, "react", payload)}
+        notify_react(socket, "show_older_messages", event_data)
 
       _ ->
         {:noreply, socket}
@@ -248,8 +228,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
         {:noreply, socket}
 
       {:error, reason} ->
-        payload = %{event_name: "error_sending_message", event_data: reason}
-        {:noreply, push_event(socket, "react", payload)}
+        notify_react(socket, "error_sending_message", reason)
     end
   end
 
@@ -278,25 +257,22 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
           |> assign(:chat_id, private_chat.chat_id)
           |> assign(:current_group_joined_at, joined_at)
 
-        payload = %{
-          event_name: "open_private_chat",
-          event_data: %{
-            chat_id: private_chat.chat_id,
-            from_user_data: user,
-            to_user_data: to_user_data,
-            plugins: ChatPluginService.get_plugins_from_chat(private_chat),
-            messages: messages_with_images_user,
-            has_more: length(messages_with_images_user) == @initial_messages_limit,
-            user_avatar_map: %{
-              user.nickname => user.image_profile,
-              to_user_data.nickname => to_user_data.image_profile
-            }
+        event_data = %{
+          chat_id: private_chat.chat_id,
+          from_user_data: user,
+          to_user_data: to_user_data,
+          plugins: ChatPluginService.get_plugins_from_chat(private_chat),
+          messages: messages_with_images_user,
+          has_more: length(messages_with_images_user) == @initial_messages_limit,
+          user_avatar_map: %{
+            user.nickname => user.image_profile,
+            to_user_data.nickname => to_user_data.image_profile
           }
         }
 
         ChatPluginService.start_plugins_for_chat(private_chat.chat_id, "private")
 
-        {:noreply, push_event(socket, "react", payload)}
+        notify_react(socket, "open_private_chat", event_data)
 
       {:error, _reason} ->
         {:noreply, socket}

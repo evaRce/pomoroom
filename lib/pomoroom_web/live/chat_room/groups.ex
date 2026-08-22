@@ -1,6 +1,6 @@
 defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
   import Phoenix.Component, only: [assign: 3]
-  import Phoenix.LiveView, only: [push_event: 3]
+  import PomoroomWeb.ChatLive.ChatRoom.ReactEvent
   import PomoroomWeb.Gettext
 
   alias Phoenix.PubSub
@@ -16,20 +16,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
         PubSub.subscribe(Pomoroom.PubSub, "chat:#{group_chat.chat_id}")
         ChatServer.join_chat(group_chat.chat_id)
 
-        payload = %{
-          event_name: "add_group_to_list",
-          event_data: %{
-            is_group: true,
-            group_data: group_chat,
-            status: "accepted"
-          }
-        }
-
-        {:noreply, push_event(socket, "react", payload)}
+        event_data = %{is_group: true, group_data: group_chat, status: "accepted"}
+        notify_react(socket, "add_group_to_list", event_data)
 
       {:error, reason} ->
-        payload = %{event_name: "error_adding_contact", event_data: reason}
-        {:noreply, push_event(socket, "react", payload)}
+        notify_react(socket, "error_adding_contact", reason)
     end
   end
 
@@ -48,24 +39,14 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
   def handle_get_my_contacts(group_name, user, socket) do
     case get_contact_list_for_group(group_name, user) do
       {:ok, contact_list} ->
-        payload = %{
-          event_name: "show_my_contacts",
-          event_data: %{contact_list: contact_list}
-        }
-
-        {:noreply, push_event(socket, "react", payload)}
+        notify_react(socket, "show_my_contacts", %{contact_list: contact_list})
     end
   end
 
   def handle_get_members(group_name, socket) do
     case GroupChats.get_members(group_name) do
       {:ok, members_data} ->
-        payload = %{
-          event_name: "show_members",
-          event_data: %{members_data: members_data}
-        }
-
-        {:noreply, push_event(socket, "react", payload)}
+        notify_react(socket, "show_members", %{members_data: members_data})
 
       {:error, _reason} ->
         {:noreply, socket}
@@ -75,8 +56,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
   def handle_add_member(group_name, new_member, user, socket) do
     case GroupChats.add_member(group_name, user.nickname, new_member) do
       {:error, reason} ->
-        payload = %{event_name: "error_managing_group_member", event_data: reason}
-        {:noreply, push_event(socket, "react", payload)}
+        notify_react(socket, "error_managing_group_member", reason)
 
       {:ok, _result} ->
         payload =
@@ -98,11 +78,6 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
   def handle_delete_member(group_name, member_name, user, socket) do
     case GroupChats.delete_member(group_name, user.nickname, member_name) do
       {:ok, %{chat_deleted: true, chat_id: chat_id}} ->
-        payload = %{
-          event_name: "group_deleted",
-          event_data: %{chat_id: chat_id, group_name: group_name}
-        }
-
         socket =
           if socket.assigns[:chat_id] == chat_id do
             socket
@@ -121,7 +96,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
             socket
           end
 
-        {:noreply, push_event(socket, "react", payload)}
+        notify_react(socket, "group_deleted", %{chat_id: chat_id, group_name: group_name})
 
       {:ok, %{chat_id: chat_id, group_name: removed_group_name, removed_at: removed_at}} ->
         PubSub.broadcast(
@@ -134,8 +109,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
         handle_member_update(group_name, user, socket)
 
       {:error, reason} ->
-        payload = %{event_name: "error_managing_group_member", event_data: reason}
-        {:noreply, push_event(socket, "react", payload)}
+        notify_react(socket, "error_managing_group_member", reason)
     end
   end
 
@@ -169,8 +143,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
         end
 
       {:error, reason} ->
-        payload = %{event_name: "error_managing_group_member", event_data: reason}
-        {:noreply, push_event(socket, "react", payload)}
+        notify_react(socket, "error_managing_group_member", reason)
     end
   end
 
@@ -185,23 +158,17 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
         _ -> false
       end
 
+    group_admin_updated_data = %{chat_id: chat_id, group_name: group_name, is_admin: is_admin}
+
     socket =
       socket
-      |> push_event("react", %{event_name: "check_admin", event_data: %{is_admin: is_admin}})
-      |> push_event("react", %{
-        event_name: "group_admin_updated",
-        event_data: %{chat_id: chat_id, group_name: group_name, is_admin: is_admin}
-      })
+      |> push_react("check_admin", %{is_admin: is_admin})
+      |> push_react("group_admin_updated", group_admin_updated_data)
 
     if socket.assigns[:chat_id] == chat_id do
       case GroupChats.get_members(group_name) do
         {:ok, members_data} ->
-          payload = %{
-            event_name: "show_members",
-            event_data: %{members_data: members_data}
-          }
-
-          {:noreply, push_event(socket, "react", payload)}
+          notify_react(socket, "show_members", %{members_data: members_data})
 
         {:error, _reason} ->
           {:noreply, socket}
@@ -235,17 +202,14 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
       |> ensure_group_chat_subscription(chat_id)
       |> maybe_reset_removed_state(chat_id)
 
-    payload = %{
-      event_name: "group_member_added",
-      event_data: %{
-        chat_id: chat_id,
-        group_name: group_name,
-        is_admin: is_admin,
-        message: added_message
-      }
+    event_data = %{
+      chat_id: chat_id,
+      group_name: group_name,
+      is_admin: is_admin,
+      message: added_message
     }
 
-    {:noreply, push_event(socket, "react", payload)}
+    notify_react(socket, "group_member_added", event_data)
   end
 
   def handle_new_group_member_added(%{group_name: group_name}, socket) do
@@ -260,17 +224,14 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
           |> ensure_group_chat_subscription(group_chat.chat_id)
           |> maybe_reset_removed_state(group_chat.chat_id)
 
-        payload = %{
-          event_name: "group_member_added",
-          event_data: %{
-            chat_id: group_chat.chat_id,
-            group_name: group_name,
-            is_admin: is_admin,
-            message: gettext("Has sido añadido al grupo %{group_name}", group_name: group_name)
-          }
+        event_data = %{
+          chat_id: group_chat.chat_id,
+          group_name: group_name,
+          is_admin: is_admin,
+          message: gettext("Has sido añadido al grupo %{group_name}", group_name: group_name)
         }
 
-        {:noreply, push_event(socket, "react", payload)}
+        notify_react(socket, "group_member_added", event_data)
 
       {:error, _reason} ->
         {:noreply, socket}
@@ -289,17 +250,14 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
         socket
       end
 
-    payload_for_ui = %{
-      event_name: "group_member_removed",
-      event_data: %{
-        chat_id: chat_id,
-        group_name: group_name,
-        removed_at: removed_at,
-        disable_send: true
-      }
+    event_data = %{
+      chat_id: chat_id,
+      group_name: group_name,
+      removed_at: removed_at,
+      disable_send: true
     }
 
-    {:noreply, push_event(socket, "react", payload_for_ui)}
+    notify_react(socket, "group_member_removed", event_data)
   end
 
   defp get_contacts_for_group(contacts, user_nickname, group_name) do
@@ -357,12 +315,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
       {:ok, contact_list} ->
         case GroupChats.get_members(group_name) do
           {:ok, members_data} ->
-            payload = %{
-              event_name: "update_show_my_contacts_and_members",
-              event_data: %{contact_list: contact_list, members_data: members_data}
-            }
-
-            {:noreply, push_event(socket, "react", payload)}
+            event_data = %{contact_list: contact_list, members_data: members_data}
+            notify_react(socket, "update_show_my_contacts_and_members", event_data)
 
           {:error, _reason} ->
             {:noreply, socket}

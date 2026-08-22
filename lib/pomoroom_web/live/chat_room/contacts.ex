@@ -1,5 +1,5 @@
 defmodule PomoroomWeb.ChatLive.ChatRoom.Contacts do
-  import Phoenix.LiveView, only: [push_event: 3]
+  import PomoroomWeb.ChatLive.ChatRoom.ReactEvent
 
   alias Phoenix.PubSub
   alias Pomoroom.FriendRequests
@@ -32,12 +32,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Contacts do
           |> Enum.reverse()
 
         if all_contact_list != [] do
-          payload = %{
-            event_name: "show_list_contact",
-            event_data: %{all_contact_list: all_contact_list}
-          }
-
-          {:noreply, push_event(socket, "react", payload)}
+          notify_react(socket, "show_list_contact", %{all_contact_list: all_contact_list})
         else
           {:noreply, socket}
         end
@@ -56,16 +51,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Contacts do
             {:error, _reason} -> nil
           end
 
-        payload = %{
-          event_name: "search_contact_result",
-          event_data: %{contact_data: contact_data, request_data: request_data}
-        }
-
-        {:noreply, push_event(socket, "react", payload)}
+        event_data = %{contact_data: contact_data, request_data: request_data}
+        notify_react(socket, "search_contact_result", event_data)
 
       {:error, _reason} ->
-        payload = %{event_name: "contact_not_found", event_data: nil}
-        {:noreply, push_event(socket, "react", payload)}
+        notify_react(socket, "contact_not_found", nil)
     end
   end
 
@@ -80,8 +70,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Contacts do
         {:noreply, socket}
 
       {:error, reason} ->
-        payload = %{event_name: "error_deleting_contact", event_data: reason}
-        {:noreply, push_event(socket, "react", payload)}
+        notify_react(socket, "error_deleting_contact", reason)
     end
   end
 end

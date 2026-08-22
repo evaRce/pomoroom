@@ -1,5 +1,5 @@
 defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
-  import Phoenix.LiveView, only: [push_event: 3]
+  import PomoroomWeb.ChatLive.ChatRoom.ReactEvent
 
   alias Phoenix.PubSub
   alias Pomoroom.ChatPlugins
@@ -33,31 +33,25 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
             {:noreply, socket}
 
           {:error, reason} ->
-            payload = %{
-              event_name: "chat_plugin_install_failed",
-              event_data: %{
-                chat_id: chat_id,
-                chat_type: chat_type,
-                plugin_type: plugin_type,
-                reason: reason_payload(reason)
-              }
+            event_data = %{
+              chat_id: chat_id,
+              chat_type: chat_type,
+              plugin_type: plugin_type,
+              reason: reason_payload(reason)
             }
 
-            {:noreply, push_event(socket, "react", payload)}
+            notify_react(socket, "chat_plugin_install_failed", event_data)
         end
 
       {:error, reason} ->
-        payload = %{
-          event_name: "chat_plugin_install_failed",
-          event_data: %{
-            chat_id: chat_id,
-            chat_type: chat_type,
-            plugin_type: plugin_type,
-            reason: reason_payload(reason)
-          }
+        event_data = %{
+          chat_id: chat_id,
+          chat_type: chat_type,
+          plugin_type: plugin_type,
+          reason: reason_payload(reason)
         }
 
-        {:noreply, push_event(socket, "react", payload)}
+        notify_react(socket, "chat_plugin_install_failed", event_data)
     end
   end
 
@@ -84,31 +78,25 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
             {:noreply, socket}
 
           {:error, reason} ->
-            payload = %{
-              event_name: "chat_plugin_uninstall_failed",
-              event_data: %{
-                chat_id: chat_id,
-                chat_type: chat_type,
-                plugin_id: plugin_id,
-                reason: reason_payload(reason)
-              }
+            event_data = %{
+              chat_id: chat_id,
+              chat_type: chat_type,
+              plugin_id: plugin_id,
+              reason: reason_payload(reason)
             }
 
-            {:noreply, push_event(socket, "react", payload)}
+            notify_react(socket, "chat_plugin_uninstall_failed", event_data)
         end
 
       {:error, reason} ->
-        payload = %{
-          event_name: "chat_plugin_uninstall_failed",
-          event_data: %{
-            chat_id: chat_id,
-            chat_type: chat_type,
-            plugin_id: plugin_id,
-            reason: reason_payload(reason)
-          }
+        event_data = %{
+          chat_id: chat_id,
+          chat_type: chat_type,
+          plugin_id: plugin_id,
+          reason: reason_payload(reason)
         }
 
-        {:noreply, push_event(socket, "react", payload)}
+        notify_react(socket, "chat_plugin_uninstall_failed", event_data)
     end
   end
 
@@ -117,12 +105,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
       :ok ->
         case PomodoroTimers.get_state(chat_id, chat_type) do
           {:ok, timer_data} ->
-            payload = %{
-              event_name: "pomodoro_state_loaded",
-              event_data: timer_data
-            }
-
-            {:noreply, push_event(socket, "react", payload)}
+            notify_react(socket, "pomodoro_state_loaded", timer_data)
 
           {:error, _reason} ->
             push_pomodoro_error(socket, chat_id, chat_type, :failed_to_load_timer_config)
@@ -206,16 +189,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
       :ok ->
         case Kanbans.get_board_for_chat(chat_id, chat_type) do
           {:ok, board} ->
-            payload = %{
-              event_name: "show_kanban_board",
-              event_data: %{
-                chat_id: chat_id,
-                chat_type: chat_type,
-                board: board
-              }
-            }
-
-            {:noreply, push_event(socket, "react", payload)}
+            event_data = %{chat_id: chat_id, chat_type: chat_type, board: board}
+            notify_react(socket, "show_kanban_board", event_data)
 
           {:error, reason} ->
             push_kanban_error(socket, chat_id, chat_type, reason)
@@ -330,29 +305,13 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
   end
 
   defp push_pomodoro_error(socket, chat_id, chat_type, reason) do
-    payload = %{
-      event_name: "pomodoro_plugin_config_error",
-      event_data: %{
-        chat_id: chat_id,
-        chat_type: chat_type,
-        reason: reason_payload(reason)
-      }
-    }
-
-    {:noreply, push_event(socket, "react", payload)}
+    event_data = %{chat_id: chat_id, chat_type: chat_type, reason: reason_payload(reason)}
+    notify_react(socket, "pomodoro_plugin_config_error", event_data)
   end
 
   defp push_kanban_error(socket, chat_id, chat_type, reason) do
-    payload = %{
-      event_name: "kanban_board_error",
-      event_data: %{
-        chat_id: chat_id,
-        chat_type: chat_type,
-        reason: reason_payload(reason)
-      }
-    }
-
-    {:noreply, push_event(socket, "react", payload)}
+    event_data = %{chat_id: chat_id, chat_type: chat_type, reason: reason_payload(reason)}
+    notify_react(socket, "kanban_board_error", event_data)
   end
 
   defp maybe_terminate_timer_process(chat_id) do
