@@ -19,6 +19,9 @@ export default function useConversationSidebarText() {
     confirmDeleteGroupTitle: t("conversationSidebarText.confirmDeleteGroupTitle"),
     confirmDeleteGroupMessage: (groupName: string) =>
       t("conversationSidebarText.confirmDeleteGroupMessage", { groupName }),
+    confirmDeleteConversationTitle: t("conversationSidebarText.confirmDeleteConversationTitle"),
+    confirmDeleteConversationMessage: (contactName: string) =>
+      t("conversationSidebarText.confirmDeleteConversationMessage", { contactName }),
     confirmCancelButton: t("conversationSidebarText.confirmCancelButton"),
   };
 }

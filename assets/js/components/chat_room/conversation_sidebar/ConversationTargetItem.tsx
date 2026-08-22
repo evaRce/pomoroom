@@ -79,11 +79,7 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
 
   const handleMenuClick = (key: string) => {
     if (key === "deleteChat") {
-      if (contact.is_group) {
-        setShowLeaveOrDeleteDialog(true);
-      } else {
-        onDelete();
-      }
+      setShowLeaveOrDeleteDialog(true);
     }
     setDropdownVisible(false);
   };
@@ -205,21 +201,27 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
 
     <ConfirmDialog
       open={showLeaveOrDeleteDialog}
-      variant={isGroupDeletion ? "danger" : "warning"}
+      variant={!contact.is_group || isGroupDeletion ? "danger" : "warning"}
       title={
-        isGroupDeletion
-          ? conversationSidebarText.confirmDeleteGroupTitle
-          : conversationSidebarText.confirmLeaveGroupTitle
+        !contact.is_group
+          ? conversationSidebarText.confirmDeleteConversationTitle
+          : isGroupDeletion
+            ? conversationSidebarText.confirmDeleteGroupTitle
+            : conversationSidebarText.confirmLeaveGroupTitle
       }
       content={
-        isGroupDeletion
-          ? conversationSidebarText.confirmDeleteGroupMessage(contact.name)
-          : conversationSidebarText.confirmLeaveGroupMessage(contact.name)
+        !contact.is_group
+          ? conversationSidebarText.confirmDeleteConversationMessage(contact.name)
+          : isGroupDeletion
+            ? conversationSidebarText.confirmDeleteGroupMessage(contact.name)
+            : conversationSidebarText.confirmLeaveGroupMessage(contact.name)
       }
       confirmLabel={
-        isGroupDeletion
-          ? conversationSidebarText.deleteGroup
-          : conversationSidebarText.leaveGroup
+        !contact.is_group
+          ? conversationSidebarText.deleteConversation
+          : isGroupDeletion
+            ? conversationSidebarText.deleteGroup
+            : conversationSidebarText.leaveGroup
       }
       cancelLabel={conversationSidebarText.confirmCancelButton}
       onClose={() => setShowLeaveOrDeleteDialog(false)}

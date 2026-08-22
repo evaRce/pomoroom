@@ -124,6 +124,8 @@ const es = {
     confirmLeaveGroupMessage: 'Vas a dejar el grupo "{{groupName}}". Dejarás de ver sus mensajes y necesitarás que alguien te vuelva a invitar para volver a entrar.',
     confirmDeleteGroupTitle: "Eliminar el grupo",
     confirmDeleteGroupMessage: 'Vas a eliminar el grupo "{{groupName}}" para todos sus miembros. Esta acción es irreversible.',
+    confirmDeleteConversationTitle: "Eliminar la conversación",
+    confirmDeleteConversationMessage: 'Vas a eliminar la conversación con "{{contactName}}". Esta acción es irreversible.',
     confirmCancelButton: "Cancelar",
   },
   infoPanelText: {

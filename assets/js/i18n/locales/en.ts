@@ -124,6 +124,8 @@ const en = {
     confirmLeaveGroupMessage: 'You are about to leave "{{groupName}}". You will stop seeing its messages and will need someone to invite you back in.',
     confirmDeleteGroupTitle: "Delete group",
     confirmDeleteGroupMessage: 'You are about to delete "{{groupName}}" for every member. This action is irreversible.',
+    confirmDeleteConversationTitle: "Delete conversation",
+    confirmDeleteConversationMessage: 'You are about to delete your conversation with "{{contactName}}". This action is irreversible.',
     confirmCancelButton: "Cancel",
   },
   infoPanelText: {
