@@ -152,7 +152,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
   def handle_start_pomodoro_timer(chat_id, chat_type, user, socket) do
     case authorize_and_validate_plugin(chat_id, chat_type, "pomodoro", user.nickname) do
       :ok ->
-        case PomodoroTimers.start(chat_id, chat_type) do
+        case PomodoroTimers.start(chat_id, chat_type, socket.assigns.locale) do
           {:ok, _timer_data} -> {:noreply, socket}
           {:error, reason} -> push_pomodoro_error(socket, chat_id, chat_type, reason)
         end

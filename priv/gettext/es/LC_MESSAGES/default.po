@@ -421,3 +421,18 @@ msgstr "Temporizador Pomodoro"
 #, elixir-autogen, elixir-format
 msgid "Temporizador compartido para sesiones de trabajo y descanso dentro del chat."
 msgstr "Temporizador compartido para sesiones de trabajo y descanso dentro del chat."
+
+#: lib/pomoroom/chat_plugins/pomodoro_timer/runtime/pomodoro_timer_notifier.ex:26
+#, elixir-autogen, elixir-format
+msgid "Ha finalizado el descanso corto"
+msgstr ""
+
+#: lib/pomoroom/chat_plugins/pomodoro_timer/runtime/pomodoro_timer_notifier.ex:27
+#, elixir-autogen, elixir-format
+msgid "Ha finalizado el descanso largo"
+msgstr ""
+
+#: lib/pomoroom/chat_plugins/pomodoro_timer/runtime/pomodoro_timer_notifier.ex:25
+#, elixir-autogen, elixir-format
+msgid "Ha finalizado el temporizador de trabajo"
+msgstr ""
