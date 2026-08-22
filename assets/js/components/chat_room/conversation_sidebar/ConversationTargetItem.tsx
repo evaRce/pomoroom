@@ -75,8 +75,6 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
     }
   };
 
-  const isGroupDeletion = contact.is_group_member_removed || contact.is_group_admin;
-
   const handleMenuClick = (key: string) => {
     if (key === "deleteChat") {
       setShowLeaveOrDeleteDialog(true);
@@ -87,9 +85,7 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
   const items = [
     {
       label: contact.is_group
-        ? isGroupDeletion
-          ? conversationSidebarText.deleteGroup
-          : conversationSidebarText.leaveGroup
+        ? conversationSidebarText.leaveGroup
         : conversationSidebarText.deleteConversation,
       key: "deleteChat",
       icon: <DeleteOutlined />,
@@ -201,27 +197,21 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
 
     <ConfirmDialog
       open={showLeaveOrDeleteDialog}
-      variant={!contact.is_group || isGroupDeletion ? "danger" : "warning"}
+      variant="danger"
       title={
-        !contact.is_group
-          ? conversationSidebarText.confirmDeleteConversationTitle
-          : isGroupDeletion
-            ? conversationSidebarText.confirmDeleteGroupTitle
-            : conversationSidebarText.confirmLeaveGroupTitle
+        contact.is_group
+          ? conversationSidebarText.confirmLeaveGroupTitle
+          : conversationSidebarText.confirmDeleteConversationTitle
       }
       content={
-        !contact.is_group
-          ? conversationSidebarText.confirmDeleteConversationMessage(contact.name)
-          : isGroupDeletion
-            ? conversationSidebarText.confirmDeleteGroupMessage(contact.name)
-            : conversationSidebarText.confirmLeaveGroupMessage(contact.name)
+        contact.is_group
+          ? conversationSidebarText.confirmLeaveGroupMessage(contact.name)
+          : conversationSidebarText.confirmDeleteConversationMessage(contact.name)
       }
       confirmLabel={
-        !contact.is_group
-          ? conversationSidebarText.deleteConversation
-          : isGroupDeletion
-            ? conversationSidebarText.deleteGroup
-            : conversationSidebarText.leaveGroup
+        contact.is_group
+          ? conversationSidebarText.leaveGroup
+          : conversationSidebarText.deleteConversation
       }
       cancelLabel={conversationSidebarText.confirmCancelButton}
       onClose={() => setShowLeaveOrDeleteDialog(false)}

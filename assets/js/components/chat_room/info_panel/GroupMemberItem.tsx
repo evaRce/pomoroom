@@ -119,7 +119,7 @@ export default function GroupMemberItem({
 
     <ConfirmDialog
       open={showLeaveDialog}
-      variant="warning"
+      variant="danger"
       title={infoPanelText.confirmLeaveGroupTitle}
       content={infoPanelText.confirmLeaveGroupMessage(groupName)}
       confirmLabel={infoPanelText.leaveGroup}
