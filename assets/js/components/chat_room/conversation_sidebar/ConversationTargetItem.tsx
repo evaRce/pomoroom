@@ -9,6 +9,7 @@ import { selectPrivateChatAction } from "../../../services/contactService";
 import { selectGroupChatAction } from "../../../services/groupService";
 import type { NormalizedContact } from "./ConversationTargetsList";
 import useConversationSidebarText from "./conversationSidebarText";
+import { ConfirmDialog } from "../../../../components-shadcn/ui/confirm-dialog";
 
 interface ConversationTargetItemProps {
   contact: NormalizedContact;
@@ -22,6 +23,7 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
   const pomodoroTimerText = usePomodoroTimerText();
   const { addEvent } = useEventContext();
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [showLeaveOrDeleteDialog, setShowLeaveOrDeleteDialog] = useState(false);
   const notification = usePomodoroNotification(contact?.chat_id || "");
   const hasPendingNotification = Boolean(notification?.hasPendingNotification);
 
@@ -73,9 +75,15 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
     }
   };
 
+  const isGroupDeletion = contact.is_group_member_removed || contact.is_group_admin;
+
   const handleMenuClick = (key: string) => {
     if (key === "deleteChat") {
-      onDelete();
+      if (contact.is_group) {
+        setShowLeaveOrDeleteDialog(true);
+      } else {
+        onDelete();
+      }
     }
     setDropdownVisible(false);
   };
@@ -83,7 +91,7 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
   const items = [
     {
       label: contact.is_group
-        ? (contact.is_group_member_removed || contact.is_group_admin)
+        ? isGroupDeletion
           ? conversationSidebarText.deleteGroup
           : conversationSidebarText.leaveGroup
         : conversationSidebarText.deleteConversation,
@@ -132,6 +140,7 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
     : null;
 
   return (
+    <>
     <div
       className={`relative rounded-lg p-3 sm:p-1.5 lg:p-2 flex items-center gap-3 sm:gap-2 lg:gap-3 hover:border-gray-400 focus-within:ring-2 mb-1 hover:bg-gray-400 ${getBackgroundContact()}`}
       onClick={handleChat}
@@ -193,5 +202,32 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
         </a>
       </div>
     </div>
+
+    <ConfirmDialog
+      open={showLeaveOrDeleteDialog}
+      variant={isGroupDeletion ? "danger" : "warning"}
+      title={
+        isGroupDeletion
+          ? conversationSidebarText.confirmDeleteGroupTitle
+          : conversationSidebarText.confirmLeaveGroupTitle
+      }
+      content={
+        isGroupDeletion
+          ? conversationSidebarText.confirmDeleteGroupMessage(contact.name)
+          : conversationSidebarText.confirmLeaveGroupMessage(contact.name)
+      }
+      confirmLabel={
+        isGroupDeletion
+          ? conversationSidebarText.deleteGroup
+          : conversationSidebarText.leaveGroup
+      }
+      cancelLabel={conversationSidebarText.confirmCancelButton}
+      onClose={() => setShowLeaveOrDeleteDialog(false)}
+      onConfirm={() => {
+        setShowLeaveOrDeleteDialog(false);
+        onDelete();
+      }}
+    />
+    </>
   );
 }

@@ -7,9 +7,11 @@ import {
 } from "@ant-design/icons";
 import type { ChatMember } from "../../../types/events";
 import useInfoPanelText from "./infoPanelText";
+import { ConfirmDialog } from "../../../../components-shadcn/ui/confirm-dialog";
 
 interface GroupMemberItemProps {
   contact: ChatMember;
+  groupName?: string;
   onSelect: () => void;
   onSetAdmin: ((memberName: string, operation: string) => void) | null;
   onDelete: ((memberName: string) => void) | null;
@@ -20,6 +22,7 @@ interface GroupMemberItemProps {
 
 export default function GroupMemberItem({
   contact,
+  groupName = "",
   onSelect,
   onSetAdmin,
   onDelete,
@@ -29,6 +32,7 @@ export default function GroupMemberItem({
 }: GroupMemberItemProps) {
   const infoPanelText = useInfoPanelText();
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [showLeaveDialog, setShowLeaveDialog] = useState(false);
 
   const handleMenuClick = (key: string) => {
     if (key === "addAdmin") {
@@ -36,7 +40,11 @@ export default function GroupMemberItem({
     } else if (key === "deleteAdmin") {
       onSetAdmin?.(contact.nickname, "delete");
     } else if (key === "deleteMember") {
-      onDelete?.(contact.nickname);
+      if (isCurrentUser) {
+        setShowLeaveDialog(true);
+      } else {
+        onDelete?.(contact.nickname);
+      }
     }
     setDropdownVisible(false);
   };
@@ -68,6 +76,7 @@ export default function GroupMemberItem({
   };
 
   return (
+    <>
     <div className="relative flex items-center justify-between p-2 border-b hover:bg-gray-400">
       <div className="flex items-center space-x-2">
         <div className="flex-shrink-0">
@@ -107,5 +116,20 @@ export default function GroupMemberItem({
         )}
       </div>
     </div>
+
+    <ConfirmDialog
+      open={showLeaveDialog}
+      variant="warning"
+      title={infoPanelText.confirmLeaveGroupTitle}
+      content={infoPanelText.confirmLeaveGroupMessage(groupName)}
+      confirmLabel={infoPanelText.leaveGroup}
+      cancelLabel={infoPanelText.confirmCancelButton}
+      onClose={() => setShowLeaveDialog(false)}
+      onConfirm={() => {
+        setShowLeaveDialog(false);
+        onDelete?.(contact.nickname);
+      }}
+    />
+    </>
   );
 }

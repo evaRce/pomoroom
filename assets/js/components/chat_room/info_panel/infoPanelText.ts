@@ -14,5 +14,9 @@ export default function useInfoPanelText() {
     removeMember: t("infoPanelText.removeMember"),
     adminBadge: t("infoPanelText.adminBadge"),
     invite: t("infoPanelText.invite"),
+    confirmLeaveGroupTitle: t("infoPanelText.confirmLeaveGroupTitle"),
+    confirmLeaveGroupMessage: (groupName: string) =>
+      t("infoPanelText.confirmLeaveGroupMessage", { groupName }),
+    confirmCancelButton: t("infoPanelText.confirmCancelButton"),
   };
 }

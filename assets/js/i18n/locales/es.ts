@@ -120,6 +120,11 @@ const es = {
     deleteConversation: "Eliminar conversación",
     statusPending: "Pendiente",
     statusRejected: "Rechazada",
+    confirmLeaveGroupTitle: "Dejar el grupo",
+    confirmLeaveGroupMessage: 'Vas a dejar el grupo "{{groupName}}". Dejarás de ver sus mensajes y necesitarás que alguien te vuelva a invitar para volver a entrar.',
+    confirmDeleteGroupTitle: "Eliminar el grupo",
+    confirmDeleteGroupMessage: 'Vas a eliminar el grupo "{{groupName}}" para todos sus miembros. Esta acción es irreversible.',
+    confirmCancelButton: "Cancelar",
   },
   infoPanelText: {
     closeDetails: "Cerrar detalles",
@@ -133,6 +138,9 @@ const es = {
     removeMember: "Eliminar miembro",
     adminBadge: "Admin",
     invite: "Invitar",
+    confirmLeaveGroupTitle: "Dejar el grupo",
+    confirmLeaveGroupMessage: 'Vas a dejar el grupo "{{groupName}}". Dejarás de ver sus mensajes y necesitarás que alguien te vuelva a invitar para volver a entrar.',
+    confirmCancelButton: "Cancelar",
   },
   kanbanText: {
     taskDeleteTitle: "Eliminar tarea",

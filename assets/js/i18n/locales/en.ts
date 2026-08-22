@@ -120,6 +120,11 @@ const en = {
     deleteConversation: "Delete conversation",
     statusPending: "Pending",
     statusRejected: "Rejected",
+    confirmLeaveGroupTitle: "Leave group",
+    confirmLeaveGroupMessage: 'You are about to leave "{{groupName}}". You will stop seeing its messages and will need someone to invite you back in.',
+    confirmDeleteGroupTitle: "Delete group",
+    confirmDeleteGroupMessage: 'You are about to delete "{{groupName}}" for every member. This action is irreversible.',
+    confirmCancelButton: "Cancel",
   },
   infoPanelText: {
     closeDetails: "Close details",
@@ -133,6 +138,9 @@ const en = {
     removeMember: "Remove member",
     adminBadge: "Admin",
     invite: "Invite",
+    confirmLeaveGroupTitle: "Leave group",
+    confirmLeaveGroupMessage: 'You are about to leave "{{groupName}}". You will stop seeing its messages and will need someone to invite you back in.',
+    confirmCancelButton: "Cancel",
   },
   kanbanText: {
     taskDeleteTitle: "Delete task",

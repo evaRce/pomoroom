@@ -159,6 +159,7 @@ export default function ChatDetailPanel() {
                 <div key={index} style={{ position: "relative" }}>
                   <GroupMemberItem
                     contact={item}
+                    groupName={currentGroupName}
                     onSelect={() => console.log("Miembro ", item.nickname)}
                     onSetAdmin={setAdmin}
                     onDelete={deleteMember}

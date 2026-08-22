@@ -13,5 +13,12 @@ export default function useConversationSidebarText() {
     deleteConversation: t("conversationSidebarText.deleteConversation"),
     statusPending: t("conversationSidebarText.statusPending"),
     statusRejected: t("conversationSidebarText.statusRejected"),
+    confirmLeaveGroupTitle: t("conversationSidebarText.confirmLeaveGroupTitle"),
+    confirmLeaveGroupMessage: (groupName: string) =>
+      t("conversationSidebarText.confirmLeaveGroupMessage", { groupName }),
+    confirmDeleteGroupTitle: t("conversationSidebarText.confirmDeleteGroupTitle"),
+    confirmDeleteGroupMessage: (groupName: string) =>
+      t("conversationSidebarText.confirmDeleteGroupMessage", { groupName }),
+    confirmCancelButton: t("conversationSidebarText.confirmCancelButton"),
   };
 }
