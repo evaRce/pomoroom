@@ -14,6 +14,7 @@ defmodule Pomoroom.FriendRequests do
     to: FriendRequestService
 
   defdelegate get(to_user, from_user), to: FriendRequestService
+  defdelegate list_pending_for_user(nickname), to: FriendRequestService
   defdelegate is_owner_request?(to_user, from_user), to: FriendRequestService
 
   defdelegate reject_friend_request(to_user, from_user, logged_user_nickname),

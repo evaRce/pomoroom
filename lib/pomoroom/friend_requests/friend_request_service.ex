@@ -88,6 +88,8 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
 
   def get(to_user, from_user), do: FriendRequestRepository.get(to_user, from_user)
 
+  def list_pending_for_user(nickname), do: FriendRequestRepository.list_pending_for_user(nickname)
+
   def is_owner_request?(to_user, from_user) do
     case get(to_user, from_user) do
       {:ok, request} ->

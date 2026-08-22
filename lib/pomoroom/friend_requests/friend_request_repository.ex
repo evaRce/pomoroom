@@ -26,6 +26,20 @@ defmodule Pomoroom.FriendRequests.FriendRequestRepository do
     )
   end
 
+  def list_pending_for_user(nickname) do
+    query = %{
+      "status" => "pending",
+      "$or" => [
+        %{"to_user" => nickname},
+        %{"from_user" => nickname}
+      ]
+    }
+
+    Mongo.find(:mongo, "friend_requests", query)
+    |> Enum.to_list()
+    |> Enum.map(&FriendRequestSchema.request_changeset(&1).changes)
+  end
+
   def delete(to_user, from_user) do
     request_query = %{"to_user" => to_user, "from_user" => from_user}
     Mongo.delete_one(:mongo, "friend_requests", request_query)
