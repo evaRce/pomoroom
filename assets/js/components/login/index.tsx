@@ -5,7 +5,6 @@ import { loginUserAction } from "../../services/userService";
 import { LiveViewHook, FormErrors } from "../../types/liveview";
 import { initI18n } from "../../i18n";
 
-// Contexto que Phoenix inyecta en `this` al invocar cada callback del hook.
 interface LoginHookThis extends LiveViewHook {
 	searchUser(email: string, password: string): void;
 	opts(errorLoginUser?: FormErrors | {}): LoginProps;

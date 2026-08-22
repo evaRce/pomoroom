@@ -66,8 +66,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
 
   def handle_selected_group_chat(group_name, user, socket) do
     case GroupChats.get_by("name", group_name) do
-      {:error, _reason} ->
-        {:noreply, socket}
+      {:error, reason} ->
+        payload = %{event_name: "error_opening_group_chat", event_data: reason}
+        {:noreply, push_event(socket, "react", payload)}
 
       {:ok, group_chat} ->
         Runtime.ensure_chat_server_exists(group_chat.chat_id)

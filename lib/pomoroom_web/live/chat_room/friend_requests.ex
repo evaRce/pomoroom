@@ -50,7 +50,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
 
                 {:noreply, push_event(socket, "react", payload)}
               {:error, _reason} ->
-                {:noreply, socket}
+                payload = %{
+                  event_name: "error_accepting_friend_request",
+                  event_data: %{error: "Inconsistencia detectada: solicitud aceptada sin chat privado"}
+                }
+                {:noreply, push_event(socket, "react", payload)}
             end
           {:error, reason} ->
             payload = %{event_name: "error_accepting_friend_request", event_data: reason}
@@ -166,8 +170,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
                     )
 
                     {:noreply, push_event(socket, "react", payload)}
-                  _ ->
-                    {:noreply, socket}
+                  {:error, reason} ->
+                    payload = %{event_name: "error_adding_contact", event_data: reason}
+                    {:noreply, push_event(socket, "react", payload)}
                 end
 
               "pending" ->
