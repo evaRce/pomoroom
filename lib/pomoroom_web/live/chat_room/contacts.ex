@@ -38,9 +38,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Contacts do
       |> Enum.map(& &1.contact_data.nickname)
       |> MapSet.new()
 
-    pending_contact_list = list_pending_contacts(user, known_nicknames)
+    open_contact_list = list_open_request_contacts(user, known_nicknames)
 
-    all_contact_list = accepted_contact_list ++ pending_contact_list
+    all_contact_list = accepted_contact_list ++ open_contact_list
 
     if all_contact_list != [] do
       notify_react(socket, "show_list_contact", %{all_contact_list: all_contact_list})
@@ -49,9 +49,9 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Contacts do
     end
   end
 
-  defp list_pending_contacts(user, known_nicknames) do
+  defp list_open_request_contacts(user, known_nicknames) do
     user.nickname
-    |> FriendRequests.list_pending_for_user()
+    |> FriendRequests.list_without_private_chat_for_user()
     |> Enum.map(fn request ->
       other_user = if request.to_user == user.nickname, do: request.from_user, else: request.to_user
 

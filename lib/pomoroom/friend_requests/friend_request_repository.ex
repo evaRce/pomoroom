@@ -26,9 +26,9 @@ defmodule Pomoroom.FriendRequests.FriendRequestRepository do
     )
   end
 
-  def list_pending_for_user(nickname) do
+  def list_without_private_chat_for_user(nickname) do
     query = %{
-      "status" => "pending",
+      "status" => %{"$in" => ["pending", "rejected"]},
       "$or" => [
         %{"to_user" => nickname},
         %{"from_user" => nickname}
