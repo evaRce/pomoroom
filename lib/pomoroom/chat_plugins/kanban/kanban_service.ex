@@ -15,6 +15,8 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
 
   @max_column_title_length 25
   @max_task_title_length 2000
+  @max_columns 5
+  @max_tasks_per_column 20
 
   def create_kanban_board(kanban_id) do
     board = %{
@@ -125,17 +127,26 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
       true ->
         case KanbanRepository.get_board_by_kanban_id(kanban_id) do
           {:ok, board} ->
-            column = %{
-              column_id: ColumnSchema.generate_column_id(),
-              title: title,
-              task_ids: []
-            }
+            case check_can_add_column?(board) do
+              true ->
+                column = %{
+                  column_id: ColumnSchema.generate_column_id(),
+                  title: title,
+                  task_ids: []
+                }
 
-            new_columns = board_columns(board) ++ [column]
+                new_columns = board_columns(board) ++ [column]
 
-            case KanbanRepository.update_board(kanban_id, new_columns) do
-              {:ok, updated_board} -> {:ok, sanitize_for_client(materialize_board(updated_board))}
-              {:error, reason} -> {:error, reason}
+                case KanbanRepository.update_board(kanban_id, new_columns) do
+                  {:ok, updated_board} ->
+                    {:ok, sanitize_for_client(materialize_board(updated_board))}
+
+                  {:error, reason} ->
+                    {:error, reason}
+                end
+
+              false ->
+                {:error, :column_limit_reached}
             end
 
           {:error, reason} ->
@@ -220,31 +231,37 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
                 {:error, :not_found}
 
               column ->
-                task_id = KanbanTaskSchema.generate_task_id()
-                task_ids = task_ids_from_column(column)
+                case check_can_add_task?(column) do
+                  true ->
+                    task_id = KanbanTaskSchema.generate_task_id()
+                    task_ids = task_ids_from_column(column)
 
-                task = %{
-                  task_id: task_id,
-                  kanban_id: kanban_id,
-                  title: title
-                }
+                    task = %{
+                      task_id: task_id,
+                      kanban_id: kanban_id,
+                      title: title
+                    }
 
-                case KanbanRepository.create_task(task) do
-                  {:ok, _result} ->
-                    new_columns =
-                      replace_column_task_ids(columns, column_id, task_ids ++ [task_id])
+                    case KanbanRepository.create_task(task) do
+                      {:ok, _result} ->
+                        new_columns =
+                          replace_column_task_ids(columns, column_id, task_ids ++ [task_id])
 
-                    case KanbanRepository.update_board(kanban_id, new_columns) do
-                      {:ok, updated_board} ->
-                        {:ok, sanitize_for_client(materialize_board(updated_board))}
+                        case KanbanRepository.update_board(kanban_id, new_columns) do
+                          {:ok, updated_board} ->
+                            {:ok, sanitize_for_client(materialize_board(updated_board))}
+
+                          {:error, reason} ->
+                            KanbanRepository.delete_task(task_id)
+                            {:error, reason}
+                        end
 
                       {:error, reason} ->
-                        KanbanRepository.delete_task(task_id)
                         {:error, reason}
                     end
 
-                  {:error, reason} ->
-                    {:error, reason}
+                  false ->
+                    {:error, :task_limit_reached}
                 end
             end
 
@@ -552,6 +569,14 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
 
   defp board_columns(board) do
     Map.get(board, :columns) || Map.get(board, "columns") || []
+  end
+
+  defp check_can_add_column?(board) do
+    length(board_columns(board)) < @max_columns
+  end
+
+  defp check_can_add_task?(column) do
+    length(task_ids_from_column(column)) < @max_tasks_per_column
   end
 
   defp find_column(columns, column_id) do
