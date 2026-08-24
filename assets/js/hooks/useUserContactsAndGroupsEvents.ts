@@ -10,6 +10,7 @@ type UseUserContactsAndGroupsEventsParams = {
     request?: ConversationEntry["request"];
     group_data?: ConversationEntry["group_data"];
     status?: ConversationEntry["status"];
+    is_group?: ConversationEntry["is_group"];
     all_contact_list?: ConversationEntry[];
     error?: string;
   };
@@ -38,7 +39,11 @@ export function useUserContactsAndGroupsEvents({
 
   useEffect(() => {
     if (eventName === "add_group_to_list" && eventData.group_data) {
-      addEvent(eventName, { group_data: eventData.group_data, status: eventData.status });
+      addEvent(eventName, {
+        group_data: eventData.group_data,
+        status: eventData.status,
+        is_group: eventData.is_group,
+      });
     }
   }, [eventData.group_data, eventData.status]);
 

@@ -30,14 +30,19 @@ export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
     submitUser(userData.email, userData.confirmPassword, userData.nickname);
   };
 
+  const [liveError, setLiveError] = useState<string | null>(null);
+
   useEffect(() => {
     if (errors) {
+      const errorKeys = Object.keys(errors);
       form.setFields(
-        Object.keys(errors).map((key) => ({
+        errorKeys.map((key) => ({
           name: key,
           errors: [errors[key] as string],
         }))
       );
+      const firstError = errorKeys.length > 0 ? (errors[errorKeys[0]] as string) : null;
+      setLiveError(firstError);
     }
   }, [errors, form]);
 
@@ -56,15 +61,14 @@ export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
         backgroundBlendMode: "overlay",
       }}
     >
-      <a href="/">
-        <Button 
-          className="absolute top-4 left-4 sm:top-8 sm:left-8 shadow bg-white"
-          icon={<HomeOutlined />}
-          size="large"
-          title={signupText.homeButtonTitle}
-          aria-label={signupText.homeButtonTitle}
-        />
-      </a>
+      <Button
+        href="/"
+        className="absolute top-4 left-4 sm:top-8 sm:left-8 shadow bg-white"
+        icon={<HomeOutlined />}
+        size="large"
+        title={signupText.homeButtonTitle}
+        aria-label={signupText.homeButtonTitle}
+      />
       <div className="max-w-md w-full mt-12 sm:mt-0">
         <div className="p-5 rounded-2xl bg-white shadow">
           <p className="text-center text-lg lg:text-xl sm:text-2xl font-bold mb-6">
@@ -75,6 +79,9 @@ export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
 						<p className="text-gray-800 text-center text-sm md:text-lg lg:text-xl font-bold mt-2">
             	{signupText.subtitle}
 						</p>
+          </p>
+          <p role="alert" aria-live="assertive" className="sr-only">
+            {liveError}
           </p>
           <Form
             form={form}
@@ -178,7 +185,7 @@ export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
 						<Form.Item>
 						<Button
               htmlType="submit"
-              className="!h-11 !border-2 mt-2 text-white text-base font-semibold transitiona-all duration-700 bg-purple-500 !border-purple-500 hover:!bg-purple-400 hover:!border-purple-300 hover:!text-white focus:!bg-purple-400 focus:!border-purple-300 focus:!text-white active:!bg-purple-400 active:!border-purple-300 active:!text-white"
+              className="!h-11 !border-[3px] mt-2 text-white text-base font-semibold transitiona-all duration-700 bg-purple-500 !border-purple-500 hover:!bg-purple-400 hover:!border-purple-300 hover:!text-white focus:!bg-purple-400 focus:!border-purple-300 focus:!text-white active:!bg-purple-400 active:!border-purple-300 active:!text-white"
               block
             >
               {signupText.form.submit}

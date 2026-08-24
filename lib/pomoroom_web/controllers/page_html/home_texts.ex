@@ -22,8 +22,10 @@ defmodule PomoroomWeb.PageHTML.HomeTexts do
       hero: %{
         title_pomoroom: "Pomoroom",
         tagline: gettext("Conecta. Colabora. Crea."),
-        description: gettext("Una plataforma de mensajería moderna con herramientas de productividad"),
-        subtext_prefix: gettext("POMOROOM es tu espacio para estudiar y/o trabajar con enfoque, ya sea"),
+        description:
+          gettext("Una plataforma de mensajería moderna con herramientas de productividad"),
+        subtext_prefix:
+          gettext("POMOROOM es tu espacio para estudiar y/o trabajar con enfoque, ya sea"),
         subtext_suffix: gettext("o en grupo."),
         solo_variants: solo_variants(current_locale)
       },
@@ -49,7 +51,32 @@ defmodule PomoroomWeb.PageHTML.HomeTexts do
         image_alt: gettext("Captura de Pomoroom"),
         image_alt_zoomed: gettext("Captura de Pomoroom ampliada"),
         zoom_label: gettext("Ampliar imagen"),
-        close_label: gettext("Cerrar")
+        close_label: gettext("Cerrar"),
+        pause_label: gettext("Pausar carrusel"),
+        play_label: gettext("Reanudar carrusel"),
+        images: [
+          %{
+            src_desktop: "/images/screenshots/esp_desktop_lista_contactos_opciones.png",
+            src_mobile: "/images/screenshots/movil-contactos.jpeg",
+            alt:
+              gettext("Lista de contactos y grupos de Pomoroom, con el menú de opciones abierto")
+          },
+          %{
+            src_desktop: "/images/screenshots/esp_desktop_chat_grupal_vista_total.png",
+            src_mobile: "/images/screenshots/movil-chat-grupal.jpeg",
+            alt: gettext("Conversación en un chat grupal de Pomoroom")
+          },
+          %{
+            src_desktop: "/images/screenshots/esp_desktop_pomodoro_vista_total.png",
+            src_mobile: "/images/screenshots/movil-pomodoro.jpeg",
+            alt: gettext("Temporizador Pomodoro de Pomoroom en marcha")
+          },
+          %{
+            src_desktop: "/images/screenshots/esp_desktop_kanban_vista_total.png",
+            src_mobile: "/images/screenshots/movil-kanban.jpeg",
+            alt: gettext("Tablero Kanban de Pomoroom con tareas organizadas por columnas")
+          }
+        ]
       }
     }
   end

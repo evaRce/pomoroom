@@ -155,6 +155,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
               onClick={handleBackToList}
               size="large"
               title={chatRoomText.back}
+              aria-label={chatRoomText.back}
             />
           )}
           <div className="flex flex-1 min-h-0 flex-col">

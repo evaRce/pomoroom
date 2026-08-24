@@ -82,7 +82,7 @@
     </div>
   </header>
 
-  <main class="flex flex-col items-center px-4 sm:px-10 pt-24 pb-16 sm:py-16">
+  <main id="main-content" class="flex flex-col items-center px-4 sm:px-10 pt-24 pb-16 sm:py-16">
     <section class="text-center max-w-3xl">
       <h1 class="text-on-bg-strong text-5xl sm:text-6xl lg:text-7xl font-mono font-extrabold mt-8 sm:mt-6 lg:mt-5">
         <span class="text-purple-600"><%= String.slice(texts.hero.title_pomoroom, 0, 4) %></span><span class="text-black"><%= String.slice(texts.hero.title_pomoroom, 4..-1//1) %></span>
@@ -117,24 +117,52 @@
 
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 lg:gap-8 w-full max-w-5xl lg:max-w-6xl mt-16 sm:mt-12">
       <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 pt-5 pb-2 sm:px-5 sm:pt-6 sm:pb-3 lg:px-6 lg:pt-7 lg:pb-4">
-        <.icon name="hero-chat-bubble-left-right" class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600" />
-        <h3 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3"><%= texts.features.chats_private.title %></h3>
-        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1"><%= texts.features.chats_private.description %></p>
+        <.icon
+          name="hero-chat-bubble-left-right"
+          class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600"
+        />
+        <h2 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3">
+          <%= texts.features.chats_private.title %>
+        </h2>
+        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1">
+          <%= texts.features.chats_private.description %>
+        </p>
       </div>
       <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 pt-5 pb-2 sm:px-5 sm:pt-6 sm:pb-3 lg:px-6 lg:pt-7 lg:pb-4">
-        <.icon name="hero-user-group" class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600" />
-        <h3 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3"><%= texts.features.chats_group.title %></h3>
-        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1"><%= texts.features.chats_group.description %></p>
+        <.icon
+          name="hero-user-group"
+          class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600"
+        />
+        <h2 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3">
+          <%= texts.features.chats_group.title %>
+        </h2>
+        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1">
+          <%= texts.features.chats_group.description %>
+        </p>
       </div>
       <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 pt-5 pb-2 sm:px-5 sm:pt-6 sm:pb-3 lg:px-6 lg:pt-7 lg:pb-4">
-        <.icon name="hero-video-camera" class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600" />
-        <h3 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3"><%= texts.features.calls.title %></h3>
-        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1"><%= texts.features.calls.description %></p>
+        <.icon
+          name="hero-video-camera"
+          class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600"
+        />
+        <h2 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3">
+          <%= texts.features.calls.title %>
+        </h2>
+        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1">
+          <%= texts.features.calls.description %>
+        </p>
       </div>
       <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 pt-5 pb-2 sm:px-5 sm:pt-6 sm:pb-3 lg:px-6 lg:pt-7 lg:pb-4">
-        <.icon name="hero-puzzle-piece" class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600" />
-        <h3 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3"><%= texts.features.plugins.title %></h3>
-        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1"><%= texts.features.plugins.description %></p>
+        <.icon
+          name="hero-puzzle-piece"
+          class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600"
+        />
+        <h2 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3">
+          <%= texts.features.plugins.title %>
+        </h2>
+        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1">
+          <%= texts.features.plugins.description %>
+        </p>
       </div>
     </div>
 
@@ -143,17 +171,54 @@
         <%= texts.showcase.title %>
       </h2>
       <div
-        class="relative w-full rounded-xl aspect-video max-h-[75vh] flex items-center justify-center bg-white shadow-sm border border-gray-100"
+        class="relative w-full rounded-xl aspect-[9/20] sm:aspect-video max-h-[75vh] flex items-center justify-center bg-white shadow-sm border border-gray-100"
+        role="region"
+        aria-roledescription="carousel"
+        aria-label={texts.showcase.title}
       >
-        <div class="absolute right-2 top-2 sm:right-5 sm:top-5 z-10 rounded-full bg-gray-600 px-2 sm:px-3 lg:px-4 text-center text-xs sm:text-sm lg:text-base text-white">
-          <span id="currentImageIndex">1</span>/<span id="totalImages"></span>
+        <div class="absolute right-2 top-2 sm:right-5 sm:top-5 z-10 flex items-center gap-2">
+          <button
+            type="button"
+            id="playPauseBtn"
+            class="flex items-center justify-center h-6 w-6 sm:h-7 sm:w-7 rounded-full bg-gray-600 text-white"
+            aria-label={texts.showcase.pause_label}
+            data-pause-label={texts.showcase.pause_label}
+            data-play-label={texts.showcase.play_label}
+          >
+            <svg
+              id="pauseIcon"
+              class="h-3 w-3 sm:h-3.5 sm:w-3.5"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <rect x="6" y="5" width="4" height="14" />
+              <rect x="14" y="5" width="4" height="14" />
+            </svg>
+            <svg
+              id="playIcon"
+              class="hidden h-3 w-3 sm:h-3.5 sm:w-3.5"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </button>
+          <div
+            class="rounded-full bg-gray-600 px-2 sm:px-3 lg:px-4 py-1 text-center text-xs sm:text-sm lg:text-base text-white"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            <span id="currentImageIndex">1</span>/<span id="totalImages"></span>
+          </div>
         </div>
         <button
           type="button"
-          class="absolute top-0 left-0 z-30 flex items-center justify-center h-full px-2 sm:px-4 cursor-pointer group focus:outline-none"
+          class="absolute top-0 left-0 z-30 flex items-center justify-center h-full px-2 sm:px-4 cursor-pointer group"
           id="prevBtn"
         >
-          <span class="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full bg-purple-600/20 group-hover:bg-purple-600/40 group-focus:outline-none">
+          <span class="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full bg-purple-600/20 group-hover:bg-purple-600/40">
             <svg
               class="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-purple-700"
               aria-hidden="true"
@@ -174,10 +239,10 @@
         </button>
         <button
           type="button"
-          class="absolute top-0 right-0 z-30 flex items-center justify-center h-full px-2 sm:px-4 cursor-pointer group focus:outline-none"
+          class="absolute top-0 right-0 z-30 flex items-center justify-center h-full px-2 sm:px-4 cursor-pointer group"
           id="nextBtn"
         >
-          <span class="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full bg-purple-600/20 group-hover:bg-purple-600/40 group-focus:outline-none">
+          <span class="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full bg-purple-600/20 group-hover:bg-purple-600/40">
             <svg
               class="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-purple-700"
               aria-hidden="true"
@@ -199,8 +264,8 @@
         <div class="relative h-full w-full p-2 sm:p-4 lg:p-6">
           <img
             id="carouselImage"
-            src="/images/wireframes/login1.png"
-            alt={texts.showcase.image_alt}
+            src={List.first(texts.showcase.images).src_desktop}
+            alt={List.first(texts.showcase.images).alt}
             class="rounded-lg w-full h-full object-contain cursor-zoom-in"
             tabindex="0"
             role="button"
@@ -217,10 +282,18 @@
       <button
         type="button"
         id="closeZoomBtn"
-        class="absolute right-4 top-4 sm:right-8 sm:top-8 z-10 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 focus:outline-none"
+        class="absolute right-4 top-4 sm:right-8 sm:top-8 z-10 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
         aria-label={texts.showcase.close_label}
       >
-        <svg class="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg
+          class="h-5 w-5 sm:h-6 sm:w-6"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <line x1="18" y1="6" x2="6" y2="18" />
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
@@ -235,24 +308,39 @@
 
     <script>
       // Carrusel de imágenes
-      const images = [
-        "/images/wireframes/login1.png",
-        "/images/wireframes/chat-grupal.png",
-        "/images/wireframes/temporizador.png"
-      ];
+      const images = <%= raw(Jason.encode!(texts.showcase.images)) %>;
 
       let currentImageIndex = 0;
+      let isZoomed = false;
       const carouselImage = document.getElementById('carouselImage');
       const currentImageIndexDisplay = document.getElementById('currentImageIndex');
       const totalImagesDisplay = document.getElementById('totalImages');
+      const zoomedImage = document.getElementById('zoomedImage');
 
       totalImagesDisplay.textContent = images.length;
 
-      function updateImage() {
-        carouselImage.src = images[currentImageIndex];
-        currentImageIndexDisplay.textContent = currentImageIndex + 1;
-        if (isZoomed) zoomedImage.src = images[currentImageIndex];
+      // Shows the mobile or desktop screenshot depending on the window width
+      // (matches Tailwind's "sm" breakpoint).
+      const mobileMediaQuery = window.matchMedia('(max-width: 639px)');
+
+      function imageSrcForViewport(image) {
+        return mobileMediaQuery.matches ? image.src_mobile : image.src_desktop;
       }
+
+      function updateImage() {
+        const image = images[currentImageIndex];
+        const src = imageSrcForViewport(image);
+        carouselImage.src = src;
+        carouselImage.alt = image.alt;
+        currentImageIndexDisplay.textContent = currentImageIndex + 1;
+        if (isZoomed) {
+          zoomedImage.src = src;
+          zoomedImage.alt = image.alt;
+        }
+      }
+
+      mobileMediaQuery.addEventListener('change', updateImage);
+      updateImage();
 
       function showPrevImage() {
         currentImageIndex = (currentImageIndex > 0) ? currentImageIndex - 1 : images.length - 1;
@@ -267,21 +355,54 @@
       document.getElementById('prevBtn').addEventListener('click', showPrevImage);
       document.getElementById('nextBtn').addEventListener('click', showNextImage);
 
-      let isZoomed = false;
+      // Accessibility: don't autoplay the carousel if the user prefers reduced
+      // motion, and always allow pausing it (WCAG 2.2.2 requirement for
+      // content that updates on its own).
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const carouselRegion = document.querySelector('[aria-roledescription="carousel"]');
+      const playPauseBtn = document.getElementById('playPauseBtn');
+      const pauseIcon = document.getElementById('pauseIcon');
+      const playIcon = document.getElementById('playIcon');
+      let isPaused = prefersReducedMotion;
+      let autoplayTimer = null;
 
-      setInterval(() => {
-        if (isZoomed) return;
-        currentImageIndex = (currentImageIndex + 1) % images.length;
-        updateImage();
-      }, 8000);
+      function setPausedUi(paused) {
+        pauseIcon.classList.toggle('hidden', paused);
+        playIcon.classList.toggle('hidden', !paused);
+        playPauseBtn.setAttribute(
+          'aria-label',
+          paused ? playPauseBtn.dataset.playLabel : playPauseBtn.dataset.pauseLabel
+        );
+      }
+
+      function startAutoplay() {
+        if (autoplayTimer) return;
+        autoplayTimer = setInterval(() => {
+          if (isZoomed || isPaused) return;
+          currentImageIndex = (currentImageIndex + 1) % images.length;
+          updateImage();
+        }, 8000);
+      }
+
+      startAutoplay();
+      setPausedUi(isPaused);
+
+      playPauseBtn.addEventListener('click', () => {
+        isPaused = !isPaused;
+        setPausedUi(isPaused);
+      });
+
+      // Pause autoplay as soon as keyboard focus enters the carousel; the
+      // user can explicitly resume it with the play button.
+      carouselRegion.addEventListener('focusin', () => { isPaused = true; setPausedUi(true); });
 
       // Zoom de la imagen a pantalla completa
       const imageZoomOverlay = document.getElementById('imageZoomOverlay');
-      const zoomedImage = document.getElementById('zoomedImage');
 
       function openZoom() {
         isZoomed = true;
         zoomedImage.src = carouselImage.src;
+        zoomedImage.alt = carouselImage.alt;
         imageZoomOverlay.classList.remove('hidden');
         imageZoomOverlay.classList.add('flex');
       }
@@ -306,6 +427,7 @@
       });
       document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && isZoomed) closeZoom();
+        if (!isZoomed && !carouselRegion.contains(document.activeElement)) return;
         if (event.key === 'ArrowLeft') showPrevImage();
         if (event.key === 'ArrowRight') showNextImage();
       });
@@ -314,10 +436,12 @@
       const variants = <%= raw(Jason.encode!(texts.hero.solo_variants)) %>;
       let soloIndex = 0;
 
-      setInterval(() => {
-        document.getElementById('soloVariant').textContent = variants[soloIndex];
-        soloIndex = (soloIndex + 1) % variants.length;
-      }, 8000);
+      if (!prefersReducedMotion) {
+        setInterval(() => {
+          document.getElementById('soloVariant').textContent = variants[soloIndex];
+          soloIndex = (soloIndex + 1) % variants.length;
+        }, 8000);
+      }
     </script>
   </main>
 </div>

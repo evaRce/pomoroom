@@ -53,3 +53,23 @@
 		transform: rotate(360deg);
 	}
 }
+
+/* Accessibility: always show a visible focus indicator for keyboard users,
+   even on elements that opt out of the default outline (e.g. focus:outline-none).
+   The doubled :focus-visible bumps specificity above antd's injected
+   `a:focus { outline: 0 }` reset, which otherwise wins on plain <a> links. */
+:focus-visible:focus-visible {
+	outline: 3px solid #f59e0b;
+	outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.001ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.001ms !important;
+		scroll-behavior: auto !important;
+	}
+}

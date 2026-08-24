@@ -57,6 +57,13 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     end
   end
 
+  def handle_info(
+        %Phoenix.Socket.Broadcast{topic: "online_users", event: "presence_diff"},
+        socket
+      ) do
+    {:noreply, socket}
+  end
+
   def handle_info({:live_session_updated, session}, socket) do
     locale = Map.get(session, "locale", socket.assigns.locale)
     Gettext.put_locale(PomoroomWeb.Gettext, locale)

@@ -344,6 +344,11 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
     renameKanbanTaskAction(addEvent, chatId, chatType, taskId, nextTitle);
   };
 
+  const handleMoveTask = (columnId: ColumnId, taskId: string, targetColumnId: ColumnId) => {
+    const targetIndex = columns.find((column) => column.id === targetColumnId)?.tasks.length ?? 0;
+    moveKanbanTaskAction(addEvent, chatId, chatType, taskId, columnId, targetColumnId, targetIndex);
+  };
+
   const handleAddColumn = () => {
     if (columns.length >= MAX_COLUMNS || isAddingColumn) return;
     setIsAddingColumn(true);
@@ -591,6 +596,7 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
               <KanbanColumn
                 key={column.id}
                 column={column}
+                otherColumns={columns.filter((otherColumn) => otherColumn.id !== column.id)}
                 isHighlighted={highlightedColumnId === column.id}
                 dragPreviewIndex={dragPreview?.columnId === column.id ? dragPreview.taskIndex : null}
                 activeTaskId={draggedTaskId}
@@ -606,6 +612,7 @@ export function KanbanBoard({ chatId, chatType }: KanbanBoardProps) {
                 }
                 onDeleteTask={handleDeleteTask}
                 onRenameTask={handleRenameTask}
+                onMoveTask={handleMoveTask}
                 onRenameColumn={handleRenameColumn}
                 onDeleteColumn={handleDeleteColumn}
               />

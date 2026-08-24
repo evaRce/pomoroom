@@ -25,13 +25,25 @@ defmodule PomoroomWeb.Router do
     pipe_through :browser
     get "/", PageController, :home
     get "/logout", PageController, :logout
-    live "/login", HomeLive.Login
-    live "/signup", HomeLive.SignUp
+
+    live_session :default, session: {__MODULE__, :live_session_data, []} do
+      live "/login", HomeLive.Login
+      live "/signup", HomeLive.SignUp
+    end
   end
 
   scope "/", PomoroomWeb do
     pipe_through [:browser, :require_authenticated_user]
-    live "/chat", ChatLive.ChatRoom
+
+    live_session :authenticated, session: {__MODULE__, :live_session_data, []} do
+      live "/chat", ChatLive.ChatRoom
+    end
+  end
+
+  def live_session_data(conn) do
+    conn
+    |> get_session()
+    |> Map.filter(fn {key, _value} -> is_binary(key) end)
   end
 
   scope "/api", PomoroomWeb do

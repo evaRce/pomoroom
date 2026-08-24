@@ -475,6 +475,7 @@ export default function ChatHeader({
                   onClick={onBack}
                   className="sm:hidden -ml-1 shrink-0 rounded-lg p-1.5 text-gray-600 hover:bg-gray-100"
                   title={chatHeaderText.back}
+                  aria-label={chatHeaderText.back}
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
@@ -580,6 +581,7 @@ export default function ChatHeader({
                 icon={<Info className="h-5 w-5" />}
                 onClick={showUserDetails}
                 title={chatHeaderText.groupDetails}
+                aria-label={chatHeaderText.groupDetails}
                 disabled={isGroupMemberRemoved}
               />
             )}
@@ -654,6 +656,7 @@ export default function ChatHeader({
               className="!h-9 !w-9 !rounded-lg shrink-0 text-gray-600 hover:!bg-gray-100"
               icon={<MoreVertical className="h-5 w-5" />}
               title={chatHeaderText.moreOptions}
+              aria-label={chatHeaderText.moreOptions}
             />
           </Dropdown>
         </div>

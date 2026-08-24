@@ -22,6 +22,9 @@ export function useKanbanText() {
       },
       cancelButton: t("kanbanText.taskCancelButton"),
       understood: t("kanbanText.taskUnderstood"),
+      optionsAriaLabel: t("kanbanText.taskOptionsAriaLabel"),
+      moveButton: t("kanbanText.taskMoveButton"),
+      moveToColumnAriaLabel: (colTitle: string) => t("kanbanText.taskMoveToColumnAriaLabel", { colTitle }),
     },
 
     column: {
@@ -49,6 +52,7 @@ export function useKanbanText() {
       limitReachedMessage: (max: number) => t("kanbanText.columnLimitReachedMessage", { max }),
       cancelButton: t("kanbanText.columnCancelButton"),
       createButton: t("kanbanText.columnCreateButton"),
+      optionsAriaLabel: (colTitle: string) => t("kanbanText.columnOptionsAriaLabel", { colTitle }),
     },
   };
 }

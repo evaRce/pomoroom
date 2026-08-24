@@ -6,6 +6,7 @@ import {
   Pencil,
   Trash2,
   GripVertical,
+  ArrowRightLeft,
 } from "lucide-react";
 import { useDroppable } from "@dnd-kit/core";
 import {
@@ -21,6 +22,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from "../../../../components-shadcn/ui/dropdown-menu";
 import { ConfirmDialog } from "../../../../components-shadcn/ui/confirm-dialog";
 import { cn } from "../../../../lib/utils";
@@ -41,12 +45,15 @@ export interface Column {
 export interface TaskCardProps {
   task: Task;
   columnId: ColumnId;
+  otherColumns: Column[];
   onDelete: (columnId: ColumnId, taskId: string) => void;
   onRename: (columnId: ColumnId, taskId: string, nextTitle: string) => void;
+  onMove: (columnId: ColumnId, taskId: string, targetColumnId: ColumnId) => void;
 }
 
 export interface KanbanColumnProps {
   column: Column;
+  otherColumns: Column[];
   isHighlighted: boolean;
   dragPreviewIndex?: number | null;
   activeTaskId?: string | null;
@@ -58,6 +65,7 @@ export interface KanbanColumnProps {
   onCancelAdd: () => void;
   onDeleteTask: (columnId: ColumnId, taskId: string) => void;
   onRenameTask: (columnId: ColumnId, taskId: string, nextTitle: string) => void;
+  onMoveTask: (columnId: ColumnId, taskId: string, targetColumnId: ColumnId) => void;
   onRenameColumn: (columnId: ColumnId, nextTitle: string) => void;
   onDeleteColumn: (columnId: ColumnId) => void;
 }
@@ -70,7 +78,7 @@ export interface KanbanTaskLimitWarningModalProps {
   buttonText?: string;
 }
 
-function TaskCard({ task, columnId, onDelete, onRename }: TaskCardProps) {
+function TaskCard({ task, columnId, otherColumns, onDelete, onRename, onMove }: TaskCardProps) {
   const KANBAN_TEXT = useKanbanText();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(task.title);
@@ -180,14 +188,14 @@ function TaskCard({ task, columnId, onDelete, onRename }: TaskCardProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:bg-sky-300 hover:text-slate-700 shrink-0"
-              aria-label="Task options"
+              className="h-6 w-6 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity text-slate-500 hover:bg-sky-300 hover:text-slate-700 shrink-0"
+              aria-label={KANBAN_TEXT.task.optionsAriaLabel}
               onPointerDown={(e) => e.stopPropagation()}
             >
               <MoreVertical className="h-3.5 w-3.5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-36 bg-white">
+          <DropdownMenuContent align="end" className="w-40 bg-white">
             <DropdownMenuItem
               onClick={startEditing}
               className="focus:bg-sky-100 outline-none"
@@ -195,6 +203,26 @@ function TaskCard({ task, columnId, onDelete, onRename }: TaskCardProps) {
               <Pencil className="h-4 w-4 mr-2" />
               {KANBAN_TEXT.task.editButton}
             </DropdownMenuItem>
+            {otherColumns.length > 0 && (
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="focus:bg-sky-100 outline-none">
+                  <ArrowRightLeft className="h-4 w-4 mr-2" />
+                  {KANBAN_TEXT.task.moveButton}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="bg-white">
+                  {otherColumns.map((column) => (
+                    <DropdownMenuItem
+                      key={column.id}
+                      onClick={() => onMove(columnId, task.id, column.id)}
+                      aria-label={KANBAN_TEXT.task.moveToColumnAriaLabel(column.title)}
+                      className="focus:bg-sky-100 outline-none"
+                    >
+                      {column.title}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            )}
             <DropdownMenuItem
               onClick={() => setShowDeleteDialog(true)}
               className="focus:bg-red-100 outline-none hover:text-red-500"
@@ -234,6 +262,7 @@ function TaskCard({ task, columnId, onDelete, onRename }: TaskCardProps) {
 
 export function KanbanColumn({
   column,
+  otherColumns,
   isHighlighted,
   dragPreviewIndex,
   activeTaskId,
@@ -245,6 +274,7 @@ export function KanbanColumn({
   onCancelAdd,
   onDeleteTask,
   onRenameTask,
+  onMoveTask,
   onRenameColumn,
   onDeleteColumn,
 }: KanbanColumnProps) {
@@ -296,8 +326,10 @@ export function KanbanColumn({
         key={task.id}
         task={task}
         columnId={column.id}
+        otherColumns={otherColumns}
         onDelete={onDeleteTask}
         onRename={onRenameTask}
+        onMove={onMoveTask}
       />,
     );
   });
@@ -374,7 +406,7 @@ export function KanbanColumn({
                   variant="ghost"
                   size="icon"
                   className="h-7 w-7 text-slate-500 hover:text-slate-700 hover:bg-sky-300"
-                  aria-label={`Column options for ${column.title}`}
+                  aria-label={KANBAN_TEXT.column.optionsAriaLabel(column.title)}
                 >
                   <MoreVertical className="h-4 w-4" />
                 </Button>

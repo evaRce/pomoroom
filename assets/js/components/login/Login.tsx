@@ -17,6 +17,8 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
   const [form] = Form.useForm();
   const [imageNumber, setImageNumber] = useState(1);
 
+  const [liveError, setLiveError] = useState<string | null>(null);
+
   const onFinish = (newValues: { email: string; password: string }) => {
     searchUser(newValues.email, newValues.password);
   };
@@ -29,6 +31,7 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
           { name: "email", errors: [commonError] },
           { name: "password", errors: [commonError] },
         ]);
+        setLiveError(commonError);
       }
     }
   }, [errors, form]);
@@ -48,15 +51,14 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
         backgroundBlendMode: "overlay",
       }}
     >
-      <a href="/">
-        <Button
-          className="absolute top-4 left-4 sm:top-8 sm:left-8 shadow bg-white"
-          icon={<HomeOutlined />}
-          size="large"
-          title={loginText.homeButtonTitle}
-          aria-label={loginText.homeButtonTitle}
-        />
-      </a>
+      <Button
+        href="/"
+        className="absolute top-4 left-4 sm:top-8 sm:left-8 shadow bg-white"
+        icon={<HomeOutlined />}
+        size="large"
+        title={loginText.homeButtonTitle}
+        aria-label={loginText.homeButtonTitle}
+      />
       <div className="max-w-md md:max-w-lg lg:max-w-xl w-full my-4">
         <div className="p-4 sm:p-8 rounded-2xl bg-white shadow">
           <p className="text-center text-lg lg:text-xl sm:text-2xl font-bold mb-6">
@@ -67,6 +69,9 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
           </p>
           <p className="text-gray-800 text-center text-sm md:text-lg lg:text-xl font-bold -mt-1">
             {loginText.subtitle}
+          </p>
+          <p role="alert" aria-live="assertive" className="sr-only">
+            {liveError}
           </p>
           <Form
               form={form}
@@ -106,16 +111,17 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
                 />
               </Form.Item>
               <Form.Item>
-                <a
-                  className="text-blue-600 underline font-semibold"
+                <button
+                  type="button"
+                  className="text-blue-600 underline font-semibold bg-transparent border-none p-0 cursor-pointer"
                 >
                   {loginText.form.forgotPassword}
-                </a>
+                </button>
               </Form.Item>
               <Form.Item>
                 <Button
                   htmlType="submit"
-                  className="!h-11 !border-2 text-white text-base font-semibold transitiona-all duration-700 bg-purple-500 !border-purple-500 hover:!bg-purple-400 hover:!border-purple-300 hover:!text-white focus:!bg-purple-400 focus:!border-purple-300 focus:!text-white active:!bg-purple-400 active:!border-purple-300 active:!text-white"
+                  className="!h-11 !border-[3px] text-white text-base font-semibold transitiona-all duration-700 bg-purple-500 !border-purple-500 hover:!bg-purple-400 hover:!border-purple-300 hover:!text-white focus:!bg-purple-400 focus:!border-purple-300 focus:!text-white active:!bg-purple-400 active:!border-purple-300 active:!text-white"
                   block
                 >
                   {loginText.form.submit}
