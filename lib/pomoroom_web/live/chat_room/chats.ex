@@ -1,6 +1,7 @@
 defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
   import Phoenix.Component, only: [assign: 3]
   import PomoroomWeb.ChatLive.ChatRoom.ReactEvent
+  import PomoroomWeb.Gettext
 
   alias Phoenix.PubSub
 
@@ -13,6 +14,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
 
   @initial_messages_limit 20
   @older_messages_limit 15
+  @max_messages 10
+  @message_scale_ms :timer.seconds(10)
 
   def handle_new_message_info(args, socket) do
     event_data = %{message: %{data: args.data, image_user: args.image_user}}
@@ -223,12 +226,26 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
   end
 
   defp send_message_to_chat(chat_id, message, user, socket) do
-    case ChatServer.send_message(chat_id, user.nickname, user.image_profile, message) do
-      {:ok, _msg} ->
-        {:noreply, socket}
+    case PomoroomWeb.RateLimiter.hit(
+           "send_message:#{user.nickname}",
+           @message_scale_ms,
+           @max_messages
+         ) do
+      {:deny, _retry_after} ->
+        notify_react(
+          socket,
+          "error_sending_message",
+          gettext("Estás enviando mensajes demasiado rápido. Espera unos segundos")
+        )
 
-      {:error, reason} ->
-        notify_react(socket, "error_sending_message", reason)
+      {:allow, _count} ->
+        case ChatServer.send_message(chat_id, user.nickname, user.image_profile, message) do
+          {:ok, _msg} ->
+            {:noreply, socket}
+
+          {:error, reason} ->
+            notify_react(socket, "error_sending_message", reason)
+        end
     end
   end
 
