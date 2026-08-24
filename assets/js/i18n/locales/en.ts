@@ -66,6 +66,7 @@ const en = {
     pluginErrorNotInstalled: "This plugin is not installed.",
     pluginErrorUnsupported: "This plugin is not supported.",
     pluginErrorChatNotFound: "The chat does not exist.",
+    pluginErrorRateLimited: "You're installing or uninstalling plugins too fast. Wait a few seconds.",
     pluginErrorFallback: "The plugin operation could not be completed.",
     back: "Back",
     chatTab: "Chat",

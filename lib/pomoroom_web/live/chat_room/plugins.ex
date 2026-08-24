@@ -10,27 +10,43 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
   alias Pomoroom.Users
   alias PomoroomWeb.Presence
 
+  @max_plugin_actions 5
+  @plugin_actions_scale_ms :timer.seconds(10)
+
   def handle_install_chat_plugin(chat_id, chat_type, plugin_type, user, socket) do
-    case authorize_chat_access(chat_id, user.nickname) do
+    case check_plugin_action_rate(user.nickname) do
       :ok ->
-        case ChatPlugins.install_plugin(chat_id, chat_type, plugin_type) do
-          {:ok, plugin} ->
-            payload = %{
-              event_name: "chat_plugin_installed",
-              event_data: %{
-                chat_id: chat_id,
-                chat_type: chat_type,
-                plugin: plugin
-              }
-            }
+        case authorize_chat_access(chat_id, user.nickname) do
+          :ok ->
+            case ChatPlugins.install_plugin(chat_id, chat_type, plugin_type) do
+              {:ok, plugin} ->
+                payload = %{
+                  event_name: "chat_plugin_installed",
+                  event_data: %{
+                    chat_id: chat_id,
+                    chat_type: chat_type,
+                    plugin: plugin
+                  }
+                }
 
-            PubSub.broadcast(
-              Pomoroom.PubSub,
-              "chat:#{chat_id}",
-              {:chat_plugin_installed, payload}
-            )
+                PubSub.broadcast(
+                  Pomoroom.PubSub,
+                  "chat:#{chat_id}",
+                  {:chat_plugin_installed, payload}
+                )
 
-            {:noreply, socket}
+                {:noreply, socket}
+
+              {:error, reason} ->
+                event_data = %{
+                  chat_id: chat_id,
+                  chat_type: chat_type,
+                  plugin_type: plugin_type,
+                  reason: reason_payload(reason)
+                }
+
+                notify_react(socket, "chat_plugin_install_failed", event_data)
+            end
 
           {:error, reason} ->
             event_data = %{
@@ -56,26 +72,39 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
   end
 
   def handle_uninstall_chat_plugin_by_id(chat_id, chat_type, plugin_id, user, socket) do
-    case authorize_chat_access(chat_id, user.nickname) do
+    case check_plugin_action_rate(user.nickname) do
       :ok ->
-        case ChatPlugins.uninstall_plugin_by_id(chat_id, chat_type, plugin_id) do
-          {:ok, plugin} ->
-            payload = %{
-              event_name: "chat_plugin_uninstalled",
-              event_data: %{
-                chat_id: chat_id,
-                chat_type: chat_type,
-                plugin: plugin
-              }
-            }
+        case authorize_chat_access(chat_id, user.nickname) do
+          :ok ->
+            case ChatPlugins.uninstall_plugin_by_id(chat_id, chat_type, plugin_id) do
+              {:ok, plugin} ->
+                payload = %{
+                  event_name: "chat_plugin_uninstalled",
+                  event_data: %{
+                    chat_id: chat_id,
+                    chat_type: chat_type,
+                    plugin: plugin
+                  }
+                }
 
-            PubSub.broadcast(
-              Pomoroom.PubSub,
-              "chat:#{chat_id}",
-              {:chat_plugin_uninstalled, payload}
-            )
+                PubSub.broadcast(
+                  Pomoroom.PubSub,
+                  "chat:#{chat_id}",
+                  {:chat_plugin_uninstalled, payload}
+                )
 
-            {:noreply, socket}
+                {:noreply, socket}
+
+              {:error, reason} ->
+                event_data = %{
+                  chat_id: chat_id,
+                  chat_type: chat_type,
+                  plugin_id: plugin_id,
+                  reason: reason_payload(reason)
+                }
+
+                notify_react(socket, "chat_plugin_uninstall_failed", event_data)
+            end
 
           {:error, reason} ->
             event_data = %{
@@ -289,6 +318,17 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
     Users.get_all_my_chats_id(user_nickname)
     |> Enum.uniq()
     |> Enum.each(&maybe_terminate_kanban_process/1)
+  end
+
+  defp check_plugin_action_rate(user_nickname) do
+    case PomoroomWeb.RateLimiter.hit(
+           "chat_plugin_action:#{user_nickname}",
+           @plugin_actions_scale_ms,
+           @max_plugin_actions
+         ) do
+      {:allow, _count} -> :ok
+      {:deny, _retry_after} -> {:error, :rate_limited}
+    end
   end
 
   defp authorize_and_validate_plugin(chat_id, chat_type, plugin_type, user_nickname) do

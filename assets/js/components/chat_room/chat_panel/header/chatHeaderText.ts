@@ -9,6 +9,7 @@ export default function useChatHeaderText() {
     plugin_not_installed: t("chatHeaderText.pluginErrorNotInstalled"),
     unsupported_plugin: t("chatHeaderText.pluginErrorUnsupported"),
     chat_not_found: t("chatHeaderText.pluginErrorChatNotFound"),
+    rate_limited: t("chatHeaderText.pluginErrorRateLimited"),
     fallback: t("chatHeaderText.pluginErrorFallback"),
   };
 
