@@ -14,4 +14,5 @@ defmodule Pomoroom.PrivateChats do
   defdelegate update_restore_deleted_contact(chat, from_user), to: PrivateChatService
   defdelegate get_member_joined_at(chat, member), to: PrivateChatService
   defdelegate both_users_deleted?(deleted_by, members), to: PrivateChatService
+  defdelegate count_active_chats(nickname), to: PrivateChatService
 end

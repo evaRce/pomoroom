@@ -7,34 +7,43 @@ defmodule Pomoroom.GroupChats.GroupChatService do
   import PomoroomWeb.Gettext
 
   @max_group_members 20
+  @max_groups_per_user 25
 
   def create_group_chat(from_user, name) do
-    chat_id = Chats.generate_chat_id()
+    if GroupChatRepository.count_groups_for_member(from_user) >= @max_groups_per_user do
+      {:error,
+       %{
+         error:
+           gettext("Has alcanzado el máximo de %{max} grupos", max: @max_groups_per_user)
+       }}
+    else
+      chat_id = Chats.generate_chat_id()
 
-    group_changeset =
-      chat_id
-      |> GroupChatSchema.group_chat_changeset(
-        name,
-        get_default_group_image(),
-        from_user,
-        generate_invite_link(chat_id)
-      )
-      |> Chats.timestamps()
+      group_changeset =
+        chat_id
+        |> GroupChatSchema.group_chat_changeset(
+          name,
+          get_default_group_image(),
+          from_user,
+          generate_invite_link(chat_id)
+        )
+        |> Chats.timestamps()
 
-    case group_changeset.valid? do
-      true ->
-        group_chat_changes = Map.put(group_changeset.changes, :plugins, [])
+      case group_changeset.valid? do
+        true ->
+          group_chat_changes = Map.put(group_changeset.changes, :plugins, [])
 
-        case GroupChatRepository.create(group_chat_changes) do
-          {:ok, _result} ->
-            {:ok, group_chat_changes}
+          case GroupChatRepository.create(group_chat_changes) do
+            {:ok, _result} ->
+              {:ok, group_chat_changes}
 
-          {:error, %Mongo.WriteError{write_errors: [%{"code" => 11000, "errmsg" => _errmsg}]}} ->
-            {:error, %{error: gettext("El grupo `%{name}` ya está creado", name: name)}}
-        end
+            {:error, %Mongo.WriteError{write_errors: [%{"code" => 11000, "errmsg" => _errmsg}]}} ->
+              {:error, %{error: gettext("El grupo `%{name}` ya está creado", name: name)}}
+          end
 
-      false ->
-        {:error, ChangesetErrors.to_map(group_changeset)}
+        false ->
+          {:error, ChangesetErrors.to_map(group_changeset)}
+      end
     end
   end
 
@@ -53,44 +62,45 @@ defmodule Pomoroom.GroupChats.GroupChatService do
               get_member_id(member) == new_member
             end)
 
-          if length(get_member_ids(members)) >= @max_group_members do
-            {:error,
-             gettext("El grupo ha alcanzado el máximo de %{max} miembros",
-               max: @max_group_members
-             )}
-          else
-            case existing_member do
-              nil ->
-                GroupChatRepository.update_by_chat_id(
-                  group_chat.chat_id,
-                  "$addToSet",
-                  %{members: %{"user_id" => new_member, "joined_at" => now, "removed_at" => nil}}
-                )
+          case check_can_add_member(members, new_member) do
+            {:error, reason} ->
+              {:error, reason}
 
-                {:ok, gettext("Usuario %{member} añadido al grupo", member: new_member)}
+            :ok ->
+              case existing_member do
+                nil ->
+                  GroupChatRepository.update_by_chat_id(
+                    group_chat.chat_id,
+                    "$addToSet",
+                    %{
+                      members: %{"user_id" => new_member, "joined_at" => now, "removed_at" => nil}
+                    }
+                  )
 
-              member when is_map(member) ->
-                removed_at = get_member_removed_at(member)
+                  {:ok, gettext("Usuario %{member} añadido al grupo", member: new_member)}
 
-                if is_nil(removed_at) do
-                  {:error,
-                   gettext("El usuario %{member} ya es miembro del grupo", member: new_member)}
-                else
-                  updated_members =
-                    Enum.map(members, fn current_member ->
-                      if get_member_id(current_member) == new_member do
-                        current_member
-                        |> Map.put("joined_at", now)
-                        |> Map.put("removed_at", nil)
-                      else
-                        current_member
-                      end
-                    end)
+                member when is_map(member) ->
+                  removed_at = get_member_removed_at(member)
 
-                  GroupChatRepository.update_members(group_chat.chat_id, updated_members)
-                  {:ok, gettext("Usuario %{member} reañadido al grupo", member: new_member)}
-                end
-            end
+                  if is_nil(removed_at) do
+                    {:error,
+                     gettext("El usuario %{member} ya es miembro del grupo", member: new_member)}
+                  else
+                    updated_members =
+                      Enum.map(members, fn current_member ->
+                        if get_member_id(current_member) == new_member do
+                          current_member
+                          |> Map.put("joined_at", now)
+                          |> Map.put("removed_at", nil)
+                        else
+                          current_member
+                        end
+                      end)
+
+                    GroupChatRepository.update_members(group_chat.chat_id, updated_members)
+                    {:ok, gettext("Usuario %{member} reañadido al grupo", member: new_member)}
+                  end
+              end
           end
         else
           {:error,
@@ -388,6 +398,23 @@ defmodule Pomoroom.GroupChats.GroupChatService do
 
       :error ->
         {:error, %{error: gettext("Enlace de invitación inválido")}}
+    end
+  end
+
+  defp check_can_add_member(members, new_member) do
+    if length(get_member_ids(members)) >= @max_group_members do
+      {:error,
+       gettext("El grupo ha alcanzado el máximo de %{max} miembros", max: @max_group_members)}
+    else
+      if GroupChatRepository.count_groups_for_member(new_member) >= @max_groups_per_user do
+        {:error,
+         gettext("El usuario %{member} ya está en el máximo de %{max} grupos",
+           member: new_member,
+           max: @max_groups_per_user
+         )}
+      else
+        :ok
+      end
     end
   end
 

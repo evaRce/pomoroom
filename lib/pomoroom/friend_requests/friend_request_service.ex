@@ -5,34 +5,40 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
   import Ecto.Changeset
   import PomoroomWeb.Gettext
 
+  @max_contacts 100
+
   def send_friend_request(to_user, from_user) when to_user == from_user do
     {:error, %{error: gettext("No puedes añadirte a ti mismo como un contacto")}}
   end
 
   def send_friend_request(to_user, from_user) do
-    case Users.exists_nickname?(to_user) do
-      true ->
-        friend_request_changeset =
-          FriendRequestSchema.request_changeset(to_user, from_user)
-          |> set_timestamps()
+    if not Users.exists_nickname?(to_user) do
+      {:error, %{error: gettext("El usuario %{user} no existe", user: to_user)}}
+    else
+      case check_own_contacts_limit(from_user) do
+        {:error, reason} ->
+          {:error, reason}
 
-        case FriendRequestRepository.create(friend_request_changeset.changes) do
-          {:ok, _result} ->
-            {:ok, friend_request_changeset.changes}
+        :ok ->
+          friend_request_changeset =
+            FriendRequestSchema.request_changeset(to_user, from_user)
+            |> set_timestamps()
 
-          {:error, %Mongo.WriteError{write_errors: [%{"code" => 11000, "errmsg" => _errmsg}]}} ->
-            {:error,
-             %{
-               error:
-                 gettext("Ya hay una petición de amistad entre %{to_user} y %{from_user}",
-                   to_user: to_user,
-                   from_user: from_user
-                 )
-             }}
-        end
+          case FriendRequestRepository.create(friend_request_changeset.changes) do
+            {:ok, _result} ->
+              {:ok, friend_request_changeset.changes}
 
-      false ->
-        {:error, %{error: gettext("El usuario %{user} no existe", user: to_user)}}
+            {:error, %Mongo.WriteError{write_errors: [%{"code" => 11000, "errmsg" => _errmsg}]}} ->
+              {:error,
+               %{
+                 error:
+                   gettext("Ya hay una petición de amistad entre %{to_user} y %{from_user}",
+                     to_user: to_user,
+                     from_user: from_user
+                   )
+               }}
+          end
+      end
     end
   end
 
@@ -64,18 +70,28 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
   def accept_friend_request(to_user, from_user, logged_user_nickname) do
     case get_request_any_direction(to_user, from_user) do
       {:ok, %{status: "pending"} = request} ->
-        if request.to_user == logged_user_nickname do
-          FriendRequestRepository.update_request_status(request.to_user, request.from_user, "accepted")
-
-          case PrivateChats.ensure_exists(request.to_user, request.from_user) do
-            {:ok, _private_chat} ->
-              {:ok, %{request | status: "accepted"}}
-
+        if request.to_user != logged_user_nickname do
+          {:error, %{error: gettext("No autorizado para aceptar esta solicitud de amistad")}}
+        else
+          case check_can_accept_contact(request.to_user, request.from_user) do
             {:error, reason} ->
               {:error, reason}
+
+            :ok ->
+              FriendRequestRepository.update_request_status(
+                request.to_user,
+                request.from_user,
+                "accepted"
+              )
+
+              case PrivateChats.ensure_exists(request.to_user, request.from_user) do
+                {:ok, _private_chat} ->
+                  {:ok, %{request | status: "accepted"}}
+
+                {:error, reason} ->
+                  {:error, reason}
+              end
           end
-        else
-          {:error, %{error: gettext("No autorizado para aceptar esta solicitud de amistad")}}
         end
 
       {:ok, _request} ->
@@ -157,6 +173,44 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
       true -> {user1, user2}
       false -> {user2, user1}
     end
+  end
+
+  defp check_can_accept_contact(to_user, from_user) do
+    case check_own_contacts_limit(to_user) do
+      {:error, reason} ->
+        {:error, reason}
+
+      :ok ->
+        check_other_contacts_limit(from_user)
+    end
+  end
+
+  defp check_own_contacts_limit(nickname) do
+    if contacts_count(nickname) >= @max_contacts do
+      {:error,
+       %{error: gettext("Has alcanzado el máximo de %{max} contactos", max: @max_contacts)}}
+    else
+      :ok
+    end
+  end
+
+  defp check_other_contacts_limit(nickname) do
+    if contacts_count(nickname) >= @max_contacts do
+      {:error,
+       %{
+         error:
+           gettext("El usuario %{user} ya tiene el máximo de %{max} contactos",
+             user: nickname,
+             max: @max_contacts
+           )
+       }}
+    else
+      :ok
+    end
+  end
+
+  defp contacts_count(nickname) do
+    PrivateChats.count_active_chats(nickname)
   end
 
   defp get_request_any_direction(to_user, from_user) do

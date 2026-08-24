@@ -6,6 +6,8 @@ defmodule Pomoroom.PrivateChats.PrivateChatService do
   alias Pomoroom.PrivateChats.{PrivateChatRepository, PrivateChatSchema}
   import PomoroomWeb.Gettext
 
+  def count_active_chats(nickname), do: PrivateChatRepository.count_active_chats_for_user(nickname)
+
   def create_private_chat(to_user, from_user) do
     private_chat_changeset =
       Chats.generate_chat_id()

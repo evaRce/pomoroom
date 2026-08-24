@@ -11,6 +11,15 @@ defmodule Pomoroom.PrivateChats.PrivateChatRepository do
     Mongo.delete_many(:mongo, "private_chats", %{})
   end
 
+  def count_active_chats_for_user(nickname) do
+    query = %{
+      "members" => %{"$elemMatch" => %{"user_id" => nickname}},
+      "deleted_by" => %{"$nin" => [nickname]}
+    }
+
+    Mongo.count!(:mongo, "private_chats", query)
+  end
+
   def get_by_chat_id(chat_id) do
     query = %{"chat_id" => chat_id}
 

@@ -11,6 +11,11 @@ defmodule Pomoroom.GroupChats.GroupChatRepository do
     Mongo.delete_many(:mongo, "group_chats", %{})
   end
 
+  def count_groups_for_member(nickname) do
+    query = %{"members" => %{"$elemMatch" => %{"user_id" => nickname, "removed_at" => nil}}}
+    Mongo.count!(:mongo, "group_chats", query)
+  end
+
   def get_by(field, value) do
     query = %{field => value}
 
