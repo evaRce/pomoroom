@@ -9,7 +9,35 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
   alias Pomoroom.GroupChats
   alias Pomoroom.Users
 
+  @max_group_actions 5
+  @group_actions_scale_ms :timer.seconds(10)
+
   def handle_add_group(name_group, user, socket) do
+    case check_group_action_rate(user.nickname) do
+      :ok ->
+        do_add_group(name_group, user, socket)
+
+      {:error, _reason} ->
+        event_data = %{
+          error: gettext("Estás creando grupos demasiado rápido. Espera unos segundos")
+        }
+
+        notify_react(socket, "error_adding_contact", event_data)
+    end
+  end
+
+  def handle_delete_group(group_name, user, socket) do
+    case check_group_action_rate(user.nickname) do
+      :ok ->
+        do_delete_group(group_name, user, socket)
+
+      {:error, _reason} ->
+        event_data = gettext("Estás borrando grupos demasiado rápido. Espera unos segundos")
+        notify_react(socket, "error_deleting_group", event_data)
+    end
+  end
+
+  defp do_add_group(name_group, user, socket) do
     case GroupChats.create_group_chat(user.nickname, name_group) do
       {:ok, group_chat} ->
         Runtime.ensure_chat_server_exists(group_chat.chat_id)
@@ -24,7 +52,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
     end
   end
 
-  def handle_delete_group(group_name, user, socket) do
+  defp do_delete_group(group_name, user, socket) do
     case GroupChats.get_by("name", group_name) do
       {:ok, group_chat} ->
         GroupChats.delete(group_name, user.nickname)
@@ -33,6 +61,17 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
 
       {:error, _reason} ->
         {:noreply, socket}
+    end
+  end
+
+  defp check_group_action_rate(user_nickname) do
+    case PomoroomWeb.RateLimiter.hit(
+           "group_action:#{user_nickname}",
+           @group_actions_scale_ms,
+           @max_group_actions
+         ) do
+      {:allow, _count} -> :ok
+      {:deny, _retry_after} -> {:error, :rate_limited}
     end
   end
 
