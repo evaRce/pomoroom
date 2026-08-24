@@ -6,6 +6,8 @@ defmodule Pomoroom.GroupChats.GroupChatService do
   alias Pomoroom.Users
   import PomoroomWeb.Gettext
 
+  @max_group_members 20
+
   def create_group_chat(from_user, name) do
     chat_id = Chats.generate_chat_id()
 
@@ -51,37 +53,44 @@ defmodule Pomoroom.GroupChats.GroupChatService do
               get_member_id(member) == new_member
             end)
 
-          case existing_member do
-            nil ->
-              GroupChatRepository.update_by_chat_id(
-                group_chat.chat_id,
-                "$addToSet",
-                %{members: %{"user_id" => new_member, "joined_at" => now, "removed_at" => nil}}
-              )
+          if length(get_member_ids(members)) >= @max_group_members do
+            {:error,
+             gettext("El grupo ha alcanzado el máximo de %{max} miembros",
+               max: @max_group_members
+             )}
+          else
+            case existing_member do
+              nil ->
+                GroupChatRepository.update_by_chat_id(
+                  group_chat.chat_id,
+                  "$addToSet",
+                  %{members: %{"user_id" => new_member, "joined_at" => now, "removed_at" => nil}}
+                )
 
-              {:ok, gettext("Usuario %{member} añadido al grupo", member: new_member)}
+                {:ok, gettext("Usuario %{member} añadido al grupo", member: new_member)}
 
-            member when is_map(member) ->
-              removed_at = get_member_removed_at(member)
+              member when is_map(member) ->
+                removed_at = get_member_removed_at(member)
 
-              if is_nil(removed_at) do
-                {:error,
-                 gettext("El usuario %{member} ya es miembro del grupo", member: new_member)}
-              else
-                updated_members =
-                  Enum.map(members, fn current_member ->
-                    if get_member_id(current_member) == new_member do
-                      current_member
-                      |> Map.put("joined_at", now)
-                      |> Map.put("removed_at", nil)
-                    else
-                      current_member
-                    end
-                  end)
+                if is_nil(removed_at) do
+                  {:error,
+                   gettext("El usuario %{member} ya es miembro del grupo", member: new_member)}
+                else
+                  updated_members =
+                    Enum.map(members, fn current_member ->
+                      if get_member_id(current_member) == new_member do
+                        current_member
+                        |> Map.put("joined_at", now)
+                        |> Map.put("removed_at", nil)
+                      else
+                        current_member
+                      end
+                    end)
 
-                GroupChatRepository.update_members(group_chat.chat_id, updated_members)
-                {:ok, gettext("Usuario %{member} reañadido al grupo", member: new_member)}
-              end
+                  GroupChatRepository.update_members(group_chat.chat_id, updated_members)
+                  {:ok, gettext("Usuario %{member} reañadido al grupo", member: new_member)}
+                end
+            end
           end
         else
           {:error,
