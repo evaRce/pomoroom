@@ -175,26 +175,28 @@ defmodule Pomoroom.GroupChats.GroupChatService do
       {:ok, group_chat} ->
         members = group_chat.members || []
 
+        active_members =
+          Enum.filter(members, fn member_map -> is_nil(get_member_removed_at(member_map)) end)
+
+        member_ids = Enum.map(active_members, &get_member_id/1) |> Enum.reject(&is_nil/1)
+        users_by_nickname = Users.get_many_by("nickname", member_ids)
+
         members_data =
-          Enum.map(members, fn member_map ->
+          active_members
+          |> Enum.map(fn member_map ->
             member_id = get_member_id(member_map)
             joined_at = get_member_joined_at(member_map)
-            removed_at = get_member_removed_at(member_map)
 
-            if is_nil(removed_at) do
-              case member_id && Users.get_by("nickname", member_id) do
-                {:ok, user} ->
-                  is_admin = member_id in group_chat.admin
+            case member_id && Map.fetch(users_by_nickname, member_id) do
+              {:ok, user} ->
+                is_admin = member_id in group_chat.admin
 
-                  user
-                  |> Map.put(:is_admin, is_admin)
-                  |> Map.put(:joined_at, joined_at)
+                user
+                |> Map.put(:is_admin, is_admin)
+                |> Map.put(:joined_at, joined_at)
 
-                {:error, _reason} ->
-                  nil
-              end
-            else
-              nil
+              _ ->
+                nil
             end
           end)
           |> Enum.reject(&is_nil/1)
