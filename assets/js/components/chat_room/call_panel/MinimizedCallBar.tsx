@@ -49,7 +49,18 @@ export default function MinimizedCallBar() {
     <div className="mx-2 my-2 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-2">
       <div
         role={isClickable ? "button" : undefined}
+        tabIndex={isClickable ? 0 : undefined}
         onClick={isClickable ? handleBarClick : undefined}
+        onKeyDown={
+          isClickable
+            ? (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleBarClick();
+                }
+              }
+            : undefined
+        }
         className={`flex min-w-0 flex-1 items-center gap-2 ${isClickable ? "cursor-pointer" : ""}`}
       >
         <p className="m-0 flex min-w-0 flex-1 items-center gap-1.5 truncate text-sm leading-none">

@@ -337,6 +337,7 @@ export default function ConversationTargetsList() {
           className="my-2 ml-2 mr-1 sm:my-1.5 sm:ml-1.5 lg:my-2 lg:ml-2 landscape-sm:my-1 flex-1 min-w-0"
           type="text"
           placeholder={conversationSidebarText.searchPlaceholder}
+          aria-label={conversationSidebarText.searchPlaceholder}
           value={searchTerm}
           onChange={handleSearch}
         />
@@ -361,6 +362,8 @@ export default function ConversationTargetsList() {
         className="flex-1 min-h-0 overflow-auto overscroll-contain w-full p-1"
         style={{ scrollbarWidth: "thin" }}
         onScroll={handleListScroll}
+        role="navigation"
+        aria-label={conversationSidebarText.listLabel}
       >
         {visibleContacts.map((contact) => (
           <Fragment key={contact.name}>

@@ -23,7 +23,8 @@ export default function RequestSend({ imageNumber }: { imageNumber: number }) {
     <div className="flex flex-col flex-1 relative justify-center items-center">
       <img
         src={`/images/background2/background-${imageNumber}.svg`}
-        alt={contactRequestsText.background.alt}
+        alt=""
+        aria-hidden="true"
         className="absolute inset-0 object-cover w-full h-full opacity-45"
       />
       <div className="flex flex-col items-center bg-white p-4 rounded-lg max-w-[80vw] sm:max-w-none text-center z-10">

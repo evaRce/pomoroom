@@ -81,6 +81,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [nowMs, setNowMs] = useState(Date.now());
   const [sessionElapsedSeconds, setSessionElapsedSeconds] = useState(0);
+  const [completionAnnouncement, setCompletionAnnouncement] = useState("");
 
   // Refs
   const hasSyncedInitialTimerRef = useRef(false);
@@ -300,8 +301,16 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
           soundEndBreak.current.play();
         }
       }
+
+      const endedMessage =
+        completedMode === "work"
+          ? pomodoroTimerText.workTimerEnded
+          : completedMode === "shortBreak"
+            ? pomodoroTimerText.shortBreakTimerEnded
+            : pomodoroTimerText.longBreakTimerEnded;
+      setCompletionAnnouncement(endedMessage);
     },
-    [soundEnabled],
+    [soundEnabled, pomodoroTimerText],
   );
 
   const handleStart = () => {
@@ -638,6 +647,9 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
 
   return (
     <div className="flex h-full w-full min-h-0 overflow-y-auto bg-gray-50">
+      <p role="alert" aria-live="assertive" className="sr-only">
+        {completionAnnouncement}
+      </p>
       <div className="flex flex-col items-center w-full p-4 sm:p-6 m-auto">
         {/* Mode selector */}
         <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mb-6 sm:mb-8 landscape-sm:mb-3">
@@ -735,6 +747,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
                 "flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2 landscape-sm:mb-0 landscape-sm:gap-1",
                 modeInfo.color,
               )}
+              aria-live="polite"
             >
               <ModeIcon className="h-4 w-4 sm:h-5 sm:w-5 landscape-sm:h-3 landscape-sm:w-3" />
               <span className="text-xs sm:text-sm font-medium landscape-sm:text-[10px]">
@@ -764,7 +777,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
                   : "hover:bg-yellow-200",
             )}
             onClick={handleReset}
-            aria-label="Reset timer"
+            aria-label={pomodoroTimerText.resetTimer}
           >
             <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
@@ -779,7 +792,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
                   : "bg-yellow-300 hover:bg-yellow-200",
             )}
             onClick={isRunning ? handlePause : handleStart}
-            aria-label={isRunning ? "Pause timer" : "Start timer"}
+            aria-label={isRunning ? pomodoroTimerText.pauseTimer : pomodoroTimerText.startTimer}
           >
             {isRunning ? (
               <Pause className="h-10 w-10 sm:h-12 sm:w-12" />

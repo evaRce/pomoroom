@@ -48,7 +48,7 @@ export default function MessageItem({
       <div className={`chat-bubble ${bubbleClass}`}>
         {message.data.text}
         <div className="message-time">
-          <time className="text-xs">
+          <time className="text-xs" dateTime={new Date(message.data.inserted_at).toISOString()}>
             {setTime(message.data.inserted_at)}
           </time>
         </div>

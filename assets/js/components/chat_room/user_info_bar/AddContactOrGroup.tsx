@@ -135,6 +135,7 @@ export default function AddContactOrGroup({ sendDataToParent, receiveDataFromPar
             onChange={e => setInputStr(e.target.value)}
             value={inputStr}
             placeholder={entryType === "contact" ? userInfoBarText.modal.addContactPlaceholder : userInfoBarText.modal.createGroupPlaceholder}
+            aria-label={entryType === "contact" ? userInfoBarText.modal.addContactPlaceholder : userInfoBarText.modal.createGroupPlaceholder}
           />
         </Form.Item>
       </Form>

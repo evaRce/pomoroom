@@ -5,6 +5,7 @@ export default function useConversationSidebarText() {
 
   return {
     searchPlaceholder: t("conversationSidebarText.searchPlaceholder"),
+    listLabel: t("conversationSidebarText.listLabel"),
     clearSearch: t("conversationSidebarText.clearSearch"),
     search: t("conversationSidebarText.search"),
     moreOptions: t("conversationSidebarText.moreOptions"),

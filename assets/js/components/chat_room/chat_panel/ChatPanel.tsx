@@ -429,6 +429,9 @@ export default function ChatPanel({ isVisibleDetail, onBack }: ChatPanelProps) {
               style={{ scrollbarWidth: "thin" }}
               ref={messagesEndRef}
               onScroll={handleMessagesScroll}
+              role="log"
+              aria-live="polite"
+              aria-relevant="additions"
             >
               {messages.length > 0 &&
                 messages.map((message) => {

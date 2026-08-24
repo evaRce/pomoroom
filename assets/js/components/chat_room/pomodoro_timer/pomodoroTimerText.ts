@@ -32,5 +32,9 @@ export default function usePomodoroTimerText() {
     shortBreakTimerEnded: t("pomodoroTimerText.shortBreakTimerEnded"),
     longBreakTimerEnded: t("pomodoroTimerText.longBreakTimerEnded"),
     loadingSettings: t("pomodoroTimerText.loadingSettings"),
+    resetTimer: t("pomodoroTimerText.resetTimer"),
+    pauseTimer: t("pomodoroTimerText.pauseTimer"),
+    startTimer: t("pomodoroTimerText.startTimer"),
+    timerSettingsButton: t("pomodoroTimerText.timerSettingsButton"),
   };
 }

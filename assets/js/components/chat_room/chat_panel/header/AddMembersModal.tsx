@@ -71,6 +71,7 @@ export default function AddMembersModal({
           className="mr-1"
           type="text"
           placeholder={addMembersModalText.searchPlaceholder}
+          aria-label={addMembersModalText.searchPlaceholder}
           value={searchTerm}
           onChange={handleSearch}
         />

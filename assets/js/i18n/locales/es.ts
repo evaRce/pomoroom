@@ -112,6 +112,7 @@ const es = {
   },
   conversationSidebarText: {
     searchPlaceholder: "Buscar a mis colegas",
+    listLabel: "Conversaciones",
     clearSearch: "Limpiar búsqueda",
     search: "Buscar",
     moreOptions: "Más opciones",
@@ -205,6 +206,10 @@ const es = {
     shortBreakTimerEnded: "Fin descanso corto",
     longBreakTimerEnded: "Fin descanso largo",
     loadingSettings: "Cargando configuración...",
+    resetTimer: "Reiniciar temporizador",
+    pauseTimer: "Pausar temporizador",
+    startTimer: "Iniciar temporizador",
+    timerSettingsButton: "Configuración del temporizador",
   },
   userInfoBarText: {
     menuAddContact: "Añadir contacto",

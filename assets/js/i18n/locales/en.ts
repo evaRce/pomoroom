@@ -112,6 +112,7 @@ const en = {
   },
   conversationSidebarText: {
     searchPlaceholder: "Search my contacts",
+    listLabel: "Conversations",
     clearSearch: "Clear search",
     search: "Search",
     moreOptions: "More options",
@@ -204,6 +205,10 @@ const en = {
     shortBreakTimerEnded: "Short break ended",
     longBreakTimerEnded: "Long break ended",
     loadingSettings: "Loading settings...",
+    resetTimer: "Reset timer",
+    pauseTimer: "Pause timer",
+    startTimer: "Start timer",
+    timerSettingsButton: "Timer settings",
   },
   userInfoBarText: {
     menuAddContact: "Add contact",

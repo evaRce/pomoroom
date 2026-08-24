@@ -72,7 +72,7 @@ export function PomodoroSettingsPopover({
                 : "hover:bg-yellow-200",
           )}
           disabled={disabled}
-          aria-label="Timer settings"
+          aria-label={pomodoroTimerText.timerSettingsButton}
         >
           <Settings className="h-5 w-5" />
         </Button>
@@ -87,10 +87,11 @@ export function PomodoroSettingsPopover({
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between gap-3">
-                <label className="text-sm text-slate-700">
+                <label htmlFor="pomodoro-work-duration" className="text-sm text-slate-700">
                   {pomodoroTimerText.workMinutes}
                 </label>
                 <Input
+                  id="pomodoro-work-duration"
                   type="number"
                   min={1}
                   max={900}
@@ -108,10 +109,11 @@ export function PomodoroSettingsPopover({
 
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between gap-3">
-                <label className="text-sm text-slate-700">
+                <label htmlFor="pomodoro-short-break-duration" className="text-sm text-slate-700">
                   {pomodoroTimerText.shortBreakMinutes}
                 </label>
                 <Input
+                  id="pomodoro-short-break-duration"
                   type="number"
                   min={1}
                   max={900}
@@ -131,10 +133,11 @@ export function PomodoroSettingsPopover({
 
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between gap-3">
-                <label className="text-sm text-slate-700">
+                <label htmlFor="pomodoro-long-break-duration" className="text-sm text-slate-700">
                   {pomodoroTimerText.longBreakMinutes}
                 </label>
                 <Input
+                  id="pomodoro-long-break-duration"
                   type="number"
                   min={1}
                   max={900}
@@ -154,10 +157,11 @@ export function PomodoroSettingsPopover({
 
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between gap-3">
-                <label className="text-sm text-slate-700">
+                <label htmlFor="pomodoro-cycles-before-long-break" className="text-sm text-slate-700">
                   {pomodoroTimerText.cyclesBeforeLongBreak}
                 </label>
                 <Input
+                  id="pomodoro-cycles-before-long-break"
                   type="number"
                   min={MIN_CYCLE_BEFORE_LONG_BREAK}
                   max={MAX_CYCLE_BEFORE_LONG_BREAK}
@@ -184,11 +188,14 @@ export function PomodoroSettingsPopover({
               className="bg-gray-500"
               checked={soundEnabled}
               onChange={onToggleSound}
+              aria-label={pomodoroTimerText.soundEndPeriod}
             />
           </div>
 
           {saveMessage && (
             <p
+              role={saveMessage.type === "error" ? "alert" : "status"}
+              aria-live="polite"
               className={cn(
                 "text-xs pl-1",
                 saveMessage.type === "error"

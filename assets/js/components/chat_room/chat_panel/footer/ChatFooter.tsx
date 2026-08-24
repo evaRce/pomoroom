@@ -184,6 +184,7 @@ export default function ChatFooter() {
                 }
               }}
               placeholder={chatFooterText.inputPlaceholder}
+              aria-label={chatFooterText.inputPlaceholder}
               maxLength={5001}
             />
             <div className="flex items-center shrink-0">
