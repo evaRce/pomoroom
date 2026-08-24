@@ -73,18 +73,22 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
 
   @impl true
   def handle_call({:update_config, raw_config}, _from, state) do
-    config = normalize_config(raw_config)
+    case validate_config(raw_config) do
+      {:error, :invalid_config} ->
+        {:reply, {:error, :invalid_config}, state}
 
-    case Repository.update_config(state.timer_id, config) do
-      {:ok, _updated} ->
-        next_state =
-          reset_runtime_for_config(%{cancel_pending_tick(state) | config: config})
+      {:ok, config} ->
+        case Repository.update_config(state.timer_id, config) do
+          {:ok, _updated} ->
+            next_state =
+              reset_runtime_for_config(%{cancel_pending_tick(state) | config: config})
 
-        broadcast_state(next_state, :update_config)
-        {:reply, {:ok, format_payload(next_state)}, next_state}
+            broadcast_state(next_state, :update_config)
+            {:reply, {:ok, format_payload(next_state)}, next_state}
 
-      {:error, :not_found} ->
-        {:reply, {:error, :timer_not_found}, state}
+          {:error, :not_found} ->
+            {:reply, {:error, :timer_not_found}, state}
+        end
     end
   end
 
@@ -396,8 +400,13 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
     }
   end
 
-  defp normalize_config(config) when is_map(config) do
-    %{
+  @min_duration_minutes 1
+  @max_duration_minutes 900
+  @min_cycles_before_long_break 2
+  @max_cycles_before_long_break 10
+
+  defp validate_config(config) when is_map(config) do
+    normalized = %{
       work_duration: Map.get(config, :work_duration) || Map.get(config, "work_duration"),
       short_break_duration:
         Map.get(config, :short_break_duration) || Map.get(config, "short_break_duration"),
@@ -407,9 +416,30 @@ defmodule Pomoroom.ChatPlugins.PomodoroTimer.Runtime.PomodoroTimerServer do
         Map.get(config, :cycles_before_long_break) ||
           Map.get(config, "cycles_before_long_break")
     }
+
+    if valid_duration?(normalized.work_duration) and
+         valid_duration?(normalized.short_break_duration) and
+         valid_duration?(normalized.long_break_duration) and
+         valid_cycles?(normalized.cycles_before_long_break) do
+      {:ok, normalized}
+    else
+      {:error, :invalid_config}
+    end
   end
 
-  defp normalize_config(_), do: @default_config
+  defp validate_config(_), do: {:error, :invalid_config}
+
+  defp valid_duration?(value) when is_integer(value) do
+    value >= @min_duration_minutes and value <= @max_duration_minutes
+  end
+
+  defp valid_duration?(_), do: false
+
+  defp valid_cycles?(value) when is_integer(value) do
+    value >= @min_cycles_before_long_break and value <= @max_cycles_before_long_break
+  end
+
+  defp valid_cycles?(_), do: false
 
   defp extract_config(timer_data) do
     %{
