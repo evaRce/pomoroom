@@ -443,6 +443,7 @@ export function KanbanColumn({
             <div className="flex flex-col gap-2 p-2 rounded-lg bg-gray-50 border border-gray-300">
               <Input
                 placeholder={KANBAN_TEXT.task.inputPlaceholder}
+                aria-label={KANBAN_TEXT.column.add.taskLabel(column.title)}
                 value={newTaskValue}
                 onChange={(e) => onChangeNewTask(e.target.value)}
                 onKeyDown={(e) => {
