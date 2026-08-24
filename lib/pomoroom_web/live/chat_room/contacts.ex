@@ -1,10 +1,14 @@
 defmodule PomoroomWeb.ChatLive.ChatRoom.Contacts do
   import PomoroomWeb.ChatLive.ChatRoom.ReactEvent
+  import PomoroomWeb.Gettext
 
   alias Phoenix.PubSub
   alias Pomoroom.FriendRequests
   alias Pomoroom.PrivateChats
   alias Pomoroom.Users
+
+  @max_contact_deletions 5
+  @contact_deletion_scale_ms :timer.seconds(10)
 
   def handle_list_contacts(user, socket) do
     accepted_contact_list =
@@ -88,6 +92,21 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Contacts do
   end
 
   def handle_delete_contact(contact_name, user, socket) do
+    case PomoroomWeb.RateLimiter.hit(
+           "delete_contact:#{user.nickname}",
+           @contact_deletion_scale_ms,
+           @max_contact_deletions
+         ) do
+      {:deny, _retry_after} ->
+        event_data = gettext("Estás borrando contactos demasiado rápido. Espera unos segundos")
+        notify_react(socket, "error_deleting_contact", event_data)
+
+      {:allow, _count} ->
+        do_delete_contact(contact_name, user, socket)
+    end
+  end
+
+  defp do_delete_contact(contact_name, user, socket) do
     {to_user, from_user} =
       FriendRequests.determine_friend_request_users(contact_name, user.nickname)
 
