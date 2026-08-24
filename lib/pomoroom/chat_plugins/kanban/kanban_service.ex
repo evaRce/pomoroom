@@ -13,6 +13,9 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
   alias Pomoroom.GroupChats
   alias Pomoroom.PrivateChats
 
+  @max_column_title_length 25
+  @max_task_title_length 2000
+
   def create_kanban_board(kanban_id) do
     board = %{
       kanban_id: kanban_id,
@@ -118,7 +121,7 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
   end
 
   def add_column(kanban_id, title) do
-    case valid_identifier?(kanban_id) and valid_identifier?(title) do
+    case valid_identifier?(kanban_id) and valid_column_title?(title) do
       true ->
         case KanbanRepository.get_board_by_kanban_id(kanban_id) do
           {:ok, board} ->
@@ -146,7 +149,7 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
 
   def rename_column(kanban_id, column_id, title) do
     case valid_identifier?(kanban_id) and valid_identifier?(column_id) and
-           valid_identifier?(title) do
+           valid_column_title?(title) do
       true ->
         case KanbanRepository.get_board_by_kanban_id(kanban_id) do
           {:ok, board} ->
@@ -206,7 +209,7 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
 
   def add_task(kanban_id, column_id, title) do
     case valid_identifier?(kanban_id) and valid_identifier?(column_id) and
-           valid_identifier?(title) do
+           valid_task_title?(title) do
       true ->
         case KanbanRepository.get_board_by_kanban_id(kanban_id) do
           {:ok, board} ->
@@ -337,7 +340,7 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
   end
 
   def rename_task(task_id, title) do
-    case valid_identifier?(task_id) and valid_identifier?(title) do
+    case valid_identifier?(task_id) and valid_task_title?(title) do
       true ->
         case KanbanRepository.get_task_by_task_id(task_id) do
           {:ok, task} ->
@@ -682,6 +685,14 @@ defmodule Pomoroom.ChatPlugins.Kanban.KanbanService do
 
   defp valid_identifier?(value) do
     is_binary(value) and value != ""
+  end
+
+  defp valid_column_title?(value) do
+    valid_identifier?(value) and String.length(value) <= @max_column_title_length
+  end
+
+  defp valid_task_title?(value) do
+    valid_identifier?(value) and String.length(value) <= @max_task_title_length
   end
 
   defp valid_position?(value) do
