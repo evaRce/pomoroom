@@ -9,6 +9,7 @@ export interface SignUpProps {
   submitUser(
     newUsername: string,
     newPassword: string,
+    newConfirmPassword: string,
     newNickname: string
   ): void;
   errors: FormErrors;
@@ -27,7 +28,7 @@ export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
     confirmPassword: string;
     nickname: string;
   }) => {
-    submitUser(userData.email, userData.confirmPassword, userData.nickname);
+    submitUser(userData.email, userData.password, userData.confirmPassword, userData.nickname);
   };
 
   const [liveError, setLiveError] = useState<string | null>(null);

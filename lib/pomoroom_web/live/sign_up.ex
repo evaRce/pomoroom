@@ -45,7 +45,15 @@ defmodule PomoroomWeb.HomeLive.SignUp do
         {:noreply, redirect(socket, to: "/chat")}
 
       {:error, reason} ->
-        {:noreply, push_event(socket, "react.error_save_user", %{errors: reason})}
+        {:noreply,
+         push_event(socket, "react.error_save_user", %{errors: remap_error_keys(reason)})}
+    end
+  end
+
+  defp remap_error_keys(errors) do
+    case Map.pop(errors, :password_confirmation) do
+      {nil, errors} -> errors
+      {message, errors} -> Map.put(errors, :confirmPassword, message)
     end
   end
 

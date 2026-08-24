@@ -27,6 +27,10 @@ defmodule Pomoroom.Users.UserSchema do
     |> validate_required([:email, :password, :nickname])
     |> validate_format(:email, @email_regex, message: gettext("no es un email válido"))
     |> validate_length(:password, min: 8, max: 64)
+    |> validate_confirmation(:password,
+      required: true,
+      message: gettext("las contraseñas no coinciden")
+    )
     |> validate_length(:nickname, min: 4, max: 20)
     |> validate_format(:nickname, @nickname_regex, message: gettext("no es un apodo válido"))
   end

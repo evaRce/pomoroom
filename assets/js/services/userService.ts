@@ -5,9 +5,15 @@ export function saveUserAction(
   hook: LiveViewHook,
   email: string,
   password: string,
+  confirmPassword: string,
   nickname: string
 ): void {
-  hook.pushEventTo(hook.el, "action.save_user", { email, password, nickname });
+  hook.pushEventTo(hook.el, "action.save_user", {
+    email,
+    password,
+    password_confirmation: confirmPassword,
+    nickname,
+  });
 }
 
 export function loginUserAction(

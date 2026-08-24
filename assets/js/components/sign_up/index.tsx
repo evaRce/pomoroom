@@ -6,14 +6,14 @@ import { LiveViewHook, FormErrors } from "../../types/liveview";
 import { initI18n } from "../../i18n";
 
 interface SignUpHookThis extends LiveViewHook {
-	submitUser(email: string, password: string, nickname: string): void;
+	submitUser(email: string, password: string, confirmPassword: string, nickname: string): void;
 	opts(errorSaveUser?: FormErrors | {}): SignUpProps;
 }
 
 const SignUpHook: {
 	mounted(this: SignUpHookThis): void;
 	destroyed(this: SignUpHookThis): void;
-	submitUser(this: SignUpHookThis, email_: string, password_: string, nickname_: string): void;
+	submitUser(this: SignUpHookThis, email_: string, password_: string, confirmPassword_: string, nickname_: string): void;
 	opts(this: SignUpHookThis, errorSaveUser?: FormErrors | {}): SignUpProps;
 } = {
 	mounted() {
@@ -33,8 +33,8 @@ const SignUpHook: {
 		rootElement.unmount()
 	},
 
-	submitUser(email_, password_, nickname_) {
-		saveUserAction(this, email_, password_, nickname_)
+	submitUser(email_, password_, confirmPassword_, nickname_) {
+		saveUserAction(this, email_, password_, confirmPassword_, nickname_)
 	},
 
 	opts(error_save_user = {}): SignUpProps {
