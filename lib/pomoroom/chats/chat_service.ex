@@ -22,13 +22,7 @@ defmodule Pomoroom.Chats.ChatService do
     if Enum.empty?(chat_ids) do
       {:ok, []}
     else
-      all_group_chats_data =
-        Enum.map(chat_ids, fn chat_id ->
-          {:ok, group_chat} = GroupChats.get_by("chat_id", chat_id)
-          group_chat
-        end)
-
-      {:ok, all_group_chats_data}
+      {:ok, GroupChats.get_many_by_chat_ids(chat_ids)}
     end
   end
 

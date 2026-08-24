@@ -32,6 +32,18 @@ defmodule Pomoroom.GroupChats.GroupChatRepository do
     end
   end
 
+  def get_many_by_chat_ids(chat_ids) do
+    query = %{"chat_id" => %{"$in" => chat_ids}}
+
+    Mongo.find(:mongo, "group_chats", query)
+    |> Enum.to_list()
+    |> Enum.map(fn chat ->
+      chat
+      |> normalize_legacy_members()
+      |> get_changes_from_changeset()
+    end)
+  end
+
   def update_by_chat_id(chat_id, operator, operation) do
     query = %{"chat_id" => chat_id}
     now = NaiveDateTime.utc_now()

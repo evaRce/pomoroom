@@ -14,6 +14,7 @@ defmodule Pomoroom.GroupChats do
   defdelegate delete_member(group_name, user, member), to: GroupChatService
   defdelegate delete_all_group_chats(), to: GroupChatService
   defdelegate get_by(field, value), to: GroupChatService
+  defdelegate get_many_by_chat_ids(chat_ids), to: GroupChatService
   defdelegate get_members(group_name), to: GroupChatService
   defdelegate is_admin?(group_name, user), to: GroupChatService
   defdelegate member_state(group_name, user), to: GroupChatService

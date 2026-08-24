@@ -177,6 +177,8 @@ defmodule Pomoroom.GroupChats.GroupChatService do
 
   def get_by(field, value), do: GroupChatRepository.get_by(field, value)
 
+  def get_many_by_chat_ids(chat_ids), do: GroupChatRepository.get_many_by_chat_ids(chat_ids)
+
   def get_members(group_name) do
     case get_by("name", group_name) do
       {:error, reason} ->
