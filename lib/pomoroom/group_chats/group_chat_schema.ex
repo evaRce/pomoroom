@@ -10,7 +10,6 @@ defmodule Pomoroom.GroupChats.GroupChatSchema do
     field :image, :string
     field :admin, {:array, :string}
     field :members, {:array, :map}
-    field :invite_link, :string
     field :plugins, {:array, :map}, default: []
     field :inserted_at, :utc_datetime
     field :updated_at, :utc_datetime
@@ -24,7 +23,6 @@ defmodule Pomoroom.GroupChats.GroupChatSchema do
       :image,
       :admin,
       :members,
-      :invite_link,
       :plugins,
       :inserted_at,
       :updated_at
@@ -40,14 +38,13 @@ defmodule Pomoroom.GroupChats.GroupChatSchema do
       :image,
       :admin,
       :members,
-      :invite_link,
       :plugins,
       :inserted_at,
       :updated_at
     ])
   end
 
-  def group_chat_changeset(chat_id, name, image, from_user, invite_link) do
+  def group_chat_changeset(chat_id, name, image, from_user) do
     now = DateTime.utc_now()
 
     group_chat = %{
@@ -56,11 +53,10 @@ defmodule Pomoroom.GroupChats.GroupChatSchema do
       image: image,
       admin: [from_user],
       members: [%{"user_id" => from_user, "joined_at" => now}],
-      invite_link: invite_link,
       plugins: []
     }
 
     changeset(group_chat)
-    |> validate_required([:chat_id, :name, :image, :admin, :members, :invite_link, :plugins])
+    |> validate_required([:chat_id, :name, :image, :admin, :members, :plugins])
   end
 end

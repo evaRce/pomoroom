@@ -1,5 +1,6 @@
 defmodule PomoroomWeb.HomeLive.Login do
   use PomoroomWeb, :live_view
+  alias Pomoroom.GroupChats
   alias Pomoroom.Users
 
   @max_attempts 3
@@ -10,6 +11,7 @@ defmodule PomoroomWeb.HomeLive.Login do
       socket
       |> assign(:client_ip, client_ip(socket))
       |> assign(:locale, Map.get(session, "locale", "es"))
+      |> assign(:pending_invite_token, Map.get(session, "pending_invite_token"))
 
     {:ok, PhoenixLiveSession.maybe_subscribe(socket, session), layout: false}
   end
@@ -57,7 +59,11 @@ defmodule PomoroomWeb.HomeLive.Login do
         if Bcrypt.verify_pass(password, user_changes.password) do
           case Users.get_by("nickname", user_changes.nickname) do
             {:ok, user_info} ->
-              socket = PhoenixLiveSession.put_session(socket, "user_info", user_info)
+              socket =
+                socket
+                |> PhoenixLiveSession.put_session("user_info", user_info)
+                |> complete_pending_invite(user_info)
+
               {:noreply, redirect(socket, to: "/chat")}
 
             {:error, _reason} ->
@@ -73,6 +79,24 @@ defmodule PomoroomWeb.HomeLive.Login do
            })}
         end
     end
+  end
+
+  defp complete_pending_invite(%{assigns: %{pending_invite_token: nil}} = socket, _user_info),
+    do: socket
+
+  defp complete_pending_invite(socket, user_info) do
+    token = socket.assigns.pending_invite_token
+
+    socket =
+      case GroupChats.join_via_invite_link(token, user_info.nickname) do
+        {:ok, %{group_name: group_name}} ->
+          PhoenixLiveSession.put_session(socket, "pending_open_group", group_name)
+
+        {:error, _reason} ->
+          socket
+      end
+
+    PhoenixLiveSession.put_session(socket, "pending_invite_token", nil)
   end
 
   defp client_ip(socket) do
