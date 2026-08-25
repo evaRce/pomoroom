@@ -74,13 +74,52 @@ defmodule Pomoroom.GroupChats.GroupChatService do
     case decode_chat_id_from_token(token) do
       {:ok, chat_id} ->
         case get_by("chat_id", chat_id) do
-          {:ok, group_chat} -> do_add_member(group_chat, new_member)
-          {:error, reason} -> {:error, reason}
+          {:ok, group_chat} ->
+            if already_active_member?(group_chat, new_member) do
+              {:ok,
+               %{
+                 group_name: group_chat.name,
+                 chat_id: group_chat.chat_id,
+                 message: gettext("Ya eres miembro de este grupo")
+               }}
+            else
+              do_add_member(group_chat, new_member)
+            end
+
+          {:error, reason} ->
+            {:error, reason}
         end
 
       {:error, reason} ->
         {:error, reason}
     end
+  end
+
+  def preview_invite(token, user) do
+    case decode_chat_id_from_token(token) do
+      {:ok, chat_id} ->
+        case get_by("chat_id", chat_id) do
+          {:ok, group_chat} ->
+            {:ok,
+             %{
+               group_name: group_chat.name,
+               chat_id: group_chat.chat_id,
+               already_member: already_active_member?(group_chat, user)
+             }}
+
+          {:error, reason} ->
+            {:error, reason}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp already_active_member?(group_chat, user) do
+    Enum.any?(group_chat.members || [], fn member ->
+      get_member_id(member) == user and is_nil(get_member_removed_at(member))
+    end)
   end
 
   defp do_add_member(group_chat, new_member) do
