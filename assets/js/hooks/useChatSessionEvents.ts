@@ -20,7 +20,7 @@ export function useChatSessionEvents({
     if (eventName === "open_private_chat") {
       addEvent(eventName, (eventData as unknown as EventBusPayloads["open_private_chat"]));
       addEvent("show_list_messages", (eventData as unknown as EventBusPayloads["show_list_messages"]));
-      addEvent("open_chat_mobile", true);
+      addEvent("open_chat_mobile", Date.now());
       setComponent("ChatPanel");
     }
   }, [eventData.from_user_data, eventData.to_user_data, eventData.messages]);
@@ -30,7 +30,7 @@ export function useChatSessionEvents({
       addEvent(eventName, (eventData as unknown as EventBusPayloads["open_group_chat"]));
       addEvent("check_admin", { is_admin: Boolean(eventData.is_admin) });
       addEvent("show_list_messages", (eventData as unknown as EventBusPayloads["show_list_messages"]));
-      addEvent("open_chat_mobile", true);
+      addEvent("open_chat_mobile", Date.now());
       setComponent("ChatPanel");
     }
   }, [

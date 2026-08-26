@@ -38,6 +38,11 @@ defmodule PomoroomWeb.GroupInviteLink do
 
     case GroupChats.join_via_invite_link(token, user_info.nickname) do
       {:ok, %{group_name: group_name, chat_id: chat_id}} ->
+        Groups.notify_group_system_message(
+          chat_id,
+          gettext("Se ha unido %{nickname}", nickname: user_info.nickname)
+        )
+
         case GroupChats.get_by("chat_id", chat_id) do
           {:ok, group_chat} ->
             Groups.notify_members_updated(group_chat, %{group_name: group_name, chat_id: chat_id})

@@ -48,6 +48,8 @@ export default function ChatPanel({ isVisibleDetail, onBack }: ChatPanelProps) {
   const updateConfigEvent = useEvent("update_config");
   const showMessageToSendEvent = useEvent("show_message_to_send");
   const showUserInfoEvent = useEvent("show_user_info");
+  const selectedGroupChatEvent = useEvent("selected_group_chat");
+  const selectedPrivateChatEvent = useEvent("selected_private_chat");
 
   const [userLogin, setUserLogin] = useState<EventBusPayload<"show_user_info"> | null>(null);
   const [currentChatId, setCurrentChatId] = useState<string>("");
@@ -156,6 +158,12 @@ export default function ChatPanel({ isVisibleDetail, onBack }: ChatPanelProps) {
     seenMessageIdsRef.current = seenMessageIds;
     return uniqueMessages;
   };
+
+  useEffect(() => {
+    if (selectedGroupChatEvent || selectedPrivateChatEvent) {
+      setMessages([]);
+    }
+  }, [selectedGroupChatEvent, selectedPrivateChatEvent]);
 
   useEffect(() => {
     if (showListMessagesEvent) {

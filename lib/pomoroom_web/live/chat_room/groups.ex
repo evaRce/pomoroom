@@ -76,6 +76,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
           {:ok, %{chat_id: chat_id, group_name: remaining_group_name, removed_at: removed_at}} ->
             PubSub.unsubscribe(Pomoroom.PubSub, "chat:#{group_chat.chat_id}")
 
+            notify_group_system_message(
+              chat_id,
+              gettext("Se ha ido %{nickname}", nickname: user.nickname)
+            )
+
             case GroupChats.get_by("chat_id", chat_id) do
               {:ok, updated_group_chat} ->
                 notify_members_updated(updated_group_chat, %{
@@ -147,6 +152,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
           {:ok, group_chat} ->
             payload = %{group_name: group_name, chat_id: group_chat.chat_id}
 
+            notify_group_system_message(
+              group_chat.chat_id,
+              gettext("Se ha añadido a %{new_member}", new_member: new_member)
+            )
+
             PubSub.broadcast(
               Pomoroom.PubSub,
               "user:#{new_member}",
@@ -191,6 +201,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
         notify_react(socket, "group_deleted", %{chat_id: chat_id, group_name: group_name})
 
       {:ok, %{chat_id: chat_id, group_name: removed_group_name, removed_at: removed_at}} ->
+        notify_group_system_message(
+          chat_id,
+          gettext("Se ha eliminado a %{member_name}", member_name: member_name)
+        )
+
         PubSub.broadcast(
           Pomoroom.PubSub,
           "user:#{member_name}",
@@ -215,6 +230,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
       {:error, reason} ->
         notify_react(socket, "error_managing_group_member", reason)
     end
+  end
+
+  def notify_group_system_message(chat_id, text) do
+    Runtime.ensure_chat_server_exists(chat_id)
+    ChatServer.send_plugin_message(chat_id, "group_chat", text)
   end
 
   def notify_members_updated(group_chat, payload, exclude \\ []) do
