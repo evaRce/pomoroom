@@ -246,7 +246,6 @@ const es = {
     formEmailRequired: "¡Por favor ingrese su correo electrónico!",
     formPasswordLabel: "Contraseña",
     formPasswordRequired: "¡Por favor ingrese su contraseña!",
-    formForgotPassword: "Olvidaste tu contraseña?",
     formSubmit: "Iniciar sesión",
     formNoAccount: "¿No tienes una cuenta?",
     formSignupLink: "Registrate aquí",

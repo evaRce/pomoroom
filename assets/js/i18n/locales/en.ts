@@ -245,7 +245,6 @@ const en = {
     formEmailRequired: "Please enter your email!",
     formPasswordLabel: "Password",
     formPasswordRequired: "Please enter your password!",
-    formForgotPassword: "Forgot your password?",
     formSubmit: "Log in",
     formNoAccount: "Don't have an account?",
     formSignupLink: "Sign up here",
