@@ -115,6 +115,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     Groups.handle_group_admin_updated(payload, socket)
   end
 
+  def handle_info({:group_members_updated, payload}, socket) do
+    Groups.handle_group_members_updated(payload, socket)
+  end
+
   def handle_info({:chat_plugin_installed, payload}, socket) do
     handle_chat_plugin_broadcast(payload, socket, "chat_plugin_installed")
   end

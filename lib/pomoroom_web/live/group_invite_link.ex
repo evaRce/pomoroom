@@ -1,7 +1,8 @@
-defmodule PomoroomWeb.GroupInviteLive do
+defmodule PomoroomWeb.GroupInviteLink do
   use PomoroomWeb, :live_view
 
   alias Pomoroom.GroupChats
+  alias PomoroomWeb.ChatLive.ChatRoom.Groups
 
   def mount(%{"token" => token}, session, socket) do
     socket = PhoenixLiveSession.maybe_subscribe(socket, session)
@@ -37,7 +38,15 @@ defmodule PomoroomWeb.GroupInviteLive do
     %{token: token, user_info: user_info} = socket.assigns
 
     case GroupChats.join_via_invite_link(token, user_info.nickname) do
-      {:ok, %{group_name: group_name}} ->
+      {:ok, %{group_name: group_name, chat_id: chat_id}} ->
+        case GroupChats.get_by("chat_id", chat_id) do
+          {:ok, group_chat} ->
+            Groups.notify_members_updated(group_chat, %{group_name: group_name, chat_id: chat_id})
+
+          {:error, _reason} ->
+            :ok
+        end
+
         PhoenixLiveSession.put_session(socket, "pending_open_group", group_name)
         {:noreply, redirect(socket, to: "/chat")}
 

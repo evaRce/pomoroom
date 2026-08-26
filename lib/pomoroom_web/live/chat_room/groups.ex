@@ -98,17 +98,25 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
         notify_react(socket, "error_managing_group_member", reason)
 
       {:ok, _result} ->
-        payload =
-          case GroupChats.get_by("name", group_name) do
-            {:ok, group_chat} -> %{group_name: group_name, chat_id: group_chat.chat_id}
-            {:error, _reason} -> %{group_name: group_name}
-          end
+        case GroupChats.get_by("name", group_name) do
+          {:ok, group_chat} ->
+            payload = %{group_name: group_name, chat_id: group_chat.chat_id}
 
-        PubSub.broadcast(
-          Pomoroom.PubSub,
-          "user:#{new_member}",
-          {:new_group_member_added, payload}
-        )
+            PubSub.broadcast(
+              Pomoroom.PubSub,
+              "user:#{new_member}",
+              {:new_group_member_added, payload}
+            )
+
+            notify_members_updated(group_chat, payload, [user.nickname])
+
+          {:error, _reason} ->
+            PubSub.broadcast(
+              Pomoroom.PubSub,
+              "user:#{new_member}",
+              {:new_group_member_added, %{group_name: group_name}}
+            )
+        end
 
         handle_member_update(group_name, user, socket)
     end
@@ -145,10 +153,48 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
            %{chat_id: chat_id, group_name: removed_group_name, removed_at: removed_at}}
         )
 
+        case GroupChats.get_by("chat_id", chat_id) do
+          {:ok, group_chat} ->
+            notify_members_updated(
+              group_chat,
+              %{group_name: removed_group_name, chat_id: chat_id},
+              [user.nickname]
+            )
+
+          {:error, _reason} ->
+            :ok
+        end
+
         handle_member_update(group_name, user, socket)
 
       {:error, reason} ->
         notify_react(socket, "error_managing_group_member", reason)
+    end
+  end
+
+  def notify_members_updated(group_chat, payload, exclude \\ []) do
+    group_chat
+    |> get_active_member_nicknames()
+    |> Enum.reject(&(&1 in exclude))
+    |> Enum.each(fn nickname ->
+      PubSub.broadcast(Pomoroom.PubSub, "user:#{nickname}", {:group_members_updated, payload})
+    end)
+  end
+
+  def handle_group_members_updated(payload, socket) do
+    chat_id = Map.get(payload, :chat_id)
+    group_name = Map.get(payload, :group_name)
+
+    if socket.assigns[:chat_id] == chat_id do
+      case GroupChats.get_members(group_name) do
+        {:ok, members_data} ->
+          notify_react(socket, "show_members", %{members_data: members_data})
+
+        {:error, _reason} ->
+          {:noreply, socket}
+      end
+    else
+      {:noreply, socket}
     end
   end
 
