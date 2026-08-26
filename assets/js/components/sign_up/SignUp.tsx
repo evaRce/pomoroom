@@ -53,7 +53,7 @@ export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
 
   return (
     <div
-      className="relative min-h-dvh flex flex-col items-center justify-center overflow-y-auto p-4 sm:p-8"
+      className="relative min-h-dvh flex flex-col items-center justify-center overflow-y-auto p-4 sm:p-8 landscape-sm:p-3"
       style={{
         backgroundImage: `url(/images/background2/background-${imageNumber}.svg)`,
         backgroundRepeat: "no-repeat",
@@ -64,20 +64,20 @@ export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
     >
       <Button
         href="/"
-        className="absolute top-4 left-4 sm:top-8 sm:left-8 shadow bg-white"
+        className="absolute top-4 left-4 sm:top-8 sm:left-8 shadow bg-white landscape-sm:!top-2 landscape-sm:!left-2 landscape-sm:!h-8 landscape-sm:!w-8"
         icon={<HomeOutlined />}
         size="large"
         title={signupText.homeButtonTitle}
         aria-label={signupText.homeButtonTitle}
       />
-      <div className="max-w-md w-full mt-12 sm:mt-0">
-        <div className="p-5 rounded-2xl bg-white shadow">
-          <p className="text-center text-lg lg:text-xl sm:text-2xl font-bold mb-6">
+      <div className="max-w-md w-full mt-12 sm:mt-0 landscape-sm:mt-2">
+        <div className="p-5 rounded-2xl bg-white shadow landscape-sm:p-3">
+          <p className="text-center text-lg lg:text-xl sm:text-2xl font-bold mb-6 landscape-sm:text-base landscape-sm:mb-2">
             <span className="text-purple-600">{signupText.brand.pomo}</span><span className="text-black">{signupText.brand.room}</span>
           </p>
-          <p className="text-gray-800 text-center text-2xl md:text-2xl lg:text-3xl font-bold">
+          <p className="text-gray-800 text-center text-2xl md:text-2xl lg:text-3xl font-bold landscape-sm:text-lg">
             {signupText.welcome}
-						<p className="text-gray-800 text-center text-sm md:text-lg lg:text-xl font-bold mt-2">
+						<p className="text-gray-800 text-center text-sm md:text-lg lg:text-xl font-bold mt-2 landscape-sm:text-xs landscape-sm:mt-1">
             	{signupText.subtitle}
 						</p>
           </p>
@@ -89,12 +89,12 @@ export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
             layout="vertical"
             name="normal_signup"
             onFinish={onFinish}
-            className="mt-5 space-y-4"
+            className="mt-5 space-y-4 landscape-sm:mt-2 landscape-sm:space-y-1"
             scrollToFirstError
           >
             <Form.Item
               label={signupText.form.emailLabel}
-							className="mb-2"
+							className="mb-2 landscape-sm:!mb-1.5"
               name="email"
               rules={[
                 { required: true, message: signupText.form.emailRequired },
@@ -111,6 +111,7 @@ export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
             </Form.Item>
 
             <Form.Item
+              className="landscape-sm:!mb-1.5"
               label={signupText.form.passwordLabel}
               name="password"
               rules={[
@@ -133,6 +134,7 @@ export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
             </Form.Item>
 
             <Form.Item
+              className="landscape-sm:!mb-1.5"
               label={signupText.form.confirmPasswordLabel}
               name="confirmPassword"
               dependencies={["password"]}
@@ -160,6 +162,7 @@ export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
             </Form.Item>
 
             <Form.Item
+              className="landscape-sm:!mb-1.5"
               label={signupText.form.nicknameLabel}
               name="nickname"
               tooltip={signupText.form.nicknameTooltip}
@@ -186,12 +189,12 @@ export const SignUp: React.FC<SignUpProps> = (props: SignUpProps) => {
 						<Form.Item>
 						<Button
               htmlType="submit"
-              className="!h-11 !border-[3px] mt-2 text-white text-base font-semibold transitiona-all duration-700 bg-purple-500 !border-purple-500 hover:!bg-purple-400 hover:!border-purple-300 hover:!text-white focus:!bg-purple-400 focus:!border-purple-300 focus:!text-white active:!bg-purple-400 active:!border-purple-300 active:!text-white"
+              className="!h-11 !border-[3px] mt-2 text-white text-base font-semibold transitiona-all duration-700 bg-purple-500 !border-purple-500 hover:!bg-purple-400 hover:!border-purple-300 hover:!text-white focus:!bg-purple-400 focus:!border-purple-300 focus:!text-white active:!bg-purple-400 active:!border-purple-300 active:!text-white landscape-sm:!h-9"
               block
             >
               {signupText.form.submit}
             </Button>
-            <p className="text-gray-800 text-sm !mt-5 mb-0 text-center">
+            <p className="text-gray-800 text-sm !mt-5 mb-0 text-center landscape-sm:!mt-2">
               {signupText.form.haveAccountPrefix}
               <a
                 href="login"

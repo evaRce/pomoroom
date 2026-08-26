@@ -100,15 +100,15 @@ export default function PluginMarketPlace({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg mx-auto md:max-w-xl bg-gray-50">
-        <DialogHeader>
-          <DialogTitle>{pluginMarketPlaceText.title}</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-lg mx-auto md:max-w-xl bg-gray-50 landscape-sm:max-w-[92vw]">
+        <DialogHeader className="landscape-sm:space-y-0.5">
+          <DialogTitle className="landscape-sm:text-base">{pluginMarketPlaceText.title}</DialogTitle>
+          <DialogDescription className="landscape-sm:text-xs">
             {pluginMarketPlaceText.description}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-4 py-4 landscape-sm:gap-2 landscape-sm:py-2">
           {isLoading && <p className="text-sm text-slate-500">{pluginMarketPlaceText.loading.listPlugins}</p>}
           {loadError && <p className="text-sm text-red-500">{loadError}</p>}
           {!isLoading && !loadError && !hasPlugins && (
@@ -125,28 +125,28 @@ export default function PluginMarketPlace({
               <div
                 key={plugin.type}
                 className={cn(
-                  "relative flex flex-col p-4 rounded-xl border transition-all",
+                  "relative flex flex-col p-4 rounded-xl border transition-all landscape-sm:p-2",
                   installed
                     ? "border-sky-300 bg-sky-100"
                     : "border-gray-300 hover:border-gray-400 hover:bg-gray-200"
                 )}
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-4 landscape-sm:gap-2">
                   {/* Icon */}
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-green-50 self-center">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-green-50 self-center landscape-sm:h-8 landscape-sm:w-8">
                     {plugin.icon ? (
-                      <span className="text-3xl leading-none">{plugin.icon}</span>
+                      <span className="text-3xl leading-none landscape-sm:text-lg">{plugin.icon}</span>
                     ) : (
-                      <Puzzle className="h-6 w-6 text-slate-500" />
+                      <Puzzle className="h-6 w-6 text-slate-500 landscape-sm:h-4 landscape-sm:w-4" />
                     )}
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="text-sm font-semibold text-slate-800">{plugin.name}</h4>
+                    <div className="flex items-center gap-2 mb-1 landscape-sm:mb-0">
+                      <h4 className="text-sm font-semibold text-slate-800 landscape-sm:text-xs">{plugin.name}</h4>
                     </div>
-                    <p className="text-sm text-slate-600 leading-relaxed">{plugin.description}</p>
+                    <p className="text-sm text-slate-600 leading-relaxed landscape-sm:text-xs landscape-sm:leading-snug">{plugin.description}</p>
                   </div>
 
                   {/* Action Button */}
@@ -156,7 +156,7 @@ export default function PluginMarketPlace({
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-8 text-xs !font-extrabold text-red-400 bg-gray-50 border-red-300 hover:bg-red-50 hover:border-red-200"
+                          className="h-8 text-xs !font-extrabold text-red-400 bg-gray-50 border-red-300 hover:bg-red-50 hover:border-red-200 landscape-sm:h-6 landscape-sm:px-2 landscape-sm:text-[10px]"
                           onClick={() => {
                             if (installedId) {
                               onUninstallPlugin(installedId);
@@ -169,7 +169,7 @@ export default function PluginMarketPlace({
                       ) : (
                         <Button
                           size="sm"
-                          className="h-8 text-xs !font-extrabold text-white bg-green-600 hover:bg-green-700"
+                          className="h-8 text-xs !font-extrabold text-white bg-green-600 hover:bg-green-700 landscape-sm:h-6 landscape-sm:px-2 landscape-sm:text-[10px]"
                           onClick={() => onInstallPlugin(plugin)}
                           disabled={pending || !installable}
                         >

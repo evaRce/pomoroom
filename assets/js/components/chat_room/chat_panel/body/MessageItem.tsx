@@ -28,8 +28,8 @@ export default function MessageItem({
 
   if (isSystemMessage) {
     return (
-      <div className="flex justify-center my-2">
-        <div className="bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm text-center">
+      <div className="flex justify-center my-2 landscape-sm:my-1">
+        <div className="bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm text-center landscape-sm:px-2 landscape-sm:py-1 landscape-sm:text-xs">
           <div>{message.data.text}</div>
         </div>
       </div>
@@ -37,19 +37,23 @@ export default function MessageItem({
   }
 
   return (
-    <div className={`chat ${messagePosition}`}>
+    <div className={`chat ${messagePosition} landscape-sm:mb-1`}>
       {!hideSenderIdentity && (
         <>
           <div className="chat-image avatar">
-            <Avatar className="bg-gray-50/30" src={message.image_user} size={45} />
+            <Avatar
+              className="bg-gray-50/30 landscape-sm:!h-7 landscape-sm:!w-7"
+              src={message.image_user}
+              size={45}
+            />
           </div>
-          <div className="chat-header">{message.data.from_user}</div>
+          <div className="chat-header landscape-sm:!text-[10px] landscape-sm:!mb-0.5">{message.data.from_user}</div>
         </>
       )}
-      <div className={`chat-bubble ${bubbleClass}`}>
+      <div className={`chat-bubble ${bubbleClass} landscape-sm:!text-xs landscape-sm:!px-2 landscape-sm:!py-1 landscape-sm:!min-h-0`}>
         {linkifyText(message.data.text)}
         <div className="message-time">
-          <time className="text-xs" dateTime={new Date(message.data.inserted_at).toISOString()}>
+          <time className="text-xs landscape-sm:text-[10px]" dateTime={new Date(message.data.inserted_at).toISOString()}>
             {setTime(message.data.inserted_at)}
           </time>
         </div>

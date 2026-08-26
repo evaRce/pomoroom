@@ -116,6 +116,7 @@ export default function AddContactOrGroup({ sendDataToParent, receiveDataFromPar
       title={entryType === "contact" ? userInfoBarText.modal.addContactTitle : userInfoBarText.modal.createGroupTitle}
       open={receiveDataFromParent}
       onCancel={handleCancel}
+      centered
       footer={[
         <Button key="cancel" onClick={handleCancel}>
           {userInfoBarText.modal.cancel}

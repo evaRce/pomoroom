@@ -105,7 +105,6 @@ export default function CurrentUserCard() {
 
 	const handleButtonClick = (e: React.MouseEvent) => {
 		e.stopPropagation(); // Prevent click from propagating to the contact container
-		setDropdownVisible(!dropdownVisible); // Toggle dropdown visibility
 	};
 
 	return (

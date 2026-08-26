@@ -43,38 +43,38 @@
 <div id="home-bg" class="min-h-screen">
   <.link
     href={"/?locale=#{texts.nav.language_next_locale}"}
-    class="sm:hidden fixed top-4 right-4 z-50 flex items-center gap-1 px-3 h-10 rounded-full bg-white shadow text-gray-600 hover:text-purple-600 transition-colors"
+    class="sm:hidden fixed top-4 right-4 z-50 flex items-center gap-1 px-3 h-10 rounded-full bg-white shadow text-gray-600 hover:text-purple-600 transition-colors landscape-sm:top-2 landscape-sm:right-2 landscape-sm:h-8"
     aria-label={texts.nav.language_aria}
   >
-    <.icon name="hero-globe-alt" class="h-5 w-5" />
-    <span class="text-sm font-semibold"><%= texts.nav.language %></span>
+    <.icon name="hero-globe-alt" class="h-5 w-5 landscape-sm:h-4 landscape-sm:w-4" />
+    <span class="text-sm font-semibold landscape-sm:text-xs"><%= texts.nav.language %></span>
   </.link>
 
-  <header class="hidden sm:flex h-[10vh] min-h-[70px] items-center px-3 sm:px-10 font-[sans-serif] tracking-wide relative z-50 bg-white shadow-sm">
+  <header class="hidden sm:flex h-[10vh] min-h-[70px] items-center px-3 sm:px-10 font-[sans-serif] tracking-wide relative z-50 bg-white shadow-sm landscape-sm:h-auto landscape-sm:min-h-0 landscape-sm:py-1">
     <div class="flex items-center justify-between w-full min-w-0 gap-2">
       <a href="home" class="inline-block align-middle shrink-0">
-        <span class="text-2xl lg:text-3xl font-mono inline-block align-middle">
+        <span class="text-2xl lg:text-3xl font-mono inline-block align-middle landscape-sm:text-lg">
           <span class="text-purple-600 font-bold"><%= String.slice(texts.hero.title_pomoroom, 0, 4) %></span><span class="text-black font-bold"><%= String.slice(texts.hero.title_pomoroom, 4..-1//1) %></span>
         </span>
       </a>
-      <div class="flex items-center gap-3 lg:gap-5 shrink-0">
+      <div class="flex items-center gap-3 lg:gap-5 shrink-0 landscape-sm:gap-2">
         <.link
           href={"/?locale=#{texts.nav.language_next_locale}"}
-          class="flex items-center gap-1 px-3 h-9 lg:h-11 rounded-full text-gray-600 hover:bg-gray-100 hover:text-purple-600 transition-colors"
+          class="flex items-center gap-1 px-3 h-9 lg:h-11 rounded-full text-gray-600 hover:bg-gray-100 hover:text-purple-600 transition-colors landscape-sm:h-7 landscape-sm:px-2"
           aria-label={texts.nav.language_aria}
         >
-          <.icon name="hero-globe-alt" class="h-5 w-5 lg:h-6 lg:w-6" />
-          <span class="text-sm lg:text-base font-semibold"><%= texts.nav.language %></span>
+          <.icon name="hero-globe-alt" class="h-5 w-5 lg:h-6 lg:w-6 landscape-sm:h-4 landscape-sm:w-4" />
+          <span class="text-sm lg:text-base font-semibold landscape-sm:text-xs"><%= texts.nav.language %></span>
         </.link>
         <a
           href="login"
-          class="whitespace-nowrap rounded-full border-2 border-purple-600 px-5 py-2 lg:px-7 lg:py-3 lg:text-lg font-semibold text-gray-700 transition-all duration-300 hover:bg-purple-600 hover:text-white"
+          class="whitespace-nowrap rounded-full border-2 border-purple-600 px-5 py-2 lg:px-7 lg:py-3 lg:text-lg font-semibold text-gray-700 transition-all duration-300 hover:bg-purple-600 hover:text-white landscape-sm:px-3 landscape-sm:py-1 landscape-sm:text-sm"
         >
           <%= texts.nav.login %>
         </a>
         <a
           href="signup"
-          class="whitespace-nowrap rounded-full font-bold text-white border-2 border-transparent transition-all duration-300 bg-purple-600 hover:bg-purple-700 px-5 py-2 lg:px-7 lg:py-3 lg:text-lg"
+          class="whitespace-nowrap rounded-full font-bold text-white border-2 border-transparent transition-all duration-300 bg-purple-600 hover:bg-purple-700 px-5 py-2 lg:px-7 lg:py-3 lg:text-lg landscape-sm:px-3 landscape-sm:py-1 landscape-sm:text-sm"
         >
           <%= texts.nav.signup %>
         </a>
@@ -82,96 +82,96 @@
     </div>
   </header>
 
-  <main id="main-content" class="flex flex-col items-center px-4 sm:px-10 pt-24 pb-16 sm:py-16">
+  <main id="main-content" class="flex flex-col items-center px-4 sm:px-10 pt-24 pb-16 sm:py-16 landscape-sm:pt-6 landscape-sm:pb-6">
     <section class="text-center max-w-3xl">
-      <h1 class="text-on-bg-strong text-5xl sm:text-6xl lg:text-7xl font-mono font-extrabold mt-8 sm:mt-6 lg:mt-5">
+      <h1 class="text-on-bg-strong text-5xl sm:text-6xl lg:text-7xl font-mono font-extrabold mt-8 sm:mt-6 lg:mt-5 landscape-sm:text-3xl landscape-sm:mt-2">
         <span class="text-purple-600"><%= String.slice(texts.hero.title_pomoroom, 0, 4) %></span><span class="text-black"><%= String.slice(texts.hero.title_pomoroom, 4..-1//1) %></span>
       </h1>
-      <p class="text-on-bg-strong text-3xl sm:text-4xl lg:text-5xl font-sans font-bold text-black mt-8 sm:mt-6 lg:mt-5">
+      <p class="text-on-bg-strong text-3xl sm:text-4xl lg:text-5xl font-sans font-bold text-black mt-8 sm:mt-6 lg:mt-5 landscape-sm:text-xl landscape-sm:mt-2">
         <%= texts.hero.tagline %>
       </p>
-      <p class="text-on-bg-strong-sm text-lg sm:text-xl lg:text-2xl font-sans font-medium text-gray-700 mt-6 sm:mt-5 lg:mt-4">
+      <p class="text-on-bg-strong-sm text-lg sm:text-xl lg:text-2xl font-sans font-medium text-gray-700 mt-6 sm:mt-5 lg:mt-4 landscape-sm:text-sm landscape-sm:mt-2">
         <%= texts.hero.description %>
       </p>
-      <p class="text-on-bg-strong-sm text-base sm:text-lg lg:text-lg font-sans italic text-gray-600 mt-3 sm:mt-3 lg:mt-2">
+      <p class="text-on-bg-strong-sm text-base sm:text-lg lg:text-lg font-sans italic text-gray-600 mt-3 sm:mt-3 lg:mt-2 landscape-sm:text-xs landscape-sm:mt-1">
         <%= texts.hero.subtext_prefix %>
         <span id="soloVariant"><%= Enum.at(texts.hero.solo_variants, 0) %></span>
         <%= texts.hero.subtext_suffix %>
       </p>
 
-      <div class="flex sm:hidden flex-col gap-4 w-full max-w-xs mx-auto mt-12">
+      <div class="flex sm:hidden flex-col gap-4 w-full max-w-xs mx-auto mt-12 landscape-sm:mt-4 landscape-sm:gap-2">
         <a
           href="signup"
-          class="w-full text-center text-lg rounded-full font-bold text-white border-2 border-transparent transition-all duration-300 bg-purple-600 hover:bg-purple-700 px-6 py-3"
+          class="w-full text-center text-lg rounded-full font-bold text-white border-2 border-transparent transition-all duration-300 bg-purple-600 hover:bg-purple-700 px-6 py-3 landscape-sm:text-sm landscape-sm:py-2"
         >
           <%= texts.nav.signup %>
         </a>
         <a
           href="login"
-          class="w-full text-center text-lg rounded-full border-2 border-purple-600 bg-white font-semibold text-gray-700 transition-all duration-300 hover:bg-purple-600 hover:text-white px-6 py-3"
+          class="w-full text-center text-lg rounded-full border-2 border-purple-600 bg-white font-semibold text-gray-700 transition-all duration-300 hover:bg-purple-600 hover:text-white px-6 py-3 landscape-sm:text-sm landscape-sm:py-2"
         >
           <%= texts.nav.login %>
         </a>
       </div>
     </section>
 
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 lg:gap-8 w-full max-w-5xl lg:max-w-6xl mt-16 sm:mt-12">
-      <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 pt-5 pb-2 sm:px-5 sm:pt-6 sm:pb-3 lg:px-6 lg:pt-7 lg:pb-4">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 lg:gap-8 w-full max-w-5xl lg:max-w-6xl mt-16 sm:mt-12 landscape-sm:mt-6 landscape-sm:gap-2">
+      <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 pt-5 pb-2 sm:px-5 sm:pt-6 sm:pb-3 lg:px-6 lg:pt-7 lg:pb-4 landscape-sm:px-2 landscape-sm:pt-2 landscape-sm:pb-2">
         <.icon
           name="hero-chat-bubble-left-right"
-          class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600"
+          class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600 landscape-sm:h-5 landscape-sm:w-5"
         />
-        <h2 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3">
+        <h2 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3 landscape-sm:text-xs landscape-sm:mt-1">
           <%= texts.features.chats_private.title %>
         </h2>
-        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1">
+        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1 landscape-sm:text-[10px] landscape-sm:mt-0.5">
           <%= texts.features.chats_private.description %>
         </p>
       </div>
-      <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 pt-5 pb-2 sm:px-5 sm:pt-6 sm:pb-3 lg:px-6 lg:pt-7 lg:pb-4">
+      <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 pt-5 pb-2 sm:px-5 sm:pt-6 sm:pb-3 lg:px-6 lg:pt-7 lg:pb-4 landscape-sm:px-2 landscape-sm:pt-2 landscape-sm:pb-2">
         <.icon
           name="hero-user-group"
-          class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600"
+          class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600 landscape-sm:h-5 landscape-sm:w-5"
         />
-        <h2 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3">
+        <h2 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3 landscape-sm:text-xs landscape-sm:mt-1">
           <%= texts.features.chats_group.title %>
         </h2>
-        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1">
+        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1 landscape-sm:text-[10px] landscape-sm:mt-0.5">
           <%= texts.features.chats_group.description %>
         </p>
       </div>
-      <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 pt-5 pb-2 sm:px-5 sm:pt-6 sm:pb-3 lg:px-6 lg:pt-7 lg:pb-4">
+      <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 pt-5 pb-2 sm:px-5 sm:pt-6 sm:pb-3 lg:px-6 lg:pt-7 lg:pb-4 landscape-sm:px-2 landscape-sm:pt-2 landscape-sm:pb-2">
         <.icon
           name="hero-video-camera"
-          class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600"
+          class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600 landscape-sm:h-5 landscape-sm:w-5"
         />
-        <h2 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3">
+        <h2 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3 landscape-sm:text-xs landscape-sm:mt-1">
           <%= texts.features.calls.title %>
         </h2>
-        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1">
+        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1 landscape-sm:text-[10px] landscape-sm:mt-0.5">
           <%= texts.features.calls.description %>
         </p>
       </div>
-      <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 pt-5 pb-2 sm:px-5 sm:pt-6 sm:pb-3 lg:px-6 lg:pt-7 lg:pb-4">
+      <div class="flex flex-col items-center text-center bg-white rounded-xl shadow-sm border border-gray-100 px-4 pt-5 pb-2 sm:px-5 sm:pt-6 sm:pb-3 lg:px-6 lg:pt-7 lg:pb-4 landscape-sm:px-2 landscape-sm:pt-2 landscape-sm:pb-2">
         <.icon
           name="hero-puzzle-piece"
-          class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600"
+          class="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 text-purple-600 landscape-sm:h-5 landscape-sm:w-5"
         />
-        <h2 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3">
+        <h2 class="font-sans font-bold text-black text-base sm:text-lg lg:text-xl mt-3 landscape-sm:text-xs landscape-sm:mt-1">
           <%= texts.features.plugins.title %>
         </h2>
-        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1">
+        <p class="font-sans text-base sm:text-sm lg:text-base text-gray-500 mt-1 landscape-sm:text-[10px] landscape-sm:mt-0.5">
           <%= texts.features.plugins.description %>
         </p>
       </div>
     </div>
 
-    <section class="w-full max-w-5xl lg:max-w-6xl mt-16 sm:mt-20 lg:mt-24">
-      <h2 class="text-on-bg text-center font-sans font-bold text-2xl sm:text-3xl lg:text-4xl text-black mb-6 sm:mb-8">
+    <section class="w-full max-w-5xl lg:max-w-6xl mt-16 sm:mt-20 lg:mt-24 landscape-sm:mt-6">
+      <h2 class="text-on-bg text-center font-sans font-bold text-2xl sm:text-3xl lg:text-4xl text-black mb-6 sm:mb-8 landscape-sm:text-lg landscape-sm:mb-2">
         <%= texts.showcase.title %>
       </h2>
       <div
-        class="relative w-full rounded-xl aspect-[9/20] sm:aspect-video max-h-[75vh] flex items-center justify-center bg-white shadow-sm border border-gray-100"
+        class="relative w-full rounded-xl aspect-[9/20] sm:aspect-video max-h-[75vh] flex items-center justify-center bg-white shadow-sm border border-gray-100 landscape-sm:aspect-auto landscape-sm:h-[85vh] landscape-sm:max-h-[85vh]"
         role="region"
         aria-roledescription="carousel"
         aria-label={texts.showcase.title}

@@ -3,7 +3,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
   import PomoroomWeb.Gettext
 
   alias Phoenix.PubSub
-  alias Pomoroom.Chats.Runtime.ChatServer
+  alias Pomoroom.Chats.Runtime.{ChatServer, Runtime}
   alias Pomoroom.FriendRequests
   alias Pomoroom.PrivateChats
   alias Pomoroom.Users
@@ -31,6 +31,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
           {:ok, request} ->
             case PrivateChats.get(request.to_user, request.from_user) do
               {:ok, private_chat} ->
+                Runtime.ensure_chat_server_exists(private_chat.chat_id)
                 ChatServer.join_chat(private_chat.chat_id)
                 PubSub.subscribe(Pomoroom.PubSub, "chat:#{private_chat.chat_id}")
 

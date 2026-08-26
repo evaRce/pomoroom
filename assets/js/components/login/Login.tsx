@@ -42,7 +42,7 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
 
   return (
     <div
-      className="relative min-h-dvh flex flex-col items-center justify-center overflow-y-auto p-4 sm:p-8"
+      className="relative min-h-dvh flex flex-col items-center justify-center overflow-y-auto p-4 sm:p-8 landscape-sm:p-3"
       style={{
         backgroundImage: `url(/images/background2/background-${imageNumber}.svg)`,
         backgroundRepeat: "no-repeat",
@@ -53,21 +53,21 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
     >
       <Button
         href="/"
-        className="absolute top-4 left-4 sm:top-8 sm:left-8 shadow bg-white"
+        className="absolute top-4 left-4 sm:top-8 sm:left-8 shadow bg-white landscape-sm:!top-2 landscape-sm:!left-2 landscape-sm:!h-8 landscape-sm:!w-8"
         icon={<HomeOutlined />}
         size="large"
         title={loginText.homeButtonTitle}
         aria-label={loginText.homeButtonTitle}
       />
-      <div className="max-w-md md:max-w-lg lg:max-w-xl w-full my-4">
-        <div className="p-4 sm:p-8 rounded-2xl bg-white shadow">
-          <p className="text-center text-lg lg:text-xl sm:text-2xl font-bold mb-6">
+      <div className="max-w-md md:max-w-lg lg:max-w-xl w-full my-4 landscape-sm:my-2">
+        <div className="p-4 sm:p-8 rounded-2xl bg-white shadow landscape-sm:p-3">
+          <p className="text-center text-lg lg:text-xl sm:text-2xl font-bold mb-6 landscape-sm:text-base landscape-sm:mb-2">
             <span className="text-purple-600">{loginText.brand.pomo}</span><span className="text-black">{loginText.brand.room}</span>
           </p>
-          <p className="text-gray-800 text-center text-2xl md:text-2xl lg:text-3xl font-bold">
+          <p className="text-gray-800 text-center text-2xl md:text-2xl lg:text-3xl font-bold landscape-sm:text-lg">
             {loginText.welcome}
           </p>
-          <p className="text-gray-800 text-center text-sm md:text-lg lg:text-xl font-bold -mt-1">
+          <p className="text-gray-800 text-center text-sm md:text-lg lg:text-xl font-bold -mt-1 landscape-sm:text-xs">
             {loginText.subtitle}
           </p>
           <p role="alert" aria-live="assertive" className="sr-only">
@@ -79,9 +79,10 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
               name="normal_login"
               initialValues={{ remember: true }}
               onFinish={onFinish}
-              className="mt-5 space-y-4"
+              className="mt-5 space-y-4 landscape-sm:mt-2 landscape-sm:space-y-2"
             >
               <Form.Item
+                className="landscape-sm:!mb-2"
                 label={loginText.form.emailLabel}
                 name="email"
                 rules={[
@@ -97,6 +98,7 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
                 />
               </Form.Item>
               <Form.Item
+                className="landscape-sm:!mb-2"
                 label={loginText.form.passwordLabel}
                 name="password"
                 rules={[
@@ -113,12 +115,12 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
               <Form.Item>
                 <Button
                   htmlType="submit"
-                  className="!h-11 !border-[3px] text-white text-base font-semibold transitiona-all duration-700 bg-purple-500 !border-purple-500 hover:!bg-purple-400 hover:!border-purple-300 hover:!text-white focus:!bg-purple-400 focus:!border-purple-300 focus:!text-white active:!bg-purple-400 active:!border-purple-300 active:!text-white"
+                  className="!h-11 !border-[3px] text-white text-base font-semibold transitiona-all duration-700 bg-purple-500 !border-purple-500 hover:!bg-purple-400 hover:!border-purple-300 hover:!text-white focus:!bg-purple-400 focus:!border-purple-300 focus:!text-white active:!bg-purple-400 active:!border-purple-300 active:!text-white landscape-sm:!h-9"
                   block
                 >
                   {loginText.form.submit}
                 </Button>
-                <p className="text-gray-800 text-sm !mt-5 mb-0 text-center">
+                <p className="text-gray-800 text-sm !mt-5 mb-0 text-center landscape-sm:!mt-2">
                   {loginText.form.noAccount}
                   <a
                     href="signup"

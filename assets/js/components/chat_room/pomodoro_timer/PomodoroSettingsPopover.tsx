@@ -78,16 +78,19 @@ export function PomodoroSettingsPopover({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-72 bg-gray-100" align="center">
-        <div className="flex flex-col gap-4">
-          <h4 className="text-base font-semibold text-slate-900">
+      <PopoverContent
+        className="w-72 bg-gray-100 landscape-sm:max-h-[85vh] landscape-sm:overflow-y-auto landscape-sm:p-2"
+        align="center"
+      >
+        <div className="flex flex-col gap-4 landscape-sm:gap-2">
+          <h4 className="text-base font-semibold text-slate-900 landscape-sm:text-sm">
             {pomodoroTimerText.timerSettings}
           </h4>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 landscape-sm:gap-1.5">
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between gap-3">
-                <label htmlFor="pomodoro-work-duration" className="text-sm text-slate-700">
+                <label htmlFor="pomodoro-work-duration" className="text-sm text-slate-700 landscape-sm:text-xs">
                   {pomodoroTimerText.workMinutes}
                 </label>
                 <Input
@@ -97,7 +100,7 @@ export function PomodoroSettingsPopover({
                   max={900}
                   value={settings.workDuration}
                   onChange={(e) => onChange("workDuration", e.target.value)}
-                  className="w-20 h-8 text-sm text-center focus:border-blue-400"
+                  className="w-20 h-8 text-sm text-center focus:border-blue-400 landscape-sm:h-6 landscape-sm:text-xs"
                 />
               </div>
               {errors.workDuration && (
@@ -109,7 +112,7 @@ export function PomodoroSettingsPopover({
 
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between gap-3">
-                <label htmlFor="pomodoro-short-break-duration" className="text-sm text-slate-700">
+                <label htmlFor="pomodoro-short-break-duration" className="text-sm text-slate-700 landscape-sm:text-xs">
                   {pomodoroTimerText.shortBreakMinutes}
                 </label>
                 <Input
@@ -121,7 +124,7 @@ export function PomodoroSettingsPopover({
                   onChange={(e) =>
                     onChange("shortBreakDuration", e.target.value)
                   }
-                  className="w-20 h-8 text-sm text-center focus:border-blue-400"
+                  className="w-20 h-8 text-sm text-center focus:border-blue-400 landscape-sm:h-6 landscape-sm:text-xs"
                 />
               </div>
               {errors.shortBreakDuration && (
@@ -133,7 +136,7 @@ export function PomodoroSettingsPopover({
 
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between gap-3">
-                <label htmlFor="pomodoro-long-break-duration" className="text-sm text-slate-700">
+                <label htmlFor="pomodoro-long-break-duration" className="text-sm text-slate-700 landscape-sm:text-xs">
                   {pomodoroTimerText.longBreakMinutes}
                 </label>
                 <Input
@@ -145,7 +148,7 @@ export function PomodoroSettingsPopover({
                   onChange={(e) =>
                     onChange("longBreakDuration", e.target.value)
                   }
-                  className="w-20 h-8 text-sm text-center focus:border-blue-400"
+                  className="w-20 h-8 text-sm text-center focus:border-blue-400 landscape-sm:h-6 landscape-sm:text-xs"
                 />
               </div>
               {errors.longBreakDuration && (
@@ -157,7 +160,7 @@ export function PomodoroSettingsPopover({
 
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between gap-3">
-                <label htmlFor="pomodoro-cycles-before-long-break" className="text-sm text-slate-700">
+                <label htmlFor="pomodoro-cycles-before-long-break" className="text-sm text-slate-700 landscape-sm:text-xs">
                   {pomodoroTimerText.cyclesBeforeLongBreak}
                 </label>
                 <Input
@@ -169,7 +172,7 @@ export function PomodoroSettingsPopover({
                   onChange={(e) =>
                     onChange("cyclesBeforeLongBreak", e.target.value)
                   }
-                  className="w-20 h-8 text-sm text-center focus:border-blue-400"
+                  className="w-20 h-8 text-sm text-center focus:border-blue-400 landscape-sm:h-6 landscape-sm:text-xs"
                 />
               </div>
               {errors.cyclesBeforeLongBreak && (
@@ -180,8 +183,8 @@ export function PomodoroSettingsPopover({
             </div>
           </div>
 
-          <div className="flex items-center justify-between mt-2">
-            <label className="text-sm text-slate-700">
+          <div className="flex items-center justify-between mt-2 landscape-sm:mt-0">
+            <label className="text-sm text-slate-700 landscape-sm:text-xs">
               {pomodoroTimerText.soundEndPeriod}
             </label>
             <Switch
@@ -207,10 +210,10 @@ export function PomodoroSettingsPopover({
             </p>
           )}
 
-          <div className="mt-3 flex items-center justify-end gap-3">
+          <div className="mt-3 flex items-center justify-end gap-3 landscape-sm:mt-1">
             <Button
               size="sm"
-              className="h-8 bg-sky-400 hover:bg-sky-600 text-stone-700"
+              className="h-8 bg-sky-400 hover:bg-sky-600 text-stone-700 landscape-sm:h-6 landscape-sm:text-xs"
               onPointerDown={(e) => e.preventDefault()}
               onClick={onSave}
               disabled={saveState === "saving" || hasErrors}

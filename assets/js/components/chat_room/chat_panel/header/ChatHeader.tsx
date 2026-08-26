@@ -470,46 +470,46 @@ export default function ChatHeader({
   return (
     <header className="shrink-0 border-b border-gray-200 bg-white shadow-sm">
       {chatData && (
-        <div className="flex items-center justify-between gap-2 px-2 py-2 sm:px-4 sm:py-3">
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="flex items-center justify-between gap-2 px-2 py-2 sm:px-4 sm:py-3 landscape-sm:gap-1 landscape-sm:px-2 landscape-sm:py-1">
+          <div className="flex min-w-0 flex-1 flex-col gap-2 landscape-sm:gap-0.5">
             <div className="flex min-w-0 items-center gap-1">
               {onBack && (
                 <button
                   type="button"
                   onClick={onBack}
-                  className="sm:hidden -ml-1 shrink-0 rounded-lg p-1.5 text-gray-600 hover:bg-gray-100"
+                  className="sm:hidden -ml-1 shrink-0 rounded-lg p-1.5 text-gray-600 hover:bg-gray-100 landscape-sm:p-1"
                   title={chatHeaderText.back}
                   aria-label={chatHeaderText.back}
                 >
-                  <ArrowLeft className="h-5 w-5" />
+                  <ArrowLeft className="h-5 w-5 landscape-sm:h-4 landscape-sm:w-4" />
                 </button>
               )}
               <button
                 type="button"
                 onClick={showUserDetails}
-                className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                className="flex min-w-0 flex-1 items-center gap-3 text-left landscape-sm:gap-2"
               >
                 <Avatar
                   size={40}
                   src={chatImage}
-                  className="shrink-0 bg-white text-blue-700 font-semibold"
+                  className="shrink-0 bg-white text-blue-700 font-semibold landscape-sm:!h-7 landscape-sm:!w-7 landscape-sm:!text-xs landscape-sm:!leading-7"
                 >
                   {chatName?.charAt(0)?.toUpperCase()}
                 </Avatar>
 
                 <div className="flex min-w-0 flex-1 items-start">
-                  <span className="truncate text-sm font-semibold text-gray-900">{chatName}</span>
+                  <span className="truncate text-sm font-semibold text-gray-900 landscape-sm:text-xs">{chatName}</span>
                 </div>
               </button>
             </div>
 
             {installedPlugins.length > 0 && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 landscape-sm:gap-1">
                 <button
                   type="button"
                   onClick={() => togglePluginTab(null)}
                   title={chatHeaderText.chatTab}
-                  className={`inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-md border px-2 sm:px-3 text-xs font-medium transition-all ${activePluginId === null
+                  className={`inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-md border px-2 sm:px-3 text-xs font-medium transition-all landscape-sm:h-6 landscape-sm:px-1.5 ${activePluginId === null
                     ? "border-sky-200 bg-sky-100 text-sky-800"
                     : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
                     }`}
@@ -523,7 +523,7 @@ export default function ChatHeader({
                     key={plugin.type}
                     onClick={() => togglePluginTab(plugin.type)}
                     title={plugin.name}
-                    className={`inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-md border px-2 sm:px-3 text-xs font-medium transition-all ${activePluginId === plugin.type
+                    className={`inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-md border px-2 sm:px-3 text-xs font-medium transition-all landscape-sm:h-6 landscape-sm:px-1.5 ${activePluginId === plugin.type
                       ? "border-sky-200 bg-sky-100 text-sky-800"
                       : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
                       }`}
@@ -549,12 +549,12 @@ export default function ChatHeader({
             )}
           </div>
 
-          <div className="hidden shrink-0 items-center gap-2 sm:flex">
+          <div className="hidden shrink-0 items-center gap-2 sm:flex landscape-sm:gap-1">
             {chatData?.group_data && checkAdmin.is_admin && !isGroupMemberRemoved && (
               <Button
                 type="text"
-                className="!h-9 !w-9 !rounded-lg text-gray-600 hover:!bg-blue-50 hover:!text-blue-600"
-                icon={<UserPlus className="h-5 w-5" />}
+                className="!h-9 !w-9 !rounded-lg text-gray-600 hover:!bg-blue-50 hover:!text-blue-600 landscape-sm:!h-7 landscape-sm:!w-7"
+                icon={<UserPlus className="h-5 w-5 landscape-sm:h-4 landscape-sm:w-4" />}
                 onClick={openAddMembersModal}
                 title={chatHeaderText.addMembers}
                 aria-label={chatHeaderText.addMembers}
@@ -567,8 +567,8 @@ export default function ChatHeader({
 
             <Button
               type="text"
-              className="!h-9 !w-9 !rounded-lg text-gray-600 hover:!bg-blue-50 hover:!text-blue-600"
-              icon={<Puzzle className="h-5 w-5" />}
+              className="!h-9 !w-9 !rounded-lg text-gray-600 hover:!bg-blue-50 hover:!text-blue-600 landscape-sm:!h-7 landscape-sm:!w-7"
+              icon={<Puzzle className="h-5 w-5 landscape-sm:h-4 landscape-sm:w-4" />}
               onClick={openPluginMarketplace}
               title={chatHeaderText.plugins}
               aria-label={chatHeaderText.plugins}
@@ -578,11 +578,11 @@ export default function ChatHeader({
             {isGroupChat && (
               <Button
                 type="text"
-                className={`!h-9 !w-9 !rounded-lg ${isVisibleDetail
+                className={`!h-9 !w-9 !rounded-lg landscape-sm:!h-7 landscape-sm:!w-7 ${isVisibleDetail
                   ? "!bg-blue-50 !text-blue-600"
                   : "text-gray-600 hover:!bg-gray-100 hover:!text-gray-900"
                   }`}
-                icon={<Info className="h-5 w-5" />}
+                icon={<Info className="h-5 w-5 landscape-sm:h-4 landscape-sm:w-4" />}
                 onClick={showUserDetails}
                 title={chatHeaderText.groupDetails}
                 aria-label={chatHeaderText.groupDetails}
@@ -657,8 +657,8 @@ export default function ChatHeader({
           >
             <Button
               type="text"
-              className="!h-9 !w-9 !rounded-lg shrink-0 text-gray-600 hover:!bg-gray-100"
-              icon={<MoreVertical className="h-5 w-5" />}
+              className="!h-9 !w-9 !rounded-lg shrink-0 text-gray-600 hover:!bg-gray-100 landscape-sm:!h-7 landscape-sm:!w-7"
+              icon={<MoreVertical className="h-5 w-5 landscape-sm:h-4 landscape-sm:w-4" />}
               title={chatHeaderText.moreOptions}
               aria-label={chatHeaderText.moreOptions}
             />

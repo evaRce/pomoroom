@@ -120,36 +120,36 @@ export default function ChatDetailPanel() {
 
   return (
     <div
-      className="overflow-y-auto shrink-0 w-full h-dvh sm:h-auto sm:w-72 sm:max-w-[28vw] lg:w-80 xl:w-96 bg-gray-100 p-3"
+      className="overflow-y-auto shrink-0 w-full h-dvh sm:h-auto sm:w-72 sm:max-w-[28vw] lg:w-80 xl:w-96 bg-gray-100 p-3 landscape-sm:p-2"
       style={{ scrollbarWidth: "thin" }}
     >
       <div className="min-w-0">
         <Button
-          className="top-0 left-0 bg-white"
+          className="top-0 left-0 bg-white landscape-sm:!h-7 landscape-sm:!w-7"
           icon={<CloseOutlined />}
           onClick={hideUserDetails}
           title={infoPanelText.closeDetails}
           aria-label={infoPanelText.closeDetails}
         />
         {chatData && (
-          <div className="text-center w-full mb-10">
+          <div className="text-center w-full mb-10 landscape-sm:mb-2">
             <Avatar
               src={chatData.image}
               size={150}
               alt={infoPanelText.defaultAvatarAlt}
-              className="bg-white"
+              className="bg-white landscape-sm:!h-14 landscape-sm:!w-14"
             />
-            <h2 className="text-2xl mt-2">{chatData.chat_name}</h2>
+            <h2 className="text-2xl mt-2 landscape-sm:text-base landscape-sm:mt-1">{chatData.chat_name}</h2>
           </div>
         )}
         {chatData?.is_group && (
-          <div className="my-4">
+          <div className="my-4 landscape-sm:my-1 landscape-sm:text-sm">
             <span>{infoPanelText.members(members.length)}</span>
           </div>
         )}
         {chatData?.is_group && (
           <div
-            className="h-[40vh] w-full overflow-y-auto relative"
+            className="h-[40vh] w-full overflow-y-auto relative landscape-sm:h-[35vh]"
             style={{ scrollbarWidth: "thin" }}
           >
             <List
