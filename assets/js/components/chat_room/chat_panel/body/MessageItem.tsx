@@ -1,6 +1,7 @@
 import React from "react";
 import { Avatar } from "antd";
 import type { ChatMessage, EventBusPayload } from "../../../../types/events";
+import { linkifyText } from "../../../../utils/linkifyText";
 
 interface MessageItemProps {
   message: ChatMessage;
@@ -46,7 +47,7 @@ export default function MessageItem({
         </>
       )}
       <div className={`chat-bubble ${bubbleClass}`}>
-        {message.data.text}
+        {linkifyText(message.data.text)}
         <div className="message-time">
           <time className="text-xs" dateTime={new Date(message.data.inserted_at).toISOString()}>
             {setTime(message.data.inserted_at)}
