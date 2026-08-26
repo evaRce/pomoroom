@@ -141,7 +141,10 @@ const es = {
     invite: "Invitar",
     confirmLeaveGroupTitle: "Dejar el grupo",
     confirmLeaveGroupMessage: 'Vas a dejar el grupo "{{groupName}}". Dejarás de ver sus mensajes y necesitarás que alguien te vuelva a invitar para volver a entrar.',
+    confirmRemoveMemberTitle: "Eliminar miembro",
+    confirmRemoveMemberMessage: '¿Seguro que quieres eliminar a "{{nickname}}" del grupo?',
     confirmCancelButton: "Cancelar",
+    groupDeletedMessage: 'El grupo "{{groupName}}" se ha eliminado porque ya no le quedan miembros.',
   },
   kanbanText: {
     taskDeleteTitle: "Eliminar tarea",

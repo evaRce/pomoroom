@@ -197,7 +197,7 @@ defmodule Pomoroom.GroupChats.GroupChatService do
         remove_member_and_cleanup(
           group_chat,
           user,
-          gettext("Contacto eliminado del grupo %{group_name}", group_name: group_name)
+          gettext("Has salido del grupo %{group_name}", group_name: group_name)
         )
     end
   end

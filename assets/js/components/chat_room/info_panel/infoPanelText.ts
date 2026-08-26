@@ -17,6 +17,11 @@ export default function useInfoPanelText() {
     confirmLeaveGroupTitle: t("infoPanelText.confirmLeaveGroupTitle"),
     confirmLeaveGroupMessage: (groupName: string) =>
       t("infoPanelText.confirmLeaveGroupMessage", { groupName }),
+    confirmRemoveMemberTitle: t("infoPanelText.confirmRemoveMemberTitle"),
+    confirmRemoveMemberMessage: (nickname: string) =>
+      t("infoPanelText.confirmRemoveMemberMessage", { nickname }),
     confirmCancelButton: t("infoPanelText.confirmCancelButton"),
+    groupDeletedMessage: (groupName: string) =>
+      t("infoPanelText.groupDeletedMessage", { groupName }),
   };
 }

@@ -33,6 +33,7 @@ export default function GroupMemberItem({
   const infoPanelText = useInfoPanelText();
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
+  const [showRemoveMemberDialog, setShowRemoveMemberDialog] = useState(false);
 
   const handleMenuClick = (key: string) => {
     if (key === "addAdmin") {
@@ -43,7 +44,7 @@ export default function GroupMemberItem({
       if (isCurrentUser) {
         setShowLeaveDialog(true);
       } else {
-        onDelete?.(contact.nickname);
+        setShowRemoveMemberDialog(true);
       }
     }
     setDropdownVisible(false);
@@ -127,6 +128,20 @@ export default function GroupMemberItem({
       onClose={() => setShowLeaveDialog(false)}
       onConfirm={() => {
         setShowLeaveDialog(false);
+        onDelete?.(contact.nickname);
+      }}
+    />
+
+    <ConfirmDialog
+      open={showRemoveMemberDialog}
+      variant="danger"
+      title={infoPanelText.confirmRemoveMemberTitle}
+      content={infoPanelText.confirmRemoveMemberMessage(contact.nickname)}
+      confirmLabel={infoPanelText.removeMember}
+      cancelLabel={infoPanelText.confirmCancelButton}
+      onClose={() => setShowRemoveMemberDialog(false)}
+      onConfirm={() => {
+        setShowRemoveMemberDialog(false);
         onDelete?.(contact.nickname);
       }}
     />

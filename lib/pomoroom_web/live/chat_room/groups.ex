@@ -44,7 +44,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
         PubSub.subscribe(Pomoroom.PubSub, "chat:#{group_chat.chat_id}")
         ChatServer.join_chat(group_chat.chat_id)
 
-        event_data = %{is_group: true, group_data: group_chat, status: "accepted"}
+        group_data =
+          Map.put(group_chat, :invite_link, GroupChats.build_invite_link(group_chat.chat_id))
+
+        event_data = %{is_group: true, group_data: group_data, status: "accepted"}
         notify_react(socket, "add_group_to_list", event_data)
 
       {:error, reason} ->
@@ -55,9 +58,51 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
   defp do_delete_group(group_name, user, socket) do
     case GroupChats.get_by("name", group_name) do
       {:ok, group_chat} ->
-        GroupChats.delete(group_name, user.nickname)
-        PubSub.unsubscribe(Pomoroom.PubSub, "chat:#{group_chat.chat_id}")
-        {:noreply, socket}
+        case GroupChats.delete(group_name, user.nickname) do
+          {:ok, %{chat_deleted: true, chat_id: chat_id}} ->
+            socket =
+              if socket.assigns[:chat_id] == chat_id do
+                socket
+                |> assign(:chat_id, nil)
+                |> assign(:current_group_joined_at, nil)
+                |> assign(:current_group_removed_at, nil)
+              else
+                socket
+              end
+
+            PubSub.unsubscribe(Pomoroom.PubSub, "chat:#{chat_id}")
+            notify_react(socket, "group_deleted", %{chat_id: chat_id, group_name: group_name})
+
+          {:ok, %{chat_id: chat_id, group_name: remaining_group_name, removed_at: removed_at}} ->
+            PubSub.unsubscribe(Pomoroom.PubSub, "chat:#{group_chat.chat_id}")
+
+            case GroupChats.get_by("chat_id", chat_id) do
+              {:ok, updated_group_chat} ->
+                notify_members_updated(updated_group_chat, %{
+                  group_name: remaining_group_name,
+                  chat_id: chat_id
+                })
+
+              {:error, _reason} ->
+                :ok
+            end
+
+            if socket.assigns[:chat_id] == chat_id do
+              socket = assign(socket, :current_group_removed_at, removed_at)
+
+              notify_react(socket, "group_member_removed", %{
+                chat_id: chat_id,
+                group_name: remaining_group_name,
+                removed_at: removed_at,
+                disable_send: true
+              })
+            else
+              {:noreply, socket}
+            end
+
+          {:error, reason} ->
+            notify_react(socket, "error_managing_group_member", reason)
+        end
 
       {:error, _reason} ->
         {:noreply, socket}

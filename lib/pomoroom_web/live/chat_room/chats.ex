@@ -167,10 +167,13 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Chats do
         }
       end)
 
+    group_data =
+      Map.put(group_chat, :invite_link, GroupChats.build_invite_link(group_chat.chat_id))
+
     event_data = %{
       chat_id: group_chat.chat_id,
       is_admin: is_admin,
-      group_data: group_chat,
+      group_data: group_data,
       plugins: ChatPluginService.get_plugins_from_chat(group_chat),
       messages: messages_with_images_user,
       has_more: length(messages_with_images_user) == @initial_messages_limit,

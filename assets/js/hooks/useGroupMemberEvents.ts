@@ -1,4 +1,6 @@
 import { useEffect, useRef } from "react";
+import { message } from "antd";
+import { useTranslation } from "react-i18next";
 import { refreshConversationsAction } from "../services/contactService";
 import { AddEvent, ChatMember, ConversationEntry, EventBusPayloads, RemoveEvent } from "../types/events";
 
@@ -24,6 +26,7 @@ export function useGroupMembershipEvents({
   removeEvent,
 }: UseGroupMembershipEventsParams) {
   const lastProcessedGroupEventRef = useRef("");
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (eventName === "show_my_contacts" && eventData?.contact_list) {
@@ -109,6 +112,7 @@ export function useGroupMembershipEvents({
         chat_id: eventData?.chat_id || "",
         group_name: eventData?.group_name || "",
       });
+      message.info(t("infoPanelText.groupDeletedMessage", { groupName: eventData?.group_name || "" }));
       refreshConversationsAction(addEvent);
     }
   }, [eventName, eventData]);
