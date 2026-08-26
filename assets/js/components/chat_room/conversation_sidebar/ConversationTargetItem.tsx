@@ -36,7 +36,7 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
       }
       onSelect();
     }
-    addEvent("mobile_open_chat", true);
+    addEvent("open_chat_mobile", true);
   };
 
   const getBackgroundContact = () => {

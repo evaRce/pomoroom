@@ -9,14 +9,13 @@ defmodule PomoroomWeb.GroupInviteLink do
 
     case authenticated_user_info(session) do
       nil ->
-        PhoenixLiveSession.put_session(session, "pending_invite_token", token)
-        {:ok, redirect(socket, to: "/login"), layout: false}
+        {:ok, redirect(socket, to: "/login?invite=#{token}"), layout: false}
 
       user_info ->
         case GroupChats.preview_invite(token, user_info.nickname) do
           {:ok, %{already_member: true, group_name: group_name}} ->
-            PhoenixLiveSession.put_session(socket, "pending_open_group", group_name)
-            {:ok, redirect(socket, to: "/chat"), layout: false}
+            {:ok, redirect(socket, to: "/chat?open_group=#{URI.encode_www_form(group_name)}"),
+             layout: false}
 
           {:ok, %{already_member: false, group_name: group_name}} ->
             socket =
@@ -47,8 +46,8 @@ defmodule PomoroomWeb.GroupInviteLink do
             :ok
         end
 
-        PhoenixLiveSession.put_session(socket, "pending_open_group", group_name)
-        {:noreply, redirect(socket, to: "/chat")}
+        {:noreply,
+         redirect(socket, to: "/chat?open_group=#{URI.encode_www_form(group_name)}")}
 
       {:error, reason} ->
         {:noreply, assign_error(socket, reason)}

@@ -5,12 +5,12 @@ defmodule PomoroomWeb.HomeLive.Login do
   @max_attempts 3
   @scale_ms :timer.minutes(1)
 
-  def mount(_params, session, socket) do
+  def mount(params, session, socket) do
     socket =
       socket
       |> assign(:client_ip, client_ip(socket))
       |> assign(:locale, Map.get(session, "locale", "es"))
-      |> assign(:pending_invite_token, Map.get(session, "pending_invite_token"))
+      |> assign(:pending_invite_token, Map.get(params, "invite"))
 
     {:ok, PhoenixLiveSession.maybe_subscribe(socket, session), layout: false}
   end
@@ -60,7 +60,6 @@ defmodule PomoroomWeb.HomeLive.Login do
             {:ok, user_info} ->
               socket = PhoenixLiveSession.put_session(socket, "user_info", user_info)
               redirect_to = post_login_redirect(socket)
-              socket = PhoenixLiveSession.put_session(socket, "pending_invite_token", nil)
               {:noreply, redirect(socket, to: redirect_to)}
 
             {:error, _reason} ->

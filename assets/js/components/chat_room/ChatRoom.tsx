@@ -43,12 +43,12 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
   const [infoChatSelected, setInfoChatSelected] = useState<InfoChatSelected>({});
   const [mobileShowChat, setMobileShowChat] = useState(false);
   const hasRequestedInitialData = useRef(false);
-  const mobileOpenChatEvent = useEvent("mobile_open_chat");
+  const mobileOpenChatEvent = useEvent("open_chat_mobile");
 
   useEffect(() => {
     if (mobileOpenChatEvent) {
       setMobileShowChat(true);
-      removeEvent("mobile_open_chat");
+      removeEvent("open_chat_mobile");
     }
   }, [mobileOpenChatEvent]);
 
