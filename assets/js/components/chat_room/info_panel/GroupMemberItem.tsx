@@ -78,20 +78,20 @@ export default function GroupMemberItem({
 
   return (
     <>
-    <div className="relative flex items-center justify-between p-2 border-b hover:bg-gray-400">
+    <div className="relative flex items-center justify-between p-2 border-b hover:bg-gray-400 landscape-sm:p-1">
       <div className="flex items-center space-x-2">
         <div className="flex-shrink-0">
           <img
-            className="h-10 w-10 rounded-full bg-white"
+            className="h-10 w-10 rounded-full bg-white landscape-sm:h-7 landscape-sm:w-7"
             src={contact.image_profile}
             alt={contact.nickname}
           />
         </div>
-        <span>{contact.nickname}</span>
+        <span className="landscape-sm:text-sm">{contact.nickname}</span>
       </div>
       <div className="flex items-center space-x-2">
         {contact.is_admin && (
-          <span className="text-white font-bold text-xs rounded-full px-2 py-1 bg-gray-500">
+          <span className="text-white font-bold text-xs rounded-full px-2 py-1 bg-gray-500 landscape-sm:px-1.5 landscape-sm:py-0.5">
             {infoPanelText.adminBadge}
           </span>
         )}
