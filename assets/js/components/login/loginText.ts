@@ -16,7 +16,6 @@ export default function useLoginText() {
       emailRequired: t("loginText.formEmailRequired"),
       passwordLabel: t("loginText.formPasswordLabel"),
       passwordRequired: t("loginText.formPasswordRequired"),
-      forgotPassword: t("loginText.formForgotPassword"),
       submit: t("loginText.formSubmit"),
       noAccount: t("loginText.formNoAccount"),
       signupLink: t("loginText.formSignupLink"),

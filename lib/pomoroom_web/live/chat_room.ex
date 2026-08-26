@@ -15,7 +15,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
   use PomoroomWeb, :live_view
 
-  def mount(_params, session, socket) do
+  def mount(params, session, socket) do
     case authenticated_user_info(session) do
       nil ->
         {:ok, redirect(socket, to: "/login")}
@@ -46,7 +46,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
           end)
 
           subscribed_chat_ids = MapSet.new(all_chats_id)
-          socket = assign(socket, :subscribed_chat_ids, subscribed_chat_ids)
+
+          socket =
+            socket
+            |> assign(:subscribed_chat_ids, subscribed_chat_ids)
+            |> maybe_open_pending_group(params)
 
           {:ok, socket, layout: false}
         else
@@ -109,6 +113,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
 
   def handle_info({:group_admin_updated, payload}, socket) do
     Groups.handle_group_admin_updated(payload, socket)
+  end
+
+  def handle_info({:group_members_updated, payload}, socket) do
+    Groups.handle_group_members_updated(payload, socket)
   end
 
   def handle_info({:chat_plugin_installed, payload}, socket) do
@@ -609,6 +617,19 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
   defp to_naive_datetime(%DateTime{} = datetime), do: DateTime.to_naive(datetime)
   defp to_naive_datetime(%NaiveDateTime{} = datetime), do: datetime
   defp to_naive_datetime(value), do: value
+
+  defp maybe_open_pending_group(socket, params) do
+    case Map.get(params, "open_group") do
+      nil ->
+        socket
+
+      group_name ->
+        {:noreply, socket} =
+          Chats.handle_selected_group_chat(group_name, socket.assigns.user_info, socket)
+
+        push_patch(socket, to: "/chat")
+    end
+  end
 
   defp authenticated_user_info(session) do
     case Map.get(session, "user_info") do

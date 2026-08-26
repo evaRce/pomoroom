@@ -1,4 +1,9 @@
 defmodule Pomoroom.GroupChats.GroupChatService do
+  use Phoenix.VerifiedRoutes,
+    endpoint: PomoroomWeb.Endpoint,
+    router: PomoroomWeb.Router,
+    statics: PomoroomWeb.static_paths()
+
   alias Pomoroom.ChangesetErrors
   alias Pomoroom.Chats
   alias Pomoroom.GroupChats.{GroupChatRepository, GroupChatSchema}
@@ -8,6 +13,8 @@ defmodule Pomoroom.GroupChats.GroupChatService do
 
   @max_group_members 20
   @max_groups_per_user 25
+  @invite_token_salt "group_invite"
+  @invite_token_max_age 60 * 60 * 24
 
   def create_group_chat(from_user, name) do
     if GroupChatRepository.count_groups_for_member(from_user) >= @max_groups_per_user do
@@ -24,8 +31,7 @@ defmodule Pomoroom.GroupChats.GroupChatService do
         |> GroupChatSchema.group_chat_changeset(
           name,
           get_default_group_image(),
-          from_user,
-          generate_invite_link(chat_id)
+          from_user
         )
         |> Chats.timestamps()
 
@@ -54,54 +60,7 @@ defmodule Pomoroom.GroupChats.GroupChatService do
 
       {:ok, group_chat} ->
         if user in group_chat.admin do
-          now = DateTime.utc_now()
-          members = group_chat.members || []
-
-          existing_member =
-            Enum.find(members, fn member ->
-              get_member_id(member) == new_member
-            end)
-
-          case check_can_add_member(members, new_member) do
-            {:error, reason} ->
-              {:error, reason}
-
-            :ok ->
-              case existing_member do
-                nil ->
-                  GroupChatRepository.update_by_chat_id(
-                    group_chat.chat_id,
-                    "$addToSet",
-                    %{
-                      members: %{"user_id" => new_member, "joined_at" => now, "removed_at" => nil}
-                    }
-                  )
-
-                  {:ok, gettext("Usuario %{member} añadido al grupo", member: new_member)}
-
-                member when is_map(member) ->
-                  removed_at = get_member_removed_at(member)
-
-                  if is_nil(removed_at) do
-                    {:error,
-                     gettext("El usuario %{member} ya es miembro del grupo", member: new_member)}
-                  else
-                    updated_members =
-                      Enum.map(members, fn current_member ->
-                        if get_member_id(current_member) == new_member do
-                          current_member
-                          |> Map.put("joined_at", now)
-                          |> Map.put("removed_at", nil)
-                        else
-                          current_member
-                        end
-                      end)
-
-                    GroupChatRepository.update_members(group_chat.chat_id, updated_members)
-                    {:ok, gettext("Usuario %{member} reañadido al grupo", member: new_member)}
-                  end
-              end
-          end
+          do_add_member(group_chat, new_member)
         else
           {:error,
            gettext("El usuario %{user} no tiene permiso para añadir miembros al grupo",
@@ -111,14 +70,117 @@ defmodule Pomoroom.GroupChats.GroupChatService do
     end
   end
 
-  def join_group_with_link(invite_link, user) do
-    case decode_chat_id_from_invite_link(invite_link) do
+  def join_via_invite_link(token, new_member) do
+    case decode_chat_id_from_token(token) do
       {:ok, chat_id} ->
-        # cambiar chat_id por chat_name
-        add_member(chat_id, user, user)
+        case get_by("chat_id", chat_id) do
+          {:ok, group_chat} ->
+            if already_active_member?(group_chat, new_member) do
+              {:ok,
+               %{
+                 group_name: group_chat.name,
+                 chat_id: group_chat.chat_id,
+                 message: gettext("Ya eres miembro de este grupo")
+               }}
+            else
+              do_add_member(group_chat, new_member)
+            end
+
+          {:error, reason} ->
+            {:error, reason}
+        end
 
       {:error, reason} ->
         {:error, reason}
+    end
+  end
+
+  def preview_invite(token, user) do
+    case decode_chat_id_from_token(token) do
+      {:ok, chat_id} ->
+        case get_by("chat_id", chat_id) do
+          {:ok, group_chat} ->
+            {:ok,
+             %{
+               group_name: group_chat.name,
+               chat_id: group_chat.chat_id,
+               already_member: already_active_member?(group_chat, user)
+             }}
+
+          {:error, reason} ->
+            {:error, reason}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp already_active_member?(group_chat, user) do
+    Enum.any?(group_chat.members || [], fn member ->
+      get_member_id(member) == user and is_nil(get_member_removed_at(member))
+    end)
+  end
+
+  defp do_add_member(group_chat, new_member) do
+    now = DateTime.utc_now()
+    members = group_chat.members || []
+
+    existing_member =
+      Enum.find(members, fn member ->
+        get_member_id(member) == new_member
+      end)
+
+    case check_can_add_member(members, new_member) do
+      {:error, reason} ->
+        {:error, reason}
+
+      :ok ->
+        case existing_member do
+          nil ->
+            GroupChatRepository.update_by_chat_id(
+              group_chat.chat_id,
+              "$addToSet",
+              %{
+                members: %{"user_id" => new_member, "joined_at" => now, "removed_at" => nil}
+              }
+            )
+
+            {:ok,
+             %{
+               group_name: group_chat.name,
+               chat_id: group_chat.chat_id,
+               message: gettext("Usuario %{member} añadido al grupo", member: new_member)
+             }}
+
+          member when is_map(member) ->
+            removed_at = get_member_removed_at(member)
+
+            if is_nil(removed_at) do
+              {:error,
+               gettext("El usuario %{member} ya es miembro del grupo", member: new_member)}
+            else
+              updated_members =
+                Enum.map(members, fn current_member ->
+                  if get_member_id(current_member) == new_member do
+                    current_member
+                    |> Map.put("joined_at", now)
+                    |> Map.put("removed_at", nil)
+                  else
+                    current_member
+                  end
+                end)
+
+              GroupChatRepository.update_members(group_chat.chat_id, updated_members)
+
+              {:ok,
+               %{
+                 group_name: group_chat.name,
+                 chat_id: group_chat.chat_id,
+                 message: gettext("Usuario %{member} reañadido al grupo", member: new_member)
+               }}
+            end
+        end
     end
   end
 
@@ -135,7 +197,7 @@ defmodule Pomoroom.GroupChats.GroupChatService do
         remove_member_and_cleanup(
           group_chat,
           user,
-          gettext("Contacto eliminado del grupo %{group_name}", group_name: group_name)
+          gettext("Has salido del grupo %{group_name}", group_name: group_name)
         )
     end
   end
@@ -374,32 +436,27 @@ defmodule Pomoroom.GroupChats.GroupChatService do
     end
   end
 
-  defp generate_invite_link(chat_id) do
-    encoded_chat_id = Base.url_encode64(chat_id, padding: false)
-    "https://pomoroom/chat/#{encoded_chat_id}"
+  def build_invite_link(chat_id) do
+    token = Phoenix.Token.sign(PomoroomWeb.Endpoint, @invite_token_salt, chat_id)
+    url(~p"/invite/#{token}")
   end
 
-  defp decode_chat_id_from_invite_link(invite_link) do
-    [_base_url, _chat, encoded_chat_id] = String.split(invite_link, "/")
-
-    case Base.url_decode64(encoded_chat_id, padding: false) do
+  def decode_chat_id_from_token(token) do
+    case Phoenix.Token.verify(PomoroomWeb.Endpoint, @invite_token_salt, token,
+           max_age: @invite_token_max_age
+         ) do
       {:ok, chat_id} ->
-        case Chats.exists?(chat_id) do
-          true ->
-            {:ok, chat_id}
-
-          false ->
-            {:error,
-             %{
-               error:
-                 gettext("El chat del enlace `%{invite_link}` no existe",
-                   invite_link: invite_link
-                 )
-             }}
+        if Chats.exists?(chat_id) do
+          {:ok, chat_id}
+        else
+          {:error, %{error: gettext("El grupo de este enlace ya no existe")}}
         end
 
-      :error ->
-        {:error, %{error: gettext("Enlace de invitación inválido")}}
+      {:error, :expired} ->
+        {:error, %{error: gettext("Este enlace de invitación ha caducado"), reason: :expired}}
+
+      {:error, _reason} ->
+        {:error, %{error: gettext("Enlace de invitación inválido"), reason: :invalid}}
     end
   end
 

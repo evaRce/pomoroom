@@ -29,6 +29,7 @@ defmodule PomoroomWeb.Router do
     live_session :default, session: {__MODULE__, :live_session_data, []} do
       live "/login", HomeLive.Login
       live "/signup", HomeLive.SignUp
+      live "/invite/:token", GroupInviteLink
     end
   end
 

@@ -111,14 +111,6 @@ export const Login: React.FC<LoginProps> = (props: LoginProps) => {
                 />
               </Form.Item>
               <Form.Item>
-                <button
-                  type="button"
-                  className="text-blue-600 underline font-semibold bg-transparent border-none p-0 cursor-pointer"
-                >
-                  {loginText.form.forgotPassword}
-                </button>
-              </Form.Item>
-              <Form.Item>
                 <Button
                   htmlType="submit"
                   className="!h-11 !border-[3px] text-white text-base font-semibold transitiona-all duration-700 bg-purple-500 !border-purple-500 hover:!bg-purple-400 hover:!border-purple-300 hover:!text-white focus:!bg-purple-400 focus:!border-purple-300 focus:!text-white active:!bg-purple-400 active:!border-purple-300 active:!text-white"

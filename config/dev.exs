@@ -26,14 +26,25 @@ config :pomoroom, :livekit,
 # watchers to your application. For example, we can use it
 # to bundle .js and .css sources.
 config :pomoroom, PomoroomWeb.Endpoint,
-  # Binding to loopback ipv4 address prevents access from other machines.
-  # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
-  http: [port: 4000],
+  # Bound to all interfaces so other devices (e.g. over a tunnel like ngrok,
+  # to share a real link with anyone) can reach the dev server. Set PHX_HOST
+  # (and PHX_PORT/PHX_SCHEME if not the ngrok default of 443/https) so
+  # generated invite links point somewhere those devices can actually
+  # resolve — e.g. `PHX_HOST=abcd1234.ngrok-free.app mix phx.server`.
+  # Defaults to "localhost"/4001/https when unset, so normal solo dev is
+  # unaffected.
+  http: [ip: {0, 0, 0, 0}, port: 4000],
   https: [
+    ip: {0, 0, 0, 0},
     port: 4001,
     cipher_suite: :strong,
     certfile: "priv/cert/selfsigned.pem",
     keyfile: "priv/cert/selfsigned_key.pem"
+  ],
+  url: [
+    host: System.get_env("PHX_HOST") || "localhost",
+    port: String.to_integer(System.get_env("PHX_PORT") || "4001"),
+    scheme: System.get_env("PHX_SCHEME") || "https"
   ],
   check_origin: false,
   code_reloader: true,

@@ -1,0 +1,88 @@
+defmodule PomoroomWeb.GroupInviteLink do
+  use PomoroomWeb, :live_view
+
+  alias Pomoroom.GroupChats
+  alias PomoroomWeb.ChatLive.ChatRoom.Groups
+
+  def mount(%{"token" => token}, session, socket) do
+    socket = PhoenixLiveSession.maybe_subscribe(socket, session)
+
+    case authenticated_user_info(session) do
+      nil ->
+        {:ok, redirect(socket, to: "/login?invite=#{token}"), layout: false}
+
+      user_info ->
+        case GroupChats.preview_invite(token, user_info.nickname) do
+          {:ok, %{already_member: true, group_name: group_name}} ->
+            {:ok, redirect(socket, to: "/chat?open_group=#{URI.encode_www_form(group_name)}"),
+             layout: false}
+
+          {:ok, %{already_member: false, group_name: group_name}} ->
+            socket =
+              socket
+              |> assign(:view, :confirm)
+              |> assign(:token, token)
+              |> assign(:user_info, user_info)
+              |> assign(:group_name, group_name)
+
+            {:ok, socket, layout: false}
+
+          {:error, reason} ->
+            {:ok, assign_error(socket, reason), layout: false}
+        end
+    end
+  end
+
+  def handle_event("confirm_join", _params, socket) do
+    %{token: token, user_info: user_info} = socket.assigns
+
+    case GroupChats.join_via_invite_link(token, user_info.nickname) do
+      {:ok, %{group_name: group_name, chat_id: chat_id}} ->
+        Groups.notify_group_system_message(
+          chat_id,
+          gettext("Se ha unido %{nickname}", nickname: user_info.nickname)
+        )
+
+        case GroupChats.get_by("chat_id", chat_id) do
+          {:ok, group_chat} ->
+            Groups.notify_members_updated(group_chat, %{group_name: group_name, chat_id: chat_id})
+
+          {:error, _reason} ->
+            :ok
+        end
+
+        {:noreply,
+         redirect(socket, to: "/chat?open_group=#{URI.encode_www_form(group_name)}")}
+
+      {:error, reason} ->
+        {:noreply, assign_error(socket, reason)}
+    end
+  end
+
+  def handle_event("cancel_join", _params, socket) do
+    {:noreply, redirect(socket, to: "/chat")}
+  end
+
+  defp assign_error(socket, reason) do
+    socket
+    |> assign(:view, :error)
+    |> assign(:error_message, error_message(reason))
+  end
+
+  defp error_message(%{error: message}), do: message
+  defp error_message(message) when is_binary(message), do: message
+  defp error_message(_), do: gettext("No se ha podido procesar el enlace de invitación")
+
+  defp authenticated_user_info(session) do
+    case Map.get(session, "user_info") do
+      %{"nickname" => nickname} = user_info when is_binary(nickname) and nickname != "" ->
+        user_info
+
+      %{nickname: nickname} = user_info when is_binary(nickname) and nickname != "" ->
+        user_info
+
+      _ ->
+        nil
+    end
+  end
+end

@@ -4,6 +4,7 @@ import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
 import {
   SendOutlined,
   SmileOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import { useEventContext, useEvent } from "../../EventContext";
 import { sendMessageToGroupAction, sendMessageToUserAction } from "../../../../services/messageService";
@@ -161,14 +162,27 @@ export default function ChatFooter() {
     setInputStr("");
   };
 
-  const footerPadding = isGroupMemberRemoved && chatData.group_data ? "px-0 py-0" : "px-3 py-2 sm:px-4 sm:py-3";
+  const isRemovedBannerVisible = isGroupMemberRemoved && chatData.group_data;
+
   return (
-    <footer className={`shrink-0 flex min-h-16 justify-between ${isGroupMemberRemoved && chatData.group_data ? '' : 'bg-gray-300'} ${footerPadding}`}>
-      {isGroupMemberRemoved && chatData.group_data ? (
-        <div className="flex h-full w-full items-center justify-center bg-yellow-300 text-yellow-900 text-2xl font-bold tracking-wide" style={{ padding: 0, borderRadius: 0 }}>
-          <span className="mx-3" role="img" aria-label={chatFooterText.warningIconLabel}>⚠️</span>
-          {groupMemberRemovedMessage}
-        </div>
+    <footer
+      className={
+        isRemovedBannerVisible
+          ? "shrink-0 flex min-h-16 items-center justify-center gap-3 border-t-2 border-amber-400 bg-amber-100 px-4 py-3"
+          : "shrink-0 flex min-h-16 items-center justify-between bg-gray-300 px-3 py-2 sm:px-4 sm:py-3"
+      }
+    >
+      {isRemovedBannerVisible ? (
+        <>
+          <WarningOutlined
+            role="img"
+            aria-label={chatFooterText.warningIconLabel}
+            className="shrink-0 text-xl text-amber-600"
+          />
+          <span className="text-base sm:text-lg font-semibold text-amber-900 text-center">
+            {groupMemberRemovedMessage}
+          </span>
+        </>
       ) : (
         <form className="flex w-full gap-3" onSubmit={handleSendMessage}>
           <div className="flex items-center w-full justify-center rounded-full bg-gray-100 shadow-sm transition-shadow duration-200 focus-within:shadow-md">

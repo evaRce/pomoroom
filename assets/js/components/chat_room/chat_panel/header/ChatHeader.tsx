@@ -377,7 +377,7 @@ export default function ChatHeader({
       setChatName(setNameChat() || "");
       setChatImage(setImageProfile() || "");
     }
-  }, [chatData]);
+  }, [chatData, userLogin]);
 
   const showUserDetails = () => {
     if (!isGroupChat || isGroupMemberRemoved) {
@@ -395,30 +395,34 @@ export default function ChatHeader({
   };
 
   const setImageProfile = () => {
-    if (!chatData || !userLogin) return undefined;
+    if (!chatData) return undefined;
 
     if (chatData.group_data) {
       return chatData.group_data.image;
-    } else {
-      if (userLogin.nickname === chatData.from_user_data?.nickname) {
-        return chatData.to_user_data?.image_profile;
-      } else if (userLogin.nickname === chatData.to_user_data?.nickname) {
-        return chatData.from_user_data?.image_profile;
-      }
+    }
+
+    if (!userLogin) return undefined;
+
+    if (userLogin.nickname === chatData.from_user_data?.nickname) {
+      return chatData.to_user_data?.image_profile;
+    } else if (userLogin.nickname === chatData.to_user_data?.nickname) {
+      return chatData.from_user_data?.image_profile;
     }
   };
 
   const setNameChat = () => {
-    if (!chatData || !userLogin) return undefined;
+    if (!chatData) return undefined;
 
     if (chatData.group_data) {
       return chatData.group_data.name;
-    } else {
-      if (userLogin.nickname === chatData.from_user_data?.nickname) {
-        return chatData.to_user_data?.nickname;
-      } else if (userLogin.nickname === chatData.to_user_data?.nickname) {
-        return chatData.from_user_data?.nickname;
-      }
+    }
+
+    if (!userLogin) return undefined;
+
+    if (userLogin.nickname === chatData.from_user_data?.nickname) {
+      return chatData.to_user_data?.nickname;
+    } else if (userLogin.nickname === chatData.to_user_data?.nickname) {
+      return chatData.from_user_data?.nickname;
     }
   };
 

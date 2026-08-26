@@ -6,8 +6,7 @@ defmodule Pomoroom.GroupChats.GroupChatSchemaTest do
     chat_id: "chat-1",
     name: "group name",
     image: "/images/default_group.svg",
-    from_user: "user_1",
-    invite_link: "invite-link-1"
+    from_user: "user_1"
   }
 
   defp build_changeset(attrs) do
@@ -15,8 +14,7 @@ defmodule Pomoroom.GroupChats.GroupChatSchemaTest do
       attrs.chat_id,
       attrs.name,
       attrs.image,
-      attrs.from_user,
-      attrs.invite_link
+      attrs.from_user
     )
   end
 
@@ -67,12 +65,5 @@ defmodule Pomoroom.GroupChats.GroupChatSchemaTest do
 
     assert changeset_min.valid?
     assert changeset_max.valid?
-  end
-
-  test "is invalid when invite_link is missing" do
-    changeset = build_changeset(%{@valid_attrs | invite_link: nil})
-
-    refute changeset.valid?
-    assert %{invite_link: ["can't be blank"]} = errors_on(changeset)
   end
 end

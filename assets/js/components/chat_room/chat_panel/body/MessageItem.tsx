@@ -1,6 +1,7 @@
 import React from "react";
 import { Avatar } from "antd";
 import type { ChatMessage, EventBusPayload } from "../../../../types/events";
+import { linkifyText } from "../../../../utils/linkifyText";
 
 interface MessageItemProps {
   message: ChatMessage;
@@ -23,9 +24,9 @@ export default function MessageItem({
   const isMyMessage = message.data.from_user === userLogin?.nickname;
   const messagePosition = isMyMessage ? "chat-end" : "chat-start";
   const bubbleClass = isMyMessage ? "message-bubble-mine" : "message-bubble-other";
-  const isPomodoro = message.data.from_user === "pomodoro";
+  const isSystemMessage = ["pomodoro", "group_chat"].includes(message.data.from_user);
 
-  if (isPomodoro) {
+  if (isSystemMessage) {
     return (
       <div className="flex justify-center my-2">
         <div className="bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm text-center">
@@ -46,7 +47,7 @@ export default function MessageItem({
         </>
       )}
       <div className={`chat-bubble ${bubbleClass}`}>
-        {message.data.text}
+        {linkifyText(message.data.text)}
         <div className="message-time">
           <time className="text-xs" dateTime={new Date(message.data.inserted_at).toISOString()}>
             {setTime(message.data.inserted_at)}
