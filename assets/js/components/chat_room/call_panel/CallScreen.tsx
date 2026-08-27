@@ -119,7 +119,7 @@ function ParticipantTile({
 
   return (
     <div
-      className={`relative flex flex-col items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-white ${className}`}
+      className={`relative flex flex-col items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-white [container-type:size] ${className}`}
     >
       {hasVideo && videoTrackRef ? (
         <>
@@ -142,7 +142,7 @@ function ParticipantTile({
         </>
       ) : (
         <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-2">
-          <div className="aspect-square w-[42%] min-w-[32px] max-w-[80px]">
+          <div className="aspect-square w-[min(42cqw,42cqh)] min-w-[32px] max-w-[80px]">
             <Avatar
               src={avatarUrl}
               className="!h-full !w-full border border-gray-200 bg-gray-50 !text-lg font-semibold !text-gray-500"
