@@ -12,11 +12,18 @@ config :pomoroom, :db, database: "pomoroom_dev", username: "mongo", password: "a
 # Note:
 # When the app runs over HTTPS, browsers block insecure ws:// connections.
 # For this reason, WebSocket traffic is routed through a TLS proxy (port 7443).
+#
+# When sharing the app over a tunnel (e.g. ngrok), that tunnel only forwards
+# the Phoenix port — it won't carry traffic to the LiveKit TLS proxy on 7443.
+# Open a second tunnel for that port (e.g. `ngrok http 7443`) and set
+# LIVEKIT_WS_URL to its wss:// URL so the frontend connects to LiveKit there
+# instead of guessing `wss://<page host>:7443`.
 
 config :pomoroom, :livekit,
   api_key: "devkey",
   api_secret: "secret",
   ws_port: 7443,
+  ws_url: System.get_env("LIVEKIT_WS_URL"),
   admin_url: "http://localhost:7880"
 
 # For development, we disable any cache and enable
