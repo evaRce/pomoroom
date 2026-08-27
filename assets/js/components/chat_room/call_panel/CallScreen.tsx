@@ -119,7 +119,7 @@ function ParticipantTile({
 
   return (
     <div
-      className={`relative flex flex-col items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-white ${className}`}
+      className={`relative flex flex-col items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-white [container-type:size] ${className}`}
     >
       {hasVideo && videoTrackRef ? (
         <>
@@ -142,7 +142,7 @@ function ParticipantTile({
         </>
       ) : (
         <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-2">
-          <div className="aspect-square w-[42%] min-w-[32px] max-w-[80px]">
+          <div className="aspect-square w-[min(42cqw,42cqh)] min-w-[32px] max-w-[80px]">
             <Avatar
               src={avatarUrl}
               className="!h-full !w-full border border-gray-200 bg-gray-50 !text-lg font-semibold !text-gray-500"
@@ -187,13 +187,13 @@ function ParticipantGrid({
     });
     observer.observe(el);
     return () => observer.disconnect();
-  }, [count >= 3]);
+  }, [count]);
 
   if (count === 0) return null;
 
   if (count === 1) {
     return (
-      <div className="flex h-full w-full items-center justify-center">
+      <div ref={containerRef} className="flex h-full w-full items-center justify-center">
         <div className="aspect-square h-[70%] max-w-[70%]">
           {renderTile(participants[0], "h-full w-full")}
         </div>
@@ -202,12 +202,20 @@ function ParticipantGrid({
   }
 
   if (count === 2) {
+    // Based on the actual measured panel size rather than viewport breakpoints, so a
+    // narrow call panel (e.g. private chat next to the conversation sidebar on desktop)
+    // stacks the two tiles the same way a portrait phone screen would.
+    const isStacked = size.width > 0 && size.height > 0 && size.height > size.width;
+
     return (
-      <div className="flex h-full w-full items-center justify-center gap-[5%] max-sm:portrait:flex-col">
+      <div
+        ref={containerRef}
+        className={`flex h-full w-full items-center justify-center gap-[5%] ${isStacked ? "flex-col" : ""}`}
+      >
         {participants.map((participant) => (
           <div
             key={participant.identity}
-            className="aspect-square h-[80%] w-[40%] max-sm:portrait:h-[40%] max-sm:portrait:w-[80%]"
+            className={isStacked ? "aspect-square h-[40%] w-[80%]" : "aspect-square h-[80%] w-[40%]"}
           >
             {renderTile(participant, "h-full w-full")}
           </div>
