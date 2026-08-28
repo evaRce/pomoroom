@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { AddEvent, ChatUserRef, ConversationEntry } from "../types/events";
+import { refreshConversationsAction } from "../services/contactService";
 
 type UseUserContactsAndGroupsEventsParams = {
   eventName: string;
@@ -13,6 +14,8 @@ type UseUserContactsAndGroupsEventsParams = {
     is_group?: ConversationEntry["is_group"];
     all_contact_list?: ConversationEntry[];
     error?: string;
+    contact_name?: string;
+    chat_id?: string | null;
   };
   addEvent: AddEvent;
   setUserNickname: (value: string) => void;
@@ -64,4 +67,11 @@ export function useUserContactsAndGroupsEvents({
       addEvent(eventName, {});
     }
   }, [eventName, eventData]);
+
+  useEffect(() => {
+    if (eventName === "contact_removed" && eventData.contact_name) {
+      addEvent(eventName, { contact_name: eventData.contact_name, chat_id: eventData.chat_id ?? null });
+      refreshConversationsAction(addEvent);
+    }
+  }, [eventData.contact_name, eventData.chat_id]);
 }

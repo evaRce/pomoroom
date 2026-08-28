@@ -215,6 +215,21 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     FriendRequests.handle_friend_request_rejected(payload, socket)
   end
 
+  def handle_info(
+        {:friend_request_change_status,
+         %{
+           event_name: "open_rejected_request_send",
+           event_data: %{rejected_request: %{to_user: _to_user, status: "rejected"}}
+         } = payload},
+        socket
+      ) do
+    FriendRequests.handle_friend_request_rejected(payload, socket)
+  end
+
+  def handle_info({:contact_removed, payload}, socket) do
+    Contacts.handle_contact_removed(payload, socket)
+  end
+
   def handle_event("action.get_user_info", _args, %{assigns: %{user_info: user}} = socket) do
     payload = %{event_name: "show_user_info", event_data: user}
     {:noreply, push_event(socket, "react", payload)}

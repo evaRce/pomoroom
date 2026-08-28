@@ -39,6 +39,7 @@ export function useContactsAndGroupsOutgoingActions({
   const setAdmin = useEvent("set_admin");
   const refreshConversations = useEvent("refresh_conversations");
   const groupDeleted = useEvent("group_deleted");
+  const contactRemoved = useEvent("contact_removed");
   const logout = useEvent("logout");
   const changeLocale = useEvent("set_locale");
 
@@ -140,6 +141,17 @@ export function useContactsAndGroupsOutgoingActions({
 
       removeEvent("group_deleted");
     }
+    if (contactRemoved) {
+      if (infoChatSelected?.contact_name === contactRemoved.contact_name) {
+        setComponent("");
+        if (isVisibleDetail) {
+          setIsVisibleDetail(false);
+        }
+        setInfoChatSelected({});
+      }
+
+      removeEvent("contact_removed");
+    }
     if (logout) {
       clearAllTimers();
       clearRequestedConfigs();
@@ -166,6 +178,7 @@ export function useContactsAndGroupsOutgoingActions({
     setAdmin,
     refreshConversations,
     groupDeleted,
+    contactRemoved,
     logout,
     changeLocale,
     pushEventToLiveView,
