@@ -109,6 +109,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     Groups.handle_group_member_removed(payload, socket)
   end
 
+  def handle_info({:group_deleted, payload}, socket) do
+    Groups.handle_group_deleted(payload, socket)
+  end
+
   def handle_info({:new_group_member_added, payload}, socket) do
     Groups.handle_new_group_member_added(payload, socket)
   end
