@@ -188,6 +188,13 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
 
             notify_members_updated(group_chat, payload, [user.nickname])
 
+            PubSub.broadcast_from(
+              Pomoroom.PubSub,
+              self(),
+              "user:#{user.nickname}",
+              {:group_member_list_changed, %{group_name: group_name}}
+            )
+
           {:error, _reason} ->
             PubSub.broadcast(
               Pomoroom.PubSub,
@@ -221,6 +228,13 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
             socket
           end
 
+        PubSub.broadcast_from(
+          Pomoroom.PubSub,
+          self(),
+          "user:#{user.nickname}",
+          {:group_deleted, %{chat_id: chat_id, group_name: group_name}}
+        )
+
         notify_react(socket, "group_deleted", %{chat_id: chat_id, group_name: group_name})
 
       {:ok, %{chat_id: chat_id, group_name: removed_group_name, removed_at: removed_at}} ->
@@ -247,6 +261,13 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
           {:error, _reason} ->
             :ok
         end
+
+        PubSub.broadcast_from(
+          Pomoroom.PubSub,
+          self(),
+          "user:#{user.nickname}",
+          {:group_member_list_changed, %{group_name: group_name}}
+        )
 
         handle_member_update(group_name, user, socket)
 
@@ -498,7 +519,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
     end
   end
 
-  defp handle_member_update(group_name, user, socket) do
+  def handle_member_update(group_name, user, socket) do
     case get_contact_list_for_group(group_name, user) do
       {:ok, contact_list} ->
         case GroupChats.get_members(group_name) do
