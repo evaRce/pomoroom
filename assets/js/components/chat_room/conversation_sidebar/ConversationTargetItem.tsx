@@ -28,7 +28,10 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
   const hasPendingNotification = Boolean(notification?.hasPendingNotification);
 
   const handleChat = () => {
-    if (!isSelected) {
+    const isPendingOrRejected =
+      contact.status_request === "pending" || contact.status_request === "rejected";
+
+    if (!isSelected || isPendingOrRejected) {
       if (contact.is_group) {
         selectGroupChatAction(addEvent, contact.name);
       } else {

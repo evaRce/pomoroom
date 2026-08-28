@@ -52,6 +52,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
             |> assign(:subscribed_chat_ids, subscribed_chat_ids)
             |> maybe_open_pending_group(params)
 
+          {:noreply, socket} = Contacts.handle_list_contacts(user_info, socket)
+
           {:ok, socket, layout: false}
         else
           socket = assign(socket, :subscribed_chat_ids, subscribed_chat_ids)
