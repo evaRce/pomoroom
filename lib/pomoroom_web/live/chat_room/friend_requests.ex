@@ -49,6 +49,13 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
                   {:friend_request_change_status, payload, private_chat.chat_id}
                 )
 
+                PubSub.broadcast_from(
+                  Pomoroom.PubSub,
+                  self(),
+                  "friend_request:#{request.to_user}",
+                  {:friend_request_change_status, payload, private_chat.chat_id}
+                )
+
                 notify_react(socket, payload)
 
               {:error, _reason} ->
@@ -95,6 +102,13 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
               Pomoroom.PubSub,
               "friend_request:#{request.from_user}",
               {:friend_request_change_status, payload_to_broadcast}
+            )
+
+            PubSub.broadcast_from(
+              Pomoroom.PubSub,
+              self(),
+              "friend_request:#{request.to_user}",
+              {:friend_request_change_status, payload}
             )
 
             notify_react(socket, payload)
@@ -165,6 +179,13 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
                       Pomoroom.PubSub,
                       "friend_request:#{to_user_arg}",
                       {:friend_request_sent, payload_from_user}
+                    )
+
+                    PubSub.broadcast_from(
+                      Pomoroom.PubSub,
+                      self(),
+                      "friend_request:#{user_nickname}",
+                      {:friend_request_sent, payload}
                     )
 
                     notify_react(socket, payload)

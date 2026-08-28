@@ -114,11 +114,27 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Contacts do
       {:ok, private_chat} ->
         PrivateChats.delete_contact(private_chat.chat_id, user.nickname)
         PubSub.unsubscribe(Pomoroom.PubSub, "chat:#{private_chat.chat_id}")
+        broadcast_contact_removed(user.nickname, contact_name, private_chat.chat_id)
         {:noreply, socket}
 
       {:error, _reason} ->
         FriendRequests.delete_request(to_user, from_user)
+        broadcast_contact_removed(user.nickname, contact_name, nil)
         {:noreply, socket}
     end
+  end
+
+  defp broadcast_contact_removed(user_nickname, contact_name, chat_id) do
+    PubSub.broadcast_from(
+      Pomoroom.PubSub,
+      self(),
+      "user:#{user_nickname}",
+      {:contact_removed, %{contact_name: contact_name, chat_id: chat_id}}
+    )
+  end
+
+  def handle_contact_removed(%{chat_id: chat_id} = payload, socket) do
+    if chat_id, do: PubSub.unsubscribe(Pomoroom.PubSub, "chat:#{chat_id}")
+    notify_react(socket, "contact_removed", payload)
   end
 end

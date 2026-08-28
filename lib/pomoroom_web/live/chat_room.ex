@@ -109,6 +109,14 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     Groups.handle_group_member_removed(payload, socket)
   end
 
+  def handle_info({:group_deleted, payload}, socket) do
+    Groups.handle_group_deleted(payload, socket)
+  end
+
+  def handle_info({:group_member_list_changed, %{group_name: group_name}}, socket) do
+    Groups.handle_member_update(group_name, socket.assigns.user_info, socket)
+  end
+
   def handle_info({:new_group_member_added, payload}, socket) do
     Groups.handle_new_group_member_added(payload, socket)
   end
@@ -213,6 +221,21 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         socket
       ) do
     FriendRequests.handle_friend_request_rejected(payload, socket)
+  end
+
+  def handle_info(
+        {:friend_request_change_status,
+         %{
+           event_name: "open_rejected_request_send",
+           event_data: %{rejected_request: %{to_user: _to_user, status: "rejected"}}
+         } = payload},
+        socket
+      ) do
+    FriendRequests.handle_friend_request_rejected(payload, socket)
+  end
+
+  def handle_info({:contact_removed, payload}, socket) do
+    Contacts.handle_contact_removed(payload, socket)
   end
 
   def handle_event("action.get_user_info", _args, %{assigns: %{user_info: user}} = socket) do
