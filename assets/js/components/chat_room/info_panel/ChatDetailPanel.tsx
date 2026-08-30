@@ -149,7 +149,7 @@ export default function ChatDetailPanel() {
         )}
         {chatData?.is_group && (
           <div
-            className="h-[40vh] w-full overflow-y-auto relative landscape-sm:h-[35vh]"
+            className="h-[42vh] w-full overflow-y-auto relative sm:h-[55vh] landscape-sm:h-[30vh]"
             style={{ scrollbarWidth: "thin" }}
           >
             <List
