@@ -2,8 +2,11 @@ defmodule PomoroomWeb.HomeLive.Login do
   use PomoroomWeb, :live_view
   alias Pomoroom.Users
 
-  @max_attempts 3
-  @scale_ms :timer.minutes(1)
+  @default_rate_limit [max_attempts: 3, scale_ms: :timer.minutes(1)]
+
+  defp rate_limit_config do
+    Keyword.merge(@default_rate_limit, Application.get_env(:pomoroom, :login_rate_limit, []))
+  end
 
   def mount(params, session, socket) do
     socket =
@@ -27,7 +30,13 @@ defmodule PomoroomWeb.HomeLive.Login do
         %{assigns: %{client_ip: client_ip}} = socket
       )
       when is_binary(email) and is_binary(password) and email != "" and password != "" do
-    case PomoroomWeb.RateLimiter.hit("login:#{client_ip}", @scale_ms, @max_attempts) do
+    config = rate_limit_config()
+
+    case PomoroomWeb.RateLimiter.hit(
+           "login:#{client_ip}",
+           config[:scale_ms],
+           config[:max_attempts]
+         ) do
       {:deny, _retry_after} ->
         {:noreply,
          push_event(socket, "react.error_login_user", %{

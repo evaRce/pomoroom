@@ -2,8 +2,11 @@ defmodule PomoroomWeb.HomeLive.SignUp do
   use PomoroomWeb, :live_view
   alias Pomoroom.Users
 
-  @max_attempts 3
-  @scale_ms :timer.minutes(30)
+  @default_rate_limit [max_attempts: 3, scale_ms: :timer.minutes(30)]
+
+  defp rate_limit_config do
+    Keyword.merge(@default_rate_limit, Application.get_env(:pomoroom, :sign_up_rate_limit, []))
+  end
 
   def mount(_params, session, socket) do
     socket =
@@ -25,7 +28,13 @@ defmodule PomoroomWeb.HomeLive.SignUp do
         params,
         %{assigns: %{client_ip: client_ip}} = socket
       ) do
-    case PomoroomWeb.RateLimiter.hit("sign_up:#{client_ip}", @scale_ms, @max_attempts) do
+    config = rate_limit_config()
+
+    case PomoroomWeb.RateLimiter.hit(
+           "sign_up:#{client_ip}",
+           config[:scale_ms],
+           config[:max_attempts]
+         ) do
       {:deny, _retry_after} ->
         {:noreply,
          push_event(socket, "react.error_save_user", %{
