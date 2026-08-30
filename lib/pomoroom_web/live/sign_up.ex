@@ -3,7 +3,7 @@ defmodule PomoroomWeb.HomeLive.SignUp do
   alias Pomoroom.Users
 
   @max_attempts 3
-  @scale_ms :timer.minutes(10)
+  @scale_ms :timer.minutes(30)
 
   def mount(_params, session, socket) do
     socket =
