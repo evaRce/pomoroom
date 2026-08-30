@@ -24,7 +24,6 @@ export default async function () {
   const page = await browser.newPage({ ignoreHTTPSErrors: true });
   try {
     await page.goto(`${BASE_URL}/signup`, { waitUntil: 'networkidle' });
-    // email duplicado a propósito, no crea usuarios nuevos
     await page.locator('#normal_signup_email').type('eva@gmail.com');
     await page.locator('#normal_signup_password').type('LoadTest12345');
     await page.locator('#normal_signup_confirmPassword').type('LoadTest12345');
