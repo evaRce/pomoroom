@@ -1,4 +1,4 @@
-alias Pomoroom.{Users, PrivateChats, FriendRequests}
+alias Pomoroom.{Users, FriendRequests}
 
 eva_nickname = "eva123"
 
@@ -27,18 +27,10 @@ created_nicknames =
   |> Enum.reject(&is_nil/1)
 
 Enum.each(created_nicknames, fn nickname ->
-  case PrivateChats.create_private_chat(eva_nickname, nickname) do
-    {:ok, _chat} ->
-      IO.puts("Contacto creado: #{eva_nickname} <-> #{nickname}")
-
-    {:error, reason} ->
-      IO.puts("Contacto #{eva_nickname}-#{nickname} no creado: #{inspect(reason)}")
-  end
-
   case FriendRequests.send_friend_request(nickname, eva_nickname) do
     {:ok, _request} ->
       case FriendRequests.accept_friend_request(nickname, eva_nickname, nickname) do
-        {:ok, _accepted} -> IO.puts("Solicitud aceptada: #{eva_nickname} <-> #{nickname}")
+        {:ok, _accepted} -> IO.puts("Contacto creado: #{eva_nickname} <-> #{nickname}")
         {:error, reason} -> IO.puts("Solicitud no aceptada #{eva_nickname}-#{nickname}: #{inspect(reason)}")
       end
 
