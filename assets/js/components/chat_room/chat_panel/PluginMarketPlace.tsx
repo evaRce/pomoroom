@@ -144,7 +144,7 @@ export default function PluginMarketPlace({
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 landscape-sm:mb-0">
-                      <h4 className="text-sm font-semibold text-slate-800 landscape-sm:text-xs">{plugin.name}</h4>
+                      <h3 className="text-sm font-semibold text-slate-800 landscape-sm:text-xs">{plugin.name}</h3>
                     </div>
                     <p className="text-sm text-slate-600 leading-relaxed landscape-sm:text-xs landscape-sm:leading-snug">{plugin.description}</p>
                   </div>

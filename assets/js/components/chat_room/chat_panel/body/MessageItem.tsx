@@ -44,6 +44,7 @@ export default function MessageItem({
             <Avatar
               className="bg-gray-50/30 landscape-sm:!h-7 landscape-sm:!w-7"
               src={message.image_user}
+              alt={message.data.from_user}
               size={45}
             />
           </div>

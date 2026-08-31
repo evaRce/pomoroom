@@ -156,7 +156,7 @@ export default function ChatDetailPanel() {
               bordered
               dataSource={members}
               renderItem={(item, index) => (
-                <div key={index} style={{ position: "relative" }}>
+                <li key={index} className="list-none" style={{ position: "relative" }}>
                   <GroupMemberItem
                     contact={item}
                     groupName={currentGroupName}
@@ -166,7 +166,7 @@ export default function ChatDetailPanel() {
                     imAdmin={checkAdmin}
                     isCurrentUser={item.nickname === currentUserNickname}
                   />
-                </div>
+                </li>
               )}
             />
           </div>

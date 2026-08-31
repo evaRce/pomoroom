@@ -55,6 +55,7 @@ export function ConfirmDialog({
       <div
         role="dialog"
         aria-modal="true"
+        aria-labelledby="confirm-dialog-title"
         className={cn(
           "w-full max-w-sm rounded-xl border bg-white p-5 shadow-2xl",
           styles.border,
@@ -74,7 +75,7 @@ export function ConfirmDialog({
               <Trash className="h-5 w-5" strokeWidth={2} />
             )}
           </div>
-          <h2 className={cn("text-lg font-semibold leading-6", styles.title)}>
+          <h2 id="confirm-dialog-title" className={cn("text-lg font-semibold leading-6", styles.title)}>
             {title}
           </h2>
         </div>
