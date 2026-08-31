@@ -10,6 +10,8 @@ config :pomoroom, PomoroomWeb.Endpoint,
 # Configure MongoDB
 config :pomoroom, :db, database: "pomoroom_test", username: "mongo", password: "abc123."
 
+config :pomoroom, dev_routes: true
+
 # LiveKit configuration (same local dev server as config/dev.exs; see comments there)
 config :pomoroom, :livekit,
   api_key: "devkey",
