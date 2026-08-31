@@ -10,6 +10,14 @@ config :pomoroom, PomoroomWeb.Endpoint,
 # Configure MongoDB
 config :pomoroom, :db, database: "pomoroom_test", username: "mongo", password: "abc123."
 
+# LiveKit configuration (same local dev server as config/dev.exs; see comments there)
+config :pomoroom, :livekit,
+  api_key: "devkey",
+  api_secret: "secret",
+  ws_port: 7443,
+  ws_url: System.get_env("LIVEKIT_WS_URL"),
+  admin_url: "http://localhost:7880"
+
 # In test we don't send emails.
 config :pomoroom, Pomoroom.Mailer, adapter: Swoosh.Adapters.Test
 
