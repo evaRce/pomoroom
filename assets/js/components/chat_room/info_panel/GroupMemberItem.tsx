@@ -84,7 +84,7 @@ export default function GroupMemberItem({
           <img
             className="h-10 w-10 rounded-full bg-white landscape-sm:h-7 landscape-sm:w-7"
             src={contact.image_profile}
-            alt={contact.nickname}
+            alt=""
           />
         </div>
         <span className="landscape-sm:text-sm">{contact.nickname}</span>

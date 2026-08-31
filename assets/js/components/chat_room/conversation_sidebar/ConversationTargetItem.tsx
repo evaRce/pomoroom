@@ -137,30 +137,31 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
   return (
     <>
     <div
-      className={`relative rounded-lg p-3 sm:p-1.5 lg:p-2 flex items-center gap-3 sm:gap-2 lg:gap-3 hover:border-gray-400 focus-within:ring-2 mb-1 hover:bg-gray-400 cursor-pointer ${getBackgroundContact()}`}
-      onClick={handleChat}
-      role="button"
-      tabIndex={0}
-      aria-current={isSelected ? "true" : undefined}
-      onKeyDown={(e) => {
-        if (e.target !== e.currentTarget) return;
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          handleChat();
-        }
-      }}
+      className={`relative rounded-lg p-3 sm:p-1.5 lg:p-2 flex items-center gap-3 sm:gap-2 lg:gap-3 hover:border-gray-400 focus-within:ring-2 mb-1 hover:bg-gray-400 ${getBackgroundContact()}`}
     >
       <div className="flex-shrink-0 rounded-full">
         <img
           className="h-12 w-12 sm:h-8 sm:w-8 lg:h-10 lg:w-10 rounded-full bg-white"
           src={contact.image}
-          alt={contact.name}
+          alt=""
         />
       </div>
       <div className="flex-1 min-w-0">
         <div>
           <div className="flex items-center justify-between">
-            <div className="flex min-w-0 flex-1 items-center gap-2">
+            <div
+              className="flex min-w-0 flex-1 items-center gap-2 cursor-pointer"
+              onClick={handleChat}
+              role="button"
+              tabIndex={0}
+              aria-current={isSelected ? "true" : undefined}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleChat();
+                }
+              }}
+            >
               <span
                 className="flex-1 min-w-0 text-base sm:text-xs lg:text-sm truncate pb-0"
                 title={contact.name}

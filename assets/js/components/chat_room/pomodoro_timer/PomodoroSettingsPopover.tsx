@@ -81,6 +81,7 @@ export function PomodoroSettingsPopover({
       <PopoverContent
         className="w-72 bg-gray-100 landscape-sm:max-h-[85vh] landscape-sm:overflow-y-auto landscape-sm:p-2"
         align="center"
+        aria-label={pomodoroTimerText.timerSettings}
       >
         <div className="flex flex-col gap-4 landscape-sm:gap-2">
           <h4 className="text-base font-semibold text-slate-900 landscape-sm:text-sm">
