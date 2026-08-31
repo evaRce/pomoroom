@@ -22,6 +22,10 @@ erl_crash.dump
 # Local dev seed data (test users/credentials).
 /priv/repo/seeds.exs
 
+# k6 load-test session cookies (live auth credentials, regenerate locally).
+/load_tests/setup/sessions.json
+/load_tests/setup/eva_session.json
+
 # Also ignore archive artifacts (built via "mix archive.build").
 *.ez
 
