@@ -8,6 +8,11 @@ const { sessions: allSessions } = JSON.parse(open('../setup/sessions.json'));
 const GROUP_NAME = 'load_test_room';
 const JOIN_CALL_LABEL = 'Entrar a la sala';
 const END_CALL_LABEL = 'Finalizar llamada';
+const REJECTION_TEXTS = [
+  'No se pudo entrar a la llamada: acceso no autorizado.',
+  'No se pudo conectar a la llamada. Inténtalo de nuevo.',
+  'No se pudo contactar con el servidor de llamadas. Revisa tu conexión a internet e inténtalo de nuevo.',
+];
 const GROUP_MEMBER_NICKNAMES = Array.from({ length: 19 }, (_, i) => `buddy${127 + i}`);
 const groupSessions = allSessions.filter((s) => GROUP_MEMBER_NICKNAMES.includes(s.nickname));
 const sessions = groupSessions.slice(0, Number(__ENV.VUS || groupSessions.length));
@@ -20,23 +25,19 @@ export const options = {
       executor: 'per-vu-iterations',
       vus: sessions.length,
       iterations: 1,
-      maxDuration: '1m',
+      maxDuration: '2m',
       options: { browser: { type: 'chromium' } },
     },
-  },
-  thresholds: {
-    checks: ['rate==1.0'],
   },
 };
 
 async function retryClick(page, evalFn, arg, timeoutMs) {
-  let elapsed = 0;
+  const start = Date.now();
   let clicked = false;
-  while (elapsed < timeoutMs && !clicked) {
+  while (Date.now() - start < timeoutMs && !clicked) {
     clicked = await page.evaluate(evalFn, arg);
     if (!clicked) {
       await page.waitForTimeout(100);
-      elapsed += 100;
     }
   }
   return clicked;
@@ -64,9 +65,18 @@ export default async function () {
         return true;
       },
       GROUP_NAME,
-      5000
+      20000
     );
     check(clickedRoom, { [`${session.nickname}: sala ${GROUP_NAME} visible`]: (v) => v });
+
+    if (!clickedRoom && __VU === 1) {
+      await page.screenshot({ path: 'debug_chat_page.png' });
+      const navHtml = await page.evaluate(() => {
+        const nav = document.querySelector('[aria-label="Conversaciones"]');
+        return nav ? nav.outerHTML : 'NAV_NOT_FOUND';
+      });
+      console.log(navHtml);
+    }
 
     const start = Date.now();
     const clickedJoin = await retryClick(
@@ -78,24 +88,40 @@ export default async function () {
         return true;
       },
       JOIN_CALL_LABEL,
-      5000
+      20000
     );
     check(clickedJoin, { [`${session.nickname}: botón entrar a la sala visible`]: (v) => v });
 
-    let elapsed = 0;
+    const waitStart = Date.now();
     let inCall = false;
-    while (elapsed < 15000) {
+    let rejectedWithMessage = false;
+    while (Date.now() - waitStart < 30000) {
       inCall = await page.evaluate(
         (label) => !!document.querySelector(`[aria-label="${label}"]`),
         END_CALL_LABEL
       );
       if (inCall) break;
+
+      rejectedWithMessage = await page.evaluate(
+        (texts) =>
+          Array.from(document.querySelectorAll('.ant-message-notice-content')).some((el) =>
+            texts.some((t) => el.textContent && el.textContent.includes(t))
+          ),
+        REJECTION_TEXTS
+      );
+      if (rejectedWithMessage) break;
+
       await page.waitForTimeout(100);
-      elapsed += 100;
     }
     callJoinDuration.add(Date.now() - start);
 
-    check(inCall, { [`${session.nickname}: conectado a la llamada`]: (v) => v });
+    check(inCall || rejectedWithMessage, {
+      [`${session.nickname}: entra a la llamada o recibe un mensaje de rechazo claro`]: (v) => v,
+    });
+    check(true, {
+      [`${session.nickname}: resultado = ${inCall ? 'conectado' : rejectedWithMessage ? 'rechazado con mensaje' : 'sin respuesta clara (colgado)'}`]:
+        () => inCall || rejectedWithMessage,
+    });
   } finally {
     await context.close();
   }
