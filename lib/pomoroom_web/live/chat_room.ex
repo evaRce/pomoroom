@@ -70,6 +70,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     {:noreply, socket}
   end
 
+  def handle_info(:clear_open_group_query, socket) do
+    {:noreply, push_patch(socket, to: "/chat")}
+  end
+
   def handle_info({:live_session_updated, session}, socket) do
     locale = Map.get(session, "locale", socket.assigns.locale)
     Gettext.put_locale(PomoroomWeb.Gettext, locale)
@@ -652,7 +656,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         {:noreply, socket} =
           Chats.handle_selected_group_chat(group_name, socket.assigns.user_info, socket)
 
-        push_patch(socket, to: "/chat")
+        send(self(), :clear_open_group_query)
+        socket
     end
   end
 
