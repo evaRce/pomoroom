@@ -13,3 +13,7 @@ services:
 
   livekit-tls:
     restart: unless-stopped
+    volumes: !override
+      - ./priv/livekit/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt/live/pomoroom-tfm-eva.polandcentral.cloudapp.azure.com:/etc/letsencrypt/live/pomoroom-tfm-eva.polandcentral.cloudapp.azure.com:ro
+      - /etc/letsencrypt/archive/pomoroom-tfm-eva.polandcentral.cloudapp.azure.com:/etc/letsencrypt/archive/pomoroom-tfm-eva.polandcentral.cloudapp.azure.com:ro
