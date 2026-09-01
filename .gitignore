@@ -22,6 +22,9 @@ erl_crash.dump
 # Real LiveKit prod credentials, generated from livekit.prod.yaml.example.
 /priv/livekit/livekit.prod.yaml
 
+# Real production secrets, generated from .env.example.
+/.env
+
 # Local dev seed data (test users/credentials).
 /priv/repo/seeds.exs
 

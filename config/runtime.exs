@@ -31,14 +31,12 @@ if config_env() == :prod do
     # Internally, the client converts wss:// URLs to https:// for these requests.
     admin_url: livekit_url
 
-  database_url =
-    System.get_env("DATABASE_URL") ||
-      raise """
-      environment variable DATABASE_URL is missing.
-      For example: ecto://USER:PASS@HOST/DATABASE
-      """
-
-  maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
+  config :pomoroom, :db,
+    database: System.get_env("MONGO_DATABASE") || "pomoroom_prod",
+    username: System.get_env("MONGO_USERNAME") || "mongo",
+    password:
+      System.get_env("MONGO_PASSWORD") ||
+        raise("environment variable MONGO_PASSWORD is missing")
 
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
