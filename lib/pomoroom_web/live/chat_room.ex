@@ -63,6 +63,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     end
   end
 
+  def handle_params(_params, _uri, socket) do
+    {:noreply, socket}
+  end
+
   def handle_info(
         %Phoenix.Socket.Broadcast{topic: "online_users", event: "presence_diff"},
         socket
