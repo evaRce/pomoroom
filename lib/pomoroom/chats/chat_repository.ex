@@ -18,7 +18,7 @@ defmodule Pomoroom.Chats.ChatRepository do
         %{
           "$or" => [
             %{"members" => %{"$in" => [user]}},
-            %{"members" => %{"$elemMatch" => %{"user_id" => user}}}
+            %{"members" => %{"$elemMatch" => %{"user_id" => user, "removed_at" => nil}}}
           ]
         },
         %{"deleted_by" => %{"$nin" => [user]}}
