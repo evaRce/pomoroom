@@ -1,0 +1,10 @@
+services:
+  db:
+    environment:
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    ports: !reset []
+
+  livekit:
+    command: --config /etc/livekit.yaml --bind 0.0.0.0
+    volumes:
+      - ./priv/livekit/livekit.prod.yaml:/etc/livekit.yaml:ro

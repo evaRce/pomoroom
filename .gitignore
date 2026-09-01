@@ -19,6 +19,9 @@ erl_crash.dump
 # Self-signed TLS cert/key generated locally via `mix phx.gen.cert`.
 /priv/cert/
 
+# Real LiveKit prod credentials, generated from livekit.prod.yaml.example.
+/priv/livekit/livekit.prod.yaml
+
 # Local dev seed data (test users/credentials).
 /priv/repo/seeds.exs
 
