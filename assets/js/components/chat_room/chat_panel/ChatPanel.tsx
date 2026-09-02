@@ -22,6 +22,7 @@ import {
 import type { TimerMode } from "../pomodoro_timer/PomodoroSettingsPopover";
 import type { ChatMessage, EventBusPayload, PomodoroServerPayload } from "../../../types/events";
 import useChatPanelText from "./chatPanelText";
+import { isChatMuted } from "../conversation_sidebar/mutedChatsStore";
 
 interface ChatPanelProps {
   isVisibleDetail: boolean;
@@ -67,6 +68,7 @@ export default function ChatPanel({ isVisibleDetail, onBack }: ChatPanelProps) {
   const pomodoroToastTimerRef = useRef<number | null>(null);
   const soundEndWork = useRef(new Audio("/sounds/bell-notification.wav"));
   const soundEndBreak = useRef(new Audio("/sounds/happy-bells-notification.wav"));
+  const soundNewMessage = useRef(new Audio("/sounds/bell-notification.wav"));
 
   const getPomodoroSignature = useCallback((eventName: string, payload: PomodoroServerPayload | undefined) => {
     const state = payload?.state || {};
@@ -293,11 +295,18 @@ export default function ChatPanel({ isVisibleDetail, onBack }: ChatPanelProps) {
 
       if (eventChatId && eventChatId === currentChatId) {
         addMessage(showMessageToSendEvent.message);
+
+        const isMyMessage = showMessageToSendEvent.message.data.from_user === userLogin?.nickname;
+
+        if (!isMyMessage && !isChatMuted(eventChatId)) {
+          soundNewMessage.current.currentTime = 0;
+          void soundNewMessage.current.play();
+        }
       }
 
       removeEvent("show_message_to_send");
     }
-  }, [showMessageToSendEvent, currentChatId]);
+  }, [showMessageToSendEvent, currentChatId, userLogin]);
 
   useEffect(() => {
     if (showUserInfoEvent) {
