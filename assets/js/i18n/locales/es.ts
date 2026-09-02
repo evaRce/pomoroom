@@ -71,7 +71,7 @@ const es = {
     back: "Volver",
     chatTab: "Chat",
     addMembers: "Añadir miembros",
-    plugins: "Plugins",
+    plugins: "Tienda de plugins",
     groupDetails: "Detalles del grupo",
     moreOptions: "Más opciones",
   },

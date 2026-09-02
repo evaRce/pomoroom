@@ -71,7 +71,7 @@ const en = {
     back: "Back",
     chatTab: "Chat",
     addMembers: "Add members",
-    plugins: "Plugins",
+    plugins: "Plugin Store",
     groupDetails: "Group details",
     moreOptions: "More options",
   },
