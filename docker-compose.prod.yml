@@ -9,6 +9,8 @@ services:
     command: --config /etc/livekit.yaml --bind 0.0.0.0
     volumes:
       - ./priv/livekit/livekit.prod.yaml:/etc/livekit.yaml:ro
+      - /etc/letsencrypt/live/pomoroom-tfm-eva.polandcentral.cloudapp.azure.com:/etc/letsencrypt/live/pomoroom-tfm-eva.polandcentral.cloudapp.azure.com:ro
+      - /etc/letsencrypt/archive/pomoroom-tfm-eva.polandcentral.cloudapp.azure.com:/etc/letsencrypt/archive/pomoroom-tfm-eva.polandcentral.cloudapp.azure.com:ro
     restart: unless-stopped
 
   livekit-tls:
