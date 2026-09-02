@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { Button, Dropdown, type MenuProps } from "antd";
-import { Brain, Coffee, MessageCircle, RotateCcw } from "lucide-react";
+import { Bell, BellOff, Brain, Coffee, MessageCircle, RotateCcw } from "lucide-react";
 import { useEventContext } from "../EventContext";
 import { DownOutlined, DeleteOutlined } from "@ant-design/icons";
 import { usePomodoroNotification } from "../pomodoro_timer/pomodoroNotificationStore";
 import { useMessageNotification } from "./messageNotificationStore";
+import { toggleChatMuted, useIsChatMuted } from "./mutedChatsStore";
 import usePomodoroTimerText from "../pomodoro_timer/pomodoroTimerText";
 import { selectPrivateChatAction } from "../../../services/contactService";
 import { selectGroupChatAction } from "../../../services/groupService";
@@ -28,6 +29,7 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
   const notification = usePomodoroNotification(contact?.chat_id || "");
   const hasPendingNotification = Boolean(notification?.hasPendingNotification);
   const hasNewMessage = useMessageNotification(contact?.chat_id || "");
+  const isMuted = useIsChatMuted(contact?.chat_id || "");
 
   const handleChat = () => {
     const isPendingOrRejected =
@@ -84,10 +86,20 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
     if (key === "deleteChat") {
       setShowLeaveOrDeleteDialog(true);
     }
+    if (key === "toggleMuted") {
+      toggleChatMuted(contact?.chat_id || "");
+    }
     setDropdownVisible(false);
   };
 
   const items = [
+    {
+      label: isMuted
+        ? conversationSidebarText.unmuteNotifications
+        : conversationSidebarText.muteNotifications,
+      key: "toggleMuted",
+      icon: isMuted ? <Bell size={14} /> : <BellOff size={14} />,
+    },
     {
       label: contact.is_group
         ? conversationSidebarText.leaveGroup
