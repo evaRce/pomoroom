@@ -13,6 +13,7 @@ export default function useConversationSidebarText() {
     deleteConversation: t("conversationSidebarText.deleteConversation"),
     statusPending: t("conversationSidebarText.statusPending"),
     statusRejected: t("conversationSidebarText.statusRejected"),
+    newMessage: t("conversationSidebarText.newMessage"),
     confirmLeaveGroupTitle: t("conversationSidebarText.confirmLeaveGroupTitle"),
     confirmLeaveGroupMessage: (groupName: string) =>
       t("conversationSidebarText.confirmLeaveGroupMessage", { groupName }),

@@ -121,6 +121,7 @@ const en = {
     deleteConversation: "Delete contact",
     statusPending: "Pending",
     statusRejected: "Rejected",
+    newMessage: "New message",
     confirmLeaveGroupTitle: "Leave group",
     confirmLeaveGroupMessage: 'You are about to leave "{{groupName}}". You will stop seeing its messages and will need someone to invite you back in.',
     confirmDeleteConversationTitle: "Delete contact",

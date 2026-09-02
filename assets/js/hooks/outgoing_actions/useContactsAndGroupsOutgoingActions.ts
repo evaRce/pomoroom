@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useEvent } from "../../components/chat_room/EventContext";
 import { clearAllTimers, clearRequestedConfigs } from "../../components/chat_room/pomodoro_timer/pomodoroTimerStore";
 import { clearAllPomodoroNotifications } from "../../components/chat_room/pomodoro_timer/pomodoroNotificationStore";
+import { clearAllMessageNotifications } from "../../components/chat_room/conversation_sidebar/messageNotificationStore";
 import { PushEventToLiveView, RemoveEvent } from "../../types/events";
 
 export type InfoChatSelected = { contact_name?: string; group_name?: string };
@@ -156,6 +157,7 @@ export function useContactsAndGroupsOutgoingActions({
       clearAllTimers();
       clearRequestedConfigs();
       clearAllPomodoroNotifications();
+      clearAllMessageNotifications();
       pushEventToLiveView("action.logout", {});
       removeEvent("logout");
     }
