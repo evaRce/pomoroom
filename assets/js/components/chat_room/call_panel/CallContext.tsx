@@ -44,7 +44,17 @@ export function CallSessionProvider({ children }: { children: React.ReactNode })
   const { addEvent, removeEvent } = useEventContext();
   const livekitTokenEvent = useEvent("livekit_token");
   const callRoomNameEvent = useEvent("call_room_name");
-  const room = useMemo(() => new Room(), []);
+  const room = useMemo(
+    () =>
+      new Room({
+        audioCaptureDefaults: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      }),
+    []
+  );
   const lastConnectAttemptedTokenRef = useRef<string | null>(null);
   const [connectedAt, setConnectedAt] = useState<number | null>(null);
   const [connectingChatId, setConnectingChatId] = useState<string | null>(null);

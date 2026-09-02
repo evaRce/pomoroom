@@ -92,10 +92,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     message_inserted_at =
       get_in(args, [:data, :inserted_at]) || get_in(args, ["data", "inserted_at"])
 
+    is_current_chat = not is_nil(current_chat_id) and current_chat_id == message_chat_id
+
     visible_for_removed_user =
-      if is_nil(current_group_removed_at) do
-        true
-      else
+      if is_current_chat and not is_nil(current_group_removed_at) do
         case NaiveDateTime.compare(
                to_naive_datetime(message_inserted_at),
                to_naive_datetime(current_group_removed_at)
@@ -103,10 +103,11 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
           :gt -> false
           _ -> true
         end
+      else
+        true
       end
 
-    if not is_nil(current_chat_id) and current_chat_id == message_chat_id and
-         visible_for_removed_user do
+    if visible_for_removed_user do
       Chats.handle_new_message_info(args, socket)
     else
       {:noreply, socket}

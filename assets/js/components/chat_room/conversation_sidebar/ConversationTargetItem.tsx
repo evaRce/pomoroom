@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Button, Dropdown, type MenuProps } from "antd";
-import { Brain, Coffee, RotateCcw } from "lucide-react";
+import { Bell, BellOff, Brain, Coffee, MessageCircle, RotateCcw } from "lucide-react";
 import { useEventContext } from "../EventContext";
 import { DownOutlined, DeleteOutlined } from "@ant-design/icons";
 import { usePomodoroNotification } from "../pomodoro_timer/pomodoroNotificationStore";
+import { useMessageNotification } from "./messageNotificationStore";
+import { toggleChatMuted, useIsChatMuted } from "./mutedChatsStore";
 import usePomodoroTimerText from "../pomodoro_timer/pomodoroTimerText";
 import { selectPrivateChatAction } from "../../../services/contactService";
 import { selectGroupChatAction } from "../../../services/groupService";
@@ -26,6 +28,8 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
   const [showLeaveOrDeleteDialog, setShowLeaveOrDeleteDialog] = useState(false);
   const notification = usePomodoroNotification(contact?.chat_id || "");
   const hasPendingNotification = Boolean(notification?.hasPendingNotification);
+  const hasNewMessage = useMessageNotification(contact?.chat_id || "");
+  const isMuted = useIsChatMuted(contact?.chat_id || "");
 
   const handleChat = () => {
     const isPendingOrRejected =
@@ -82,10 +86,20 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
     if (key === "deleteChat") {
       setShowLeaveOrDeleteDialog(true);
     }
+    if (key === "toggleMuted") {
+      toggleChatMuted(contact?.chat_id || "");
+    }
     setDropdownVisible(false);
   };
 
   const items = [
+    {
+      label: isMuted
+        ? conversationSidebarText.unmuteNotifications
+        : conversationSidebarText.muteNotifications,
+      key: "toggleMuted",
+      icon: isMuted ? <Bell size={14} /> : <BellOff size={14} />,
+    },
     {
       label: contact.is_group
         ? conversationSidebarText.leaveGroup
@@ -168,6 +182,15 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
               >
                 {contact.name}
               </span>
+              {hasNewMessage && (
+                <span
+                  className="flex shrink-0 items-center rounded-full border border-blue-400 bg-blue-100 p-1 text-blue-600"
+                  title={conversationSidebarText.newMessage}
+                  aria-label={conversationSidebarText.newMessage}
+                >
+                  <MessageCircle size={14} />
+                </span>
+              )}
               {hasPendingNotification && lastPomodoroEventVisual && (
                 <span
                   className={`flex shrink-0 items-center gap-1 px-2 py-1 sm:px-1.5 sm:py-0.5 lg:px-2 lg:py-1 rounded-full border text-xs sm:text-[10px] lg:text-xs ${lastPomodoroEventVisual.className}`}

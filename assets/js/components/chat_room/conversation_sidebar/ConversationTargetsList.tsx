@@ -7,6 +7,8 @@ import { deleteContactAction } from "../../../services/contactService";
 import { deleteGroupAction } from "../../../services/groupService";
 import type { ChatGroupData, ChatUserRef, ConversationEntry } from "../../../types/events";
 import useConversationSidebarText from "./conversationSidebarText";
+import { useCallContext } from "../call_panel/CallContext";
+import { clearMessageNotification, markMessageNotification } from "./messageNotificationStore";
 
 export interface NormalizedContact {
   name: string;
@@ -43,6 +45,8 @@ export default function ConversationTargetsList() {
   const addGroupToListEvent = useEvent("add_group_to_list");
   const groupAdminUpdatedEvent = useEvent("group_admin_updated");
   const showListMessagesEvent = useEvent("show_list_messages");
+  const showMessageToSendEvent = useEvent("show_message_to_send");
+  const { viewingChatId } = useCallContext();
 
   const getCurrentUserRemovedAtFromGroup = (groupData: ChatGroupData | undefined, nickname: string | undefined) => {
     if (!groupData || !nickname) {
@@ -149,7 +153,21 @@ export default function ConversationTargetsList() {
     if (openContact) {
       setSelectedContact(openContact.name);
     }
+
+    clearMessageNotification(showListMessagesEvent.chat_id);
   }, [showListMessagesEvent, contacts]);
+
+  useEffect(() => {
+    const eventChatId = showMessageToSendEvent?.message?.data?.chat_id;
+
+    if (!eventChatId) return;
+
+    if (eventChatId !== viewingChatId) {
+      markMessageNotification(eventChatId);
+    }
+
+    removeEvent("show_message_to_send");
+  }, [showMessageToSendEvent, viewingChatId]);
 
   useEffect(() => {
     if (!groupAdminUpdatedEvent?.group_name) return;
