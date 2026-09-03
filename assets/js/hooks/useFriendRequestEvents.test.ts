@@ -76,9 +76,9 @@ describe("useFriendRequestEvents", () => {
     expect(setComponent).toHaveBeenCalledWith("RejectedRequestSend");
   });
 
-  it("accepts a friend request, clears the component and deselects the contact", () => {
+  it("accepts a friend request and opens the private chat with the other user", () => {
     const request = { from_user: "bob01", to_user: "eva01", status: "accepted" };
-    const { addEvent, setComponent } = setup("update_contact_status_to_accepted", {
+    const { addEvent } = setup("update_contact_status_to_accepted", {
       request,
       new_status: "accepted",
     });
@@ -87,7 +87,6 @@ describe("useFriendRequestEvents", () => {
       request,
       new_status: "accepted",
     });
-    expect(setComponent).toHaveBeenCalledWith("");
-    expect(addEvent).toHaveBeenCalledWith("deselect_contact", { from_user: "bob01", to_user: "eva01" });
+    expect(addEvent).toHaveBeenCalledWith("selected_private_chat", { contact_name: "bob01" });
   });
 });
