@@ -84,6 +84,7 @@ const en = {
     search: "Search",
     shareLink: "Or share this link to invite a contact",
     copyLink: "Copy link",
+    linkCopied: "Link copied",
   },
   pluginMarketPlaceText: {
     title: "Plugin Store",

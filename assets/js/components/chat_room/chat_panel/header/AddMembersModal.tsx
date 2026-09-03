@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Modal, List } from "antd";
+import { Button, Modal, List, message } from "antd";
 import { CopyOutlined, SearchOutlined, CloseOutlined } from "@ant-design/icons";
 import { useEventContext, useEvent } from "../../EventContext";
 import GroupMemberItem from "../../info_panel/GroupMemberItem";
@@ -123,16 +123,17 @@ export default function AddMembersModal({
         {addMembersModalText.shareLink}
       </p>
 
-      <div className="flex items-center justify-between mt-2 p-1 bg-gray-300">
-        <span className="mx-2 overflow-ellipsis overflow-hidden whitespace-nowrap truncate">
+      <div className="flex items-center justify-between gap-2 mt-2 rounded-full bg-gray-200 shadow-sm p-1 pl-4">
+        <span className="overflow-ellipsis overflow-hidden whitespace-nowrap truncate text-sm text-gray-600">
           {chatData?.group_data?.invite_link}
         </span>
         <Button
-          className="bg-sky-400"
+          className="bg-sky-400 hover:bg-sky-500 border-none text-white rounded-full shrink-0 shadow-sm transition-colors duration-200"
           icon={<CopyOutlined />}
-          onClick={() =>
-            navigator.clipboard.writeText(`${chatData?.group_data?.invite_link}`)
-          }
+          onClick={() => {
+            navigator.clipboard.writeText(`${chatData?.group_data?.invite_link}`);
+            message.success(addMembersModalText.linkCopied);
+          }}
         >
           {addMembersModalText.copyLink}
         </Button>

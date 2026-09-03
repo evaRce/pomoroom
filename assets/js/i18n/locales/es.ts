@@ -84,6 +84,7 @@ const es = {
     search: "Buscar",
     shareLink: "O comparte este enlace para invitar a algún colega",
     copyLink: "Copiar enlace",
+    linkCopied: "Enlace copiado",
   },
   pluginMarketPlaceText: {
     title: "Tienda de Plugins",
