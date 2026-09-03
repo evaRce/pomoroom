@@ -11,6 +11,7 @@ const ERROR_EVENT_NAMES = [
   "error_opening_private_chat",
   "error_opening_group_chat",
   "error_accepting_friend_request",
+  "error_cancelling_friend_request",
   "error_managing_group_member",
   "error_deleting_contact",
   "error_deleting_group",

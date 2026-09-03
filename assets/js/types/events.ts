@@ -8,6 +8,7 @@ export interface EventBusPayloads {
   delete_contact: string;
   selected_private_chat: { contact_name: string };
   send_friend_request: { to_user: string };
+  cancel_friend_request: { to_user: string };
   update_status_request: { status: string; contact_name: string; from_user_name: string };
   toggle_detail_visibility: { is_visible: boolean; is_group: boolean; group_name: string };
   add_group: { name: string };
@@ -111,6 +112,8 @@ export interface EventBusPayloads {
   contact_removed: { contact_name: string; chat_id: string | null };
   update_contact_status_to_accepted: { request: FriendRequestRef; new_status: string; chat_id?: string };
   update_contact_status_to_rejected: { request: FriendRequestRef; new_status: string };
+  friend_request_cancelled: { from_user: string; to_user: string };
+  error_cancelling_friend_request: string;
   deselect_contact: { from_user: string; to_user: string };
 
   // Group membership
@@ -262,6 +265,7 @@ export interface OutgoingActionPayloads {
   "action.delete_contact": string;
   "action.selected_private_chat": { contact_name: string };
   "action.send_friend_request": { to_user: string };
+  "action.cancel_friend_request": { to_user: string };
   "action.update_status_request": { status: string; contact_name: string; from_user_name: string };
   "action.get_members": { is_visible: boolean; is_group: boolean; group_name: string };
   "action.add_group": { name: string };

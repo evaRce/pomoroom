@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useEventContext, useEvent } from "../EventContext";
-import { Typography } from 'antd';
+import { Button, Space, Typography } from 'antd';
 import { FriendRequestRef } from "../../../types/events";
+import { cancelFriendRequestAction } from "../../../services/contactService";
 import useContactRequestsText from "./contactRequestsText";
 
 const { Text } = Typography;
 
 export default function RequestSend({ imageNumber }: { imageNumber: number }) {
   const contactRequestsText = useContactRequestsText();
-  const { removeEvent } = useEventContext();
+  const { addEvent, removeEvent } = useEventContext();
   const [requestData, setRequestData] = useState<FriendRequestRef | null>(null);
   const requestSendEvent = useEvent("open_chat_request_send");
 
@@ -18,6 +19,11 @@ export default function RequestSend({ imageNumber }: { imageNumber: number }) {
       removeEvent("open_chat_request_send");
     }
   }, [requestSendEvent]);
+
+  const handleCancel = () => {
+    if (!requestData) return;
+    cancelFriendRequestAction(addEvent, requestData.to_user);
+  };
 
   return (
     <div className="flex flex-col flex-1 relative justify-center items-center">
@@ -33,6 +39,11 @@ export default function RequestSend({ imageNumber }: { imageNumber: number }) {
           <br></br>
           {contactRequestsText.requestSend.waitingResponse}
         </Text>
+        <Space style={{ marginTop: 16 }}>
+          <Button danger onClick={handleCancel}>
+            {contactRequestsText.requestSend.cancel}
+          </Button>
+        </Space>
       </div>
     </div>
   );

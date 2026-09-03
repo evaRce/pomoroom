@@ -42,6 +42,7 @@ export default function ConversationTargetsList() {
   const showUserInfoEvent = useEvent("show_user_info");
   const updateContactStatusAcceptedEvent = useEvent("update_contact_status_to_accepted");
   const updateContactStatusRejectedEvent = useEvent("update_contact_status_to_rejected");
+  const friendRequestCancelledEvent = useEvent("friend_request_cancelled");
   const deselectContactEvent = useEvent("deselect_contact");
   const closeChatMobileEvent = useEvent("close_chat_mobile");
   const addGroupToListEvent = useEvent("add_group_to_list");
@@ -128,6 +129,13 @@ export default function ConversationTargetsList() {
       removeEvent("update_contact_status_to_rejected");
     }
   }, [updateContactStatusRejectedEvent]);
+
+  useEffect(() => {
+    if (friendRequestCancelledEvent) {
+      removeCancelledRequestContact(friendRequestCancelledEvent);
+      removeEvent("friend_request_cancelled");
+    }
+  }, [friendRequestCancelledEvent]);
 
   useEffect(() => {
     if (deselectContactEvent) {
@@ -317,6 +325,21 @@ export default function ConversationTargetsList() {
         }
 
         return contact;
+      })
+    );
+  };
+
+  const removeCancelledRequestContact = (request: { from_user?: string; to_user?: string }) => {
+    setContacts((prevContacts) =>
+      prevContacts.filter((contact) => {
+        const isInvolvedReceived =
+          contact?.name === request?.to_user &&
+          userLogin.nickname === request?.from_user;
+        const isInvolvedSend =
+          contact?.name === request?.from_user &&
+          userLogin.nickname === request?.to_user;
+
+        return !((isInvolvedReceived || isInvolvedSend) && contact?.status_request === "pending");
       })
     );
   };

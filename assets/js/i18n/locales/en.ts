@@ -113,6 +113,7 @@ const en = {
     reject: "Reject",
     requestSendPrefix: "You sent a friend request to",
     waitingResponse: "Waiting for response.",
+    cancel: "Cancel request",
   },
   conversationSidebarText: {
     searchPlaceholder: "Search my contacts",

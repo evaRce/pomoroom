@@ -113,6 +113,7 @@ const es = {
     reject: "Rechazar",
     requestSendPrefix: "Has enviado una solicitud de amistad a",
     waitingResponse: "Esperando respuesta.",
+    cancel: "Cancelar petición",
   },
   conversationSidebarText: {
     searchPlaceholder: "Buscar a mis colegas",

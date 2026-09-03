@@ -25,6 +25,34 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
     notify_react(socket, payload)
   end
 
+  def handle_friend_request_cancelled(payload, socket) do
+    notify_react(socket, payload)
+  end
+
+  def handle_cancel_friend_request(to_user_arg, user, socket) do
+    user_nickname = user.nickname
+
+    case FriendRequests.cancel_friend_request(to_user_arg, user_nickname, user_nickname) do
+      {:ok, request} ->
+        payload = %{
+          event_name: "friend_request_cancelled",
+          event_data: %{from_user: request.from_user, to_user: request.to_user}
+        }
+
+        PubSub.broadcast_from(
+          Pomoroom.PubSub,
+          self(),
+          "friend_request:#{request.to_user}",
+          {:friend_request_cancelled, payload}
+        )
+
+        notify_react(socket, payload)
+
+      {:error, reason} ->
+        notify_react(socket, "error_cancelling_friend_request", reason)
+    end
+  end
+
   def handle_update_status_request(status, to_user_name, from_user_name, user_nickname, socket) do
     case status do
       "accepted" ->

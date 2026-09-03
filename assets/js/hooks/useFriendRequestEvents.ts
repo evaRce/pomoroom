@@ -12,12 +12,15 @@ type UseFriendRequestEventsParams = {
     rejected_request?: RejectedRequestPayload;
     new_status?: string;
     chat_id?: string;
+    from_user?: string;
+    to_user?: string;
   };
   addEvent: AddEvent;
   userNickname: string;
   setIsVisibleDetail: (value: boolean) => void;
   setComponent: (value: string) => void;
   infoChatSelected: InfoChatSelected;
+  component: string;
 };
 
 export function useFriendRequestEvents({
@@ -28,6 +31,7 @@ export function useFriendRequestEvents({
   setIsVisibleDetail,
   setComponent,
   infoChatSelected,
+  component,
 }: UseFriendRequestEventsParams) {
   useEffect(() => {
     if (
@@ -101,4 +105,18 @@ export function useFriendRequestEvents({
       selectPrivateChatAction(addEvent, otherUser);
     }
   }, [eventData.request, eventData.new_status]);
+
+  useEffect(() => {
+    if (
+      eventName === "friend_request_cancelled" &&
+      eventData.from_user &&
+      eventData.to_user &&
+      (userNickname === eventData.from_user || userNickname === eventData.to_user)
+    ) {
+      addEvent(eventName, { from_user: eventData.from_user, to_user: eventData.to_user });
+      if (component === "RequestSend" || component === "RequestReceived") {
+        setComponent("");
+      }
+    }
+  }, [eventData.from_user, eventData.to_user]);
 }

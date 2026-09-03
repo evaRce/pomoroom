@@ -5,7 +5,11 @@ import { useFriendRequestEvents } from "./useFriendRequestEvents";
 function setup(
   eventName: string,
   eventData: Record<string, unknown>,
-  overrides: { userNickname?: string; infoChatSelected?: { contact_name?: string; group_name?: string } } = {}
+  overrides: {
+    userNickname?: string;
+    infoChatSelected?: { contact_name?: string; group_name?: string };
+    component?: string;
+  } = {}
 ) {
   const addEvent = vi.fn();
   const setIsVisibleDetail = vi.fn();
@@ -20,6 +24,7 @@ function setup(
       setIsVisibleDetail,
       setComponent,
       infoChatSelected: overrides.infoChatSelected ?? {},
+      component: overrides.component ?? "",
     })
   );
 
@@ -104,5 +109,29 @@ describe("useFriendRequestEvents", () => {
       new_status: "accepted",
       chat_id: "chat-123",
     });
+  });
+
+  it("forwards a cancelled request and closes the send panel if it was open", () => {
+    const { addEvent, setComponent } = setup(
+      "friend_request_cancelled",
+      { from_user: "eva01", to_user: "bob01" },
+      { userNickname: "eva01", component: "RequestSend" }
+    );
+
+    expect(addEvent).toHaveBeenCalledWith("friend_request_cancelled", {
+      from_user: "eva01",
+      to_user: "bob01",
+    });
+    expect(setComponent).toHaveBeenCalledWith("");
+  });
+
+  it("does not touch the visible component for a cancelled request on an unrelated screen", () => {
+    const { setComponent } = setup(
+      "friend_request_cancelled",
+      { from_user: "eva01", to_user: "bob01" },
+      { userNickname: "eva01", component: "ChatPanel" }
+    );
+
+    expect(setComponent).not.toHaveBeenCalled();
   });
 });

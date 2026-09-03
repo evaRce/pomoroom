@@ -124,6 +124,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
     setIsVisibleDetail,
     setComponent,
     infoChatSelected,
+    component,
   });
 
   useGroupMembershipEvents({

@@ -247,6 +247,10 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
     Contacts.handle_contact_removed(payload, socket)
   end
 
+  def handle_info({:friend_request_cancelled, payload}, socket) do
+    FriendRequests.handle_friend_request_cancelled(payload, socket)
+  end
+
   def handle_event("action.get_user_info", _args, %{assigns: %{user_info: user}} = socket) do
     payload = %{event_name: "show_user_info", event_data: user}
     {:noreply, push_event(socket, "react", payload)}
@@ -537,6 +541,14 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
         %{assigns: %{user_info: user}} = socket
       ) do
     FriendRequests.handle_send_friend_request(to_user_arg, user, socket)
+  end
+
+  def handle_event(
+        "action.cancel_friend_request",
+        %{"to_user" => to_user_arg},
+        %{assigns: %{user_info: user}} = socket
+      ) do
+    FriendRequests.handle_cancel_friend_request(to_user_arg, user, socket)
   end
 
   def handle_event(
