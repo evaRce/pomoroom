@@ -47,6 +47,7 @@ function ChatRoomSlice({ eventName, eventData, userNickname, pushEventToLiveView
     setIsVisibleDetail,
     setComponent,
     infoChatSelected,
+    component,
   });
 
   return component === "RequestReceived" ? <RequestReceived imageNumber={1} /> : null;

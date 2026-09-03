@@ -41,6 +41,7 @@ interface PomodoroSettingsPopoverProps {
   onChange: (field: keyof TimerSettings, value: string) => void;
   onToggleSound: (checked: boolean) => void;
   onSave: () => void;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function PomodoroSettingsPopover({
@@ -55,10 +56,11 @@ export function PomodoroSettingsPopover({
   onChange,
   onToggleSound,
   onSave,
+  onOpenChange,
 }: PomodoroSettingsPopoverProps) {
   const pomodoroTimerText = usePomodoroTimerText();
   return (
-    <Popover>
+    <Popover onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"

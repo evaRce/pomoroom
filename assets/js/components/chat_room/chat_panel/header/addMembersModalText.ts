@@ -10,5 +10,6 @@ export default function useAddMembersModalText() {
     search: t("addMembersModalText.search"),
     shareLink: t("addMembersModalText.shareLink"),
     copyLink: t("addMembersModalText.copyLink"),
+    linkCopied: t("addMembersModalText.linkCopied"),
   };
 }

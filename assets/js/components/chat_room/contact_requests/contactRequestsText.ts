@@ -23,6 +23,7 @@ export default function useContactRequestsText() {
     requestSend: {
       prefix: t("contactRequestsText.requestSendPrefix"),
       waitingResponse: t("contactRequestsText.waitingResponse"),
+      cancel: t("contactRequestsText.cancel"),
     },
   };
 }

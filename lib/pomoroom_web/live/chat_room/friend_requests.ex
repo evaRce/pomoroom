@@ -17,11 +17,40 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
 
   def handle_friend_request_accepted(payload, chat_id, socket) do
     PubSub.subscribe(Pomoroom.PubSub, "chat:#{chat_id}")
+    PubSub.subscribe(Pomoroom.PubSub, "chat:#{chat_id}:pomodoro")
     notify_react(socket, payload)
   end
 
   def handle_friend_request_rejected(payload, socket) do
     notify_react(socket, payload)
+  end
+
+  def handle_friend_request_cancelled(payload, socket) do
+    notify_react(socket, payload)
+  end
+
+  def handle_cancel_friend_request(to_user_arg, user, socket) do
+    user_nickname = user.nickname
+
+    case FriendRequests.cancel_friend_request(to_user_arg, user_nickname, user_nickname) do
+      {:ok, request} ->
+        payload = %{
+          event_name: "friend_request_cancelled",
+          event_data: %{from_user: request.from_user, to_user: request.to_user}
+        }
+
+        PubSub.broadcast_from(
+          Pomoroom.PubSub,
+          self(),
+          "friend_request:#{request.to_user}",
+          {:friend_request_cancelled, payload}
+        )
+
+        notify_react(socket, payload)
+
+      {:error, reason} ->
+        notify_react(socket, "error_cancelling_friend_request", reason)
+    end
   end
 
   def handle_update_status_request(status, to_user_name, from_user_name, user_nickname, socket) do
@@ -34,12 +63,14 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
                 Runtime.ensure_chat_server_exists(private_chat.chat_id)
                 ChatServer.join_chat(private_chat.chat_id)
                 PubSub.subscribe(Pomoroom.PubSub, "chat:#{private_chat.chat_id}")
+                PubSub.subscribe(Pomoroom.PubSub, "chat:#{private_chat.chat_id}:pomodoro")
 
                 payload = %{
                   event_name: "update_contact_status_to_accepted",
                   event_data: %{
                     request: request,
-                    new_status: status
+                    new_status: status,
+                    chat_id: private_chat.chat_id
                   }
                 }
 
@@ -220,6 +251,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
                              ) do
                           {:ok, request} ->
                             PubSub.subscribe(Pomoroom.PubSub, "chat:#{private_chat.chat_id}")
+                            PubSub.subscribe(Pomoroom.PubSub, "chat:#{private_chat.chat_id}:pomodoro")
 
                             %{
                               event_name: "add_contact_to_list",

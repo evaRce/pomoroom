@@ -19,6 +19,8 @@ defmodule Pomoroom.FriendRequests do
 
   defdelegate reject_friend_request(to_user, from_user, logged_user_nickname),
     to: FriendRequestService
+  defdelegate cancel_friend_request(to_user, from_user, logged_user_nickname),
+    to: FriendRequestService
   defdelegate delete_request(to_user, from_user), to: FriendRequestService
   defdelegate delete_request_between_users(user1, user2), to: FriendRequestService
   defdelegate delete_all_request(), to: FriendRequestService

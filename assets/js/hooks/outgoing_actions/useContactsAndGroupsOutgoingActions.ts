@@ -29,6 +29,7 @@ export function useContactsAndGroupsOutgoingActions({
   const contactToDelete = useEvent("delete_contact");
   const selectedPrivateChat = useEvent("selected_private_chat");
   const sendFriendRequest = useEvent("send_friend_request");
+  const cancelFriendRequest = useEvent("cancel_friend_request");
   const statusFriendRequest = useEvent("update_status_request");
   const visibility = useEvent("toggle_detail_visibility");
   const addGroup = useEvent("add_group");
@@ -68,6 +69,10 @@ export function useContactsAndGroupsOutgoingActions({
     if (sendFriendRequest) {
       pushEventToLiveView("action.send_friend_request", sendFriendRequest);
       removeEvent("send_friend_request");
+    }
+    if (cancelFriendRequest) {
+      pushEventToLiveView("action.cancel_friend_request", cancelFriendRequest);
+      removeEvent("cancel_friend_request");
     }
     if (statusFriendRequest) {
       pushEventToLiveView("action.update_status_request", statusFriendRequest);
@@ -177,6 +182,7 @@ export function useContactsAndGroupsOutgoingActions({
     contactToDelete,
     selectedPrivateChat,
     sendFriendRequest,
+    cancelFriendRequest,
     statusFriendRequest,
     visibility,
     addGroup,

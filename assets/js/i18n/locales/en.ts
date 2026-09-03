@@ -84,6 +84,7 @@ const en = {
     search: "Search",
     shareLink: "Or share this link to invite a contact",
     copyLink: "Copy link",
+    linkCopied: "Link copied",
   },
   pluginMarketPlaceText: {
     title: "Plugin Store",
@@ -112,6 +113,7 @@ const en = {
     reject: "Reject",
     requestSendPrefix: "You sent a friend request to",
     waitingResponse: "Waiting for response.",
+    cancel: "Cancel request",
   },
   conversationSidebarText: {
     searchPlaceholder: "Search my contacts",
@@ -131,6 +133,8 @@ const en = {
     confirmDeleteConversationTitle: "Delete contact",
     confirmDeleteConversationMessage: 'You are about to remove "{{contactName}}" from your contacts. If you both delete it, the conversation will be permanently erased. This action is irreversible.',
     confirmCancelButton: "Cancel",
+    emptyStateTitle: "Welcome to Pomoroom",
+    emptyStateSubtitle: "Add a new contact or create a group to start chatting",
   },
   infoPanelText: {
     closeDetails: "Close details",

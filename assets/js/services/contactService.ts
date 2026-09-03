@@ -12,6 +12,10 @@ export function sendFriendRequestAction(addEvent: AddEvent, toUser: string): voi
   addEvent("send_friend_request", { to_user: toUser });
 }
 
+export function cancelFriendRequestAction(addEvent: AddEvent, toUser: string): void {
+  addEvent("cancel_friend_request", { to_user: toUser });
+}
+
 export function updateFriendRequestStatusAction(
   addEvent: AddEvent,
   status: string,
