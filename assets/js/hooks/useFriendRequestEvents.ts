@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { AddEvent, FriendRequestRef } from "../types/events";
+import { selectPrivateChatAction } from "../services/contactService";
 import type { InfoChatSelected } from "./outgoing_actions/useContactsAndGroupsOutgoingActions";
 
 type RejectedRequestPayload = FriendRequestRef & { status: string };
@@ -88,11 +89,11 @@ export function useFriendRequestEvents({
   useEffect(() => {
     if (eventName === "update_contact_status_to_accepted" && eventData.request) {
       addEvent(eventName, { request: eventData.request, new_status: eventData.new_status || "" });
-      setComponent("");
-      addEvent("deselect_contact", {
-        from_user: eventData.request.from_user,
-        to_user: eventData.request.to_user,
-      });
+      const otherUser =
+        userNickname === eventData.request.to_user
+          ? eventData.request.from_user
+          : eventData.request.to_user;
+      selectPrivateChatAction(addEvent, otherUser);
     }
   }, [eventData.request, eventData.new_status]);
 }
