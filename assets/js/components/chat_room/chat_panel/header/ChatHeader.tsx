@@ -591,6 +591,18 @@ export default function ChatHeader({
             )}
           </div>
 
+          {(!isGroupChat || !isGroupMemberRemoved) && (
+            <Button
+              type="text"
+              className="!h-9 !w-9 !rounded-lg shrink-0 sm:hidden !bg-green-50 !text-green-700 hover:!bg-green-100 landscape-sm:!h-7 landscape-sm:!w-7"
+              icon={<MobileCallIcon className={`h-5 w-5 landscape-sm:h-4 landscape-sm:w-4 ${isThisChatConnecting ? "animate-spin" : ""}`} />}
+              onClick={handleMobileCallClick}
+              disabled={isCallBusyElsewhere || isThisChatConnecting}
+              title={mobileCallLabel}
+              aria-label={mobileCallLabel}
+            />
+          )}
+
           <Dropdown
             trigger={["click"]}
             open={isMobileActionsOpen}
@@ -608,18 +620,6 @@ export default function ChatHeader({
                   >
                     <UserPlus className="h-4 w-4 shrink-0" />
                     {chatHeaderText.addMembers}
-                  </button>
-                )}
-
-                {(!isGroupChat || !isGroupMemberRemoved) && (
-                  <button
-                    type="button"
-                    onClick={handleMobileCallClick}
-                    disabled={isCallBusyElsewhere || isThisChatConnecting}
-                    className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400 disabled:hover:bg-transparent"
-                  >
-                    <MobileCallIcon className={`h-4 w-4 shrink-0 ${isThisChatConnecting ? "animate-spin" : ""}`} />
-                    {mobileCallLabel}
                   </button>
                 )}
 
@@ -657,7 +657,7 @@ export default function ChatHeader({
           >
             <Button
               type="text"
-              className="!h-9 !w-9 !rounded-lg shrink-0 text-gray-600 hover:!bg-gray-100 landscape-sm:!h-7 landscape-sm:!w-7"
+              className="!h-9 !w-9 !rounded-lg shrink-0 !bg-green-50 !text-green-700 hover:!bg-green-100 landscape-sm:!h-7 landscape-sm:!w-7"
               icon={<MoreVertical className="h-5 w-5 landscape-sm:h-4 landscape-sm:w-4" />}
               title={chatHeaderText.moreOptions}
               aria-label={chatHeaderText.moreOptions}
