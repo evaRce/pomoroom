@@ -128,7 +128,7 @@ export default function AddMembersModal({
           {chatData?.group_data?.invite_link}
         </span>
         <Button
-          className="bg-lime-400 hover:bg-lime-500 border-none text-white rounded-full shrink-0 shadow-sm transition-colors duration-200"
+          className="bg-lime-400 hover:bg-lime-500 border-none rounded-full shrink-0 shadow-sm transition-colors duration-200"
           icon={<CopyOutlined />}
           onClick={() => {
             navigator.clipboard.writeText(`${chatData?.group_data?.invite_link}`);
