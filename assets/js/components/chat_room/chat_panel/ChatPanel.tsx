@@ -320,6 +320,7 @@ export default function ChatPanel({ isVisibleDetail, onBack }: ChatPanelProps) {
 
   const handleBack = () => {
     setViewingChatId(null);
+    setCurrentChatId("");
     onBack?.();
   };
 
