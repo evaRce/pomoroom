@@ -53,6 +53,8 @@ const es = {
   chatFooterText: {
     removedFromGroupWithName: "Has sido eliminado del grupo {{groupName}}",
     removedFromGroupGeneric: "Has sido eliminado del grupo",
+    groupDeletedWithName: "El grupo {{groupName}} ha sido eliminado",
+    groupDeletedGeneric: "El grupo ha sido eliminado",
     warningIconLabel: "warning",
     inputPlaceholder: "Escribe un mensaje",
     emojiButton: "Elegir emoji",
@@ -147,7 +149,10 @@ const es = {
     confirmRemoveMemberTitle: "Eliminar miembro",
     confirmRemoveMemberMessage: '¿Seguro que quieres eliminar a "{{nickname}}" del grupo?',
     confirmCancelButton: "Cancelar",
-    groupDeletedMessage: 'El grupo "{{groupName}}" se ha eliminado porque ya no le quedan miembros.',
+    deleteGroup: "Eliminar grupo",
+    confirmDeleteGroupTitle: "Eliminar grupo",
+    confirmDeleteGroupMessage:
+      'Vas a eliminar el grupo "{{groupName}}" para todos sus miembros. Esta acción es irreversible y no se podrá recuperar ni el grupo ni sus mensajes.',
   },
   kanbanText: {
     taskDeleteTitle: "Eliminar tarea",

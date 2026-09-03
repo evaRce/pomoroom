@@ -60,6 +60,23 @@ defmodule Pomoroom.GroupChatsTest do
     assert GroupChats.get_by("name", "grupo1") == {:error, "Chat no encontrado"}
   end
 
+  test "an admin can delete the group for everyone, and non-admins are rejected" do
+    user1 = register("from_user1")
+    user2 = register("to_user2")
+
+    {:ok, _group_chat} = GroupChats.create_group_chat(user1.nickname, "grupo1")
+    {:ok, _} = GroupChats.add_member("grupo1", user1.nickname, user2.nickname)
+
+    {:error, no_permission} = GroupChats.delete_for_everyone("grupo1", user2.nickname)
+    assert no_permission == "El usuario to_user2 no tiene permiso para eliminar el grupo"
+
+    {:ok, deleted} = GroupChats.delete_for_everyone("grupo1", user1.nickname)
+
+    assert deleted.group_name == "grupo1"
+    assert Enum.sort(deleted.member_ids) == Enum.sort([user1.nickname, user2.nickname])
+    assert GroupChats.get_by("name", "grupo1") == {:error, "Chat no encontrado"}
+  end
+
   test "an admin can remove a member, and non-admins are rejected" do
     user1 = register("from_user1")
     user2 = register("to_user2")

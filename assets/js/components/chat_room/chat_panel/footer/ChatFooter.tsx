@@ -21,8 +21,11 @@ export default function ChatFooter() {
   const [modalVisible, setModalVisible] = useState(false);
   const [isGroupMemberRemoved, setIsGroupMemberRemoved] = useState(false);
   const [groupMemberRemovedMessage, setGroupMemberRemovedMessage] = useState("");
+  const [isGroupDeleted, setIsGroupDeleted] = useState(false);
+  const [groupDeletedMessage, setGroupDeletedMessage] = useState("");
   const lastProcessedGroupMemberRemovedEventSignatureRef = useRef("");
   const lastProcessedGroupMemberAddedEventSignatureRef = useRef("");
+  const lastProcessedGroupDeletedEventSignatureRef = useRef("");
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLElement>(null);
   const [isLandscapeSm, setIsLandscapeSm] = useState(false);
@@ -32,6 +35,7 @@ export default function ChatFooter() {
   const openGroupChatEvent = useEvent("open_group_chat");
   const groupMemberRemovedEvent = useEvent("group_member_removed");
   const groupMemberAddedEvent = useEvent("group_member_added");
+  const groupDeletedEvent = useEvent("group_deleted");
 
   const onEmojiClick = (emojiObject: EmojiClickData, _event: MouseEvent) => {
     setInputStr((prevInput) => prevInput + emojiObject.emoji);
@@ -69,6 +73,8 @@ export default function ChatFooter() {
   useEffect(() => {
     if (openPrivateChatEvent) {
       setChatData(openPrivateChatEvent);
+      setIsGroupDeleted(false);
+      setGroupDeletedMessage("");
       removeEvent("open_private_chat");
     }
   }, [openPrivateChatEvent]);
@@ -82,6 +88,8 @@ export default function ChatFooter() {
           ? buildRemovedMessage(activeChatContextEvent.group_data?.name)
           : ""
       );
+      setIsGroupDeleted(false);
+      setGroupDeletedMessage("");
     }
   }, [activeChatContextEvent]);
 
@@ -92,9 +100,30 @@ export default function ChatFooter() {
       setGroupMemberRemovedMessage(
         openGroupChatEvent.removed_at ? buildRemovedMessage(openGroupChatEvent.group_data?.name) : ""
       );
+      setIsGroupDeleted(false);
+      setGroupDeletedMessage("");
       removeEvent("open_group_chat");
     }
   }, [openGroupChatEvent]);
+
+  useEffect(() => {
+    if (!groupDeletedEvent) return;
+
+    const deletedEventSignature = `${groupDeletedEvent.chat_id || ""}:${groupDeletedEvent.group_name || ""}`;
+
+    if (lastProcessedGroupDeletedEventSignatureRef.current === deletedEventSignature) return;
+
+    const isSameChatById =
+      chatData?.chat_id &&
+      groupDeletedEvent.chat_id &&
+      chatData.chat_id === groupDeletedEvent.chat_id;
+
+    if (isSameChatById) {
+      lastProcessedGroupDeletedEventSignatureRef.current = deletedEventSignature;
+      setIsGroupDeleted(true);
+      setGroupDeletedMessage(chatFooterText.groupDeleted(groupDeletedEvent.group_name));
+    }
+  }, [groupDeletedEvent]);
 
   useEffect(() => {
     if (!groupMemberRemovedEvent) return;
@@ -145,7 +174,7 @@ export default function ChatFooter() {
 
     const currentData = chatData?.chat_id ? chatData : activeChatContextEvent || chatData;
 
-    if (isGroupMemberRemoved && currentData?.group_data) {
+    if ((isGroupMemberRemoved || isGroupDeleted) && currentData?.group_data) {
       return;
     }
 
@@ -162,14 +191,15 @@ export default function ChatFooter() {
     setInputStr("");
   };
 
-  const isRemovedBannerVisible = isGroupMemberRemoved && chatData.group_data;
+  const isRemovedBannerVisible = (isGroupMemberRemoved || isGroupDeleted) && chatData.group_data;
+  const bannerMessage = isGroupDeleted ? groupDeletedMessage : groupMemberRemovedMessage;
 
   return (
     <footer
       className={
         isRemovedBannerVisible
           ? "shrink-0 flex min-h-16 items-center justify-center gap-3 border-t-2 border-amber-400 bg-amber-100 px-4 py-3 landscape-sm:min-h-10 landscape-sm:gap-2 landscape-sm:px-3 landscape-sm:py-1"
-          : "shrink-0 flex min-h-16 items-center justify-between bg-gray-300 px-3 py-2 sm:px-4 sm:py-3 landscape-sm:min-h-10 landscape-sm:px-2 landscape-sm:py-1"
+          : "shrink-0 flex min-h-16 items-center justify-between px-3 py-2 sm:px-4 sm:py-3 landscape-sm:min-h-10 landscape-sm:px-2 landscape-sm:py-1"
       }
     >
       {isRemovedBannerVisible ? (
@@ -180,14 +210,14 @@ export default function ChatFooter() {
             className="shrink-0 text-xl text-amber-600"
           />
           <span className="text-base sm:text-lg font-semibold text-amber-900 text-center">
-            {groupMemberRemovedMessage}
+            {bannerMessage}
           </span>
         </>
       ) : (
         <form className="flex w-full gap-3" onSubmit={handleSendMessage}>
-          <div className="flex items-center w-full justify-center rounded-full bg-gray-100 shadow-sm transition-shadow duration-200 focus-within:shadow-md">
+          <div className="flex items-center w-full justify-center rounded-full bg-gray-200 shadow-sm transition-shadow duration-200 focus-within:shadow-md">
             <input
-              className="input bg-transparent border-none h-9 w-full px-4 focus:outline-none shadow-none landscape-sm:h-7 landscape-sm:px-3"
+              className="input bg-transparent border-none h-9 w-full min-w-0 px-4 focus:outline-none shadow-none landscape-sm:h-7 landscape-sm:px-3"
               type="text"
               value={inputStr}
               onChange={(e) => {
@@ -205,7 +235,7 @@ export default function ChatFooter() {
               <div className="relative">
                 <Button
                   ref={emojiButtonRef}
-                  className="bg-transparent border-none h-9 w-9 flex items-center justify-center hover:bg-gray-200 transition-colors duration-200 landscape-sm:!h-7 landscape-sm:!w-7"
+                  className="bg-transparent border-none h-8 w-12 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors duration-200 landscape-sm:!h-6 landscape-sm:!w-10"
                   onClick={() => setShowPicker((prev) => !prev)}
                   icon={<SmileOutlined />}
                   title={chatFooterText.emojiButton}
@@ -228,7 +258,7 @@ export default function ChatFooter() {
                 )}
               </div>
               <Button
-                className="bg-sky-400 hover:bg-sky-500 border-none text-white h-9 w-9 flex items-center justify-center rounded-full mr-1 transition-colors duration-200 landscape-sm:!h-7 landscape-sm:!w-7"
+                className="bg-sky-400 hover:bg-sky-500 border-none text-white h-8 w-12 flex items-center justify-center rounded-full mr-1 transition-colors duration-200 landscape-sm:!h-6 landscape-sm:!w-10"
                 icon={<SendOutlined />}
                 onClick={(e) => handleSendMessage(e)}
                 title={chatFooterText.sendMessageButton}

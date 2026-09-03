@@ -54,6 +54,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = (props: ChatRoomProps) => {
 
   const handleBackToList = () => {
     setMobileShowChat(false);
+    addEvent("close_chat_mobile", Date.now());
   };
 
   useEffect(() => {

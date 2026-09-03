@@ -7,9 +7,11 @@ import { toggleDetailVisibilityAction } from "../../../services/contactService";
 import {
   setGroupAdminAction,
   deleteMemberAction,
+  deleteGroupForEveryoneAction,
 } from "../../../services/groupService";
 import type { ChatMember, EventBusPayload } from "../../../types/events";
 import useInfoPanelText from "./infoPanelText";
+import { ConfirmDialog } from "../../../../components-shadcn/ui/confirm-dialog";
 
 export default function ChatDetailPanel() {
   const infoPanelText = useInfoPanelText();
@@ -18,6 +20,8 @@ export default function ChatDetailPanel() {
   const [members, setMembers] = useState<ChatMember[]>([]);
   const [checkAdmin, setCheckAdmin] = useState(false);
   const [currentUserNickname, setCurrentUserNickname] = useState("");
+  const [showLeaveDialog, setShowLeaveDialog] = useState(false);
+  const [showDeleteGroupDialog, setShowDeleteGroupDialog] = useState(false);
   const currentChatId = chatData?.chat_id || "";
   const currentGroupName = chatData?.group_name || chatData?.chat_name || "";
 
@@ -103,6 +107,11 @@ export default function ChatDetailPanel() {
     setGroupAdminAction(addEvent, memberName, chatData.chat_name, operation);
   };
 
+  const deleteGroupForEveryone = () => {
+    if (!chatData) return;
+    deleteGroupForEveryoneAction(addEvent, chatData.chat_name);
+  };
+
   const deleteMember = (memberName: string) => {
     if (!chatData) return;
     const index = members.findIndex(
@@ -119,37 +128,34 @@ export default function ChatDetailPanel() {
   };
 
   return (
-    <div
-      className="overflow-y-auto shrink-0 w-full h-dvh sm:h-auto sm:w-72 sm:max-w-[28vw] lg:w-80 xl:w-96 bg-gray-100 p-3 landscape-sm:p-2"
-      style={{ scrollbarWidth: "thin" }}
-    >
-      <div className="min-w-0">
+    <div className="flex flex-col shrink-0 w-full h-dvh overflow-hidden sm:w-72 sm:max-w-[28vw] lg:w-80 xl:w-96 bg-gray-100 p-3 landscape-sm:p-2">
+      <div className="flex flex-1 min-h-0 min-w-0 flex-col">
         <Button
-          className="top-0 left-0 bg-white landscape-sm:!h-7 landscape-sm:!w-7"
+          className="shrink-0 top-0 left-0 bg-white landscape-sm:!h-7 landscape-sm:!w-7"
           icon={<CloseOutlined />}
           onClick={hideUserDetails}
           title={infoPanelText.closeDetails}
           aria-label={infoPanelText.closeDetails}
         />
         {chatData && (
-          <div className="text-center w-full mb-10 landscape-sm:mb-2">
+          <div className="shrink-0 text-center w-full mb-4 landscape-sm:mb-1">
             <Avatar
               src={chatData.image}
-              size={150}
+              size={96}
               alt={infoPanelText.defaultAvatarAlt}
-              className="bg-white landscape-sm:!h-14 landscape-sm:!w-14"
+              className="bg-white landscape-sm:!h-12 landscape-sm:!w-12"
             />
-            <h2 className="text-2xl mt-2 landscape-sm:text-base landscape-sm:mt-1">{chatData.chat_name}</h2>
+            <h2 className="text-xl mt-2 landscape-sm:text-sm landscape-sm:mt-1">{chatData.chat_name}</h2>
           </div>
         )}
         {chatData?.is_group && (
-          <div className="my-4 landscape-sm:my-1 landscape-sm:text-sm">
+          <div className="shrink-0 my-2 landscape-sm:my-0.5 landscape-sm:text-xs">
             <span>{infoPanelText.members(members.length)}</span>
           </div>
         )}
         {chatData?.is_group && (
           <div
-            className="h-[42vh] w-full overflow-y-auto relative sm:h-[55vh] landscape-sm:h-[30vh]"
+            className="flex-1 min-h-0 w-full overflow-y-auto relative"
             style={{ scrollbarWidth: "thin" }}
           >
             <List
@@ -159,7 +165,6 @@ export default function ChatDetailPanel() {
                 <li key={index} className="list-none" style={{ position: "relative" }}>
                   <GroupMemberItem
                     contact={item}
-                    groupName={currentGroupName}
                     onSelect={() => console.log("Miembro ", item.nickname)}
                     onSetAdmin={setAdmin}
                     onDelete={deleteMember}
@@ -171,7 +176,53 @@ export default function ChatDetailPanel() {
             />
           </div>
         )}
+        {chatData?.is_group && (
+          <button
+            type="button"
+            onClick={() => setShowLeaveDialog(true)}
+            className="shrink-0 mt-2 w-full py-2 landscape-sm:mt-1 landscape-sm:py-1 rounded-md border border-gray-300 bg-white text-red-600 text-sm font-medium hover:bg-red-50"
+          >
+            {infoPanelText.leaveGroup}
+          </button>
+        )}
+        {chatData?.is_group && checkAdmin && (
+          <button
+            type="button"
+            onClick={() => setShowDeleteGroupDialog(true)}
+            className="shrink-0 mt-2 w-full py-2 landscape-sm:mt-1 landscape-sm:py-1 rounded-md border border-gray-300 bg-white text-red-600 text-sm font-medium hover:bg-red-50"
+          >
+            {infoPanelText.deleteGroup}
+          </button>
+        )}
       </div>
+
+      <ConfirmDialog
+        open={showLeaveDialog}
+        variant="danger"
+        title={infoPanelText.confirmLeaveGroupTitle}
+        content={infoPanelText.confirmLeaveGroupMessage(currentGroupName)}
+        confirmLabel={infoPanelText.leaveGroup}
+        cancelLabel={infoPanelText.confirmCancelButton}
+        onClose={() => setShowLeaveDialog(false)}
+        onConfirm={() => {
+          setShowLeaveDialog(false);
+          deleteMember(currentUserNickname);
+        }}
+      />
+
+      <ConfirmDialog
+        open={showDeleteGroupDialog}
+        variant="danger"
+        title={infoPanelText.confirmDeleteGroupTitle}
+        content={infoPanelText.confirmDeleteGroupMessage(currentGroupName)}
+        confirmLabel={infoPanelText.deleteGroup}
+        cancelLabel={infoPanelText.confirmCancelButton}
+        onClose={() => setShowDeleteGroupDialog(false)}
+        onConfirm={() => {
+          setShowDeleteGroupDialog(false);
+          deleteGroupForEveryone();
+        }}
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "antd";
-import { Mic, MicOff, PhoneOff } from "lucide-react";
+import { Mic, MicOff, Phone } from "lucide-react";
 import { useLocalParticipant } from "@livekit/components-react";
 import { useCallContext } from "./CallContext";
 import { useEventContext } from "../EventContext";
@@ -28,6 +28,7 @@ export default function MinimizedCallBar() {
 
   const handleBarClick = () => {
     if (isSameChat) {
+      addEvent("open_chat_mobile", Date.now());
       setMinimized(false);
       return;
     }
@@ -38,6 +39,7 @@ export default function MinimizedCallBar() {
       } else {
         selectPrivateChatAction(addEvent, activeCallRoomName);
       }
+      addEvent("open_chat_mobile", Date.now());
       setMinimized(false);
     }
   };
@@ -89,7 +91,7 @@ export default function MinimizedCallBar() {
         className="!flex !h-9 !w-9 !items-center !justify-center !p-0"
         danger
         type="primary"
-        icon={<PhoneOff className="h-4 w-4" />}
+        icon={<Phone className="h-4 w-4" />}
         onClick={(event) => {
           stop(event);
           leaveCall();

@@ -62,6 +62,49 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
     end
   end
 
+  def handle_delete_group_for_everyone(group_name, user, socket) do
+    case check_group_action_rate(user.nickname) do
+      :ok ->
+        do_delete_group_for_everyone(group_name, user, socket)
+
+      {:error, _reason} ->
+        event_data = gettext("Estás borrando grupos demasiado rápido. Espera unos segundos")
+        notify_react(socket, "error_deleting_group", event_data)
+    end
+  end
+
+  defp do_delete_group_for_everyone(group_name, user, socket) do
+    case GroupChats.delete_for_everyone(group_name, user.nickname) do
+      {:ok, %{chat_id: chat_id, group_name: deleted_group_name, member_ids: member_ids}} ->
+        socket =
+          if socket.assigns[:chat_id] == chat_id do
+            socket
+            |> assign(:chat_id, nil)
+            |> assign(:current_group_joined_at, nil)
+            |> assign(:current_group_removed_at, nil)
+          else
+            socket
+          end
+
+        PubSub.unsubscribe(Pomoroom.PubSub, "chat:#{chat_id}")
+
+        Enum.each(member_ids, fn member_id ->
+          if member_id != user.nickname do
+            PubSub.broadcast(
+              Pomoroom.PubSub,
+              "user:#{member_id}",
+              {:group_deleted, %{chat_id: chat_id, group_name: deleted_group_name}}
+            )
+          end
+        end)
+
+        notify_react(socket, "group_deleted", %{chat_id: chat_id, group_name: deleted_group_name})
+
+      {:error, reason} ->
+        notify_react(socket, "error_deleting_group", reason)
+    end
+  end
+
   defp do_delete_group(group_name, user, socket) do
     case GroupChats.get_by("name", group_name) do
       {:ok, group_chat} ->
