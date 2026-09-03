@@ -57,23 +57,23 @@ defmodule PomoroomWeb.PageHTML.HomeTexts do
         images: [
           %{
             src_desktop: "/images/screenshots/esp_desktop_lista_contactos_opciones.png",
-            src_mobile: "/images/screenshots/movil-contactos.jpeg",
+            src_mobile: "/images/screenshots/esp_movil_lista_contactos_opciones.jpeg",
             alt:
               gettext("Lista de contactos y grupos de Pomoroom, con el menú de opciones abierto")
           },
           %{
             src_desktop: "/images/screenshots/esp_desktop_chat_grupal_vista_total.png",
-            src_mobile: "/images/screenshots/movil-chat-grupal.jpeg",
+            src_mobile: "/images/screenshots/esp_movil_chat_grupal_vista_total.jpeg",
             alt: gettext("Conversación en un chat grupal de Pomoroom")
           },
           %{
             src_desktop: "/images/screenshots/esp_desktop_pomodoro_vista_total.png",
-            src_mobile: "/images/screenshots/movil-pomodoro.jpeg",
+            src_mobile: "/images/screenshots/esp_movil_pomodoro_vista_total.jpeg",
             alt: gettext("Temporizador Pomodoro de Pomoroom en marcha")
           },
           %{
             src_desktop: "/images/screenshots/esp_desktop_kanban_vista_total.png",
-            src_mobile: "/images/screenshots/movil-kanban.jpeg",
+            src_mobile: "/images/screenshots/esp_movil_kanban_vista_total.jpeg",
             alt: gettext("Tablero Kanban de Pomoroom con tareas organizadas por columnas")
           }
         ]
