@@ -131,6 +131,8 @@ const es = {
     confirmDeleteConversationTitle: "Eliminar contacto",
     confirmDeleteConversationMessage: 'Vas a eliminar a "{{contactName}}" de tus contactos. Si ambos lo elimináis, la conversación se borrará por completo. Esta acción es irreversible.',
     confirmCancelButton: "Cancelar",
+    emptyStateTitle: "Bienvenid@ a Pomoroom",
+    emptyStateSubtitle: "Agrega a un nuevo contacto o crea un grupo para empezar a chatear",
   },
   infoPanelText: {
     closeDetails: "Cerrar detalles",

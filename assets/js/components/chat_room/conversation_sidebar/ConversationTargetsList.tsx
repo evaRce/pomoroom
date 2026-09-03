@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Fragment, useRef } from "react";
 import { Button } from "antd";
-import { SearchOutlined, CloseOutlined } from "@ant-design/icons";
+import { SearchOutlined, CloseOutlined, MessageOutlined } from "@ant-design/icons";
 import ConversationTargetItem from "./ConversationTargetItem";
 import { useEventContext, useEvent } from "../EventContext";
 import { deleteContactAction } from "../../../services/contactService";
@@ -33,6 +33,7 @@ export default function ConversationTargetsList() {
   const [selectedContact, setSelectedContact] = useState("");
   const [userLogin, setUserLogin] = useState<Partial<ChatUserRef>>({});
   const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH_SIZE);
+  const [hasLoadedContacts, setHasLoadedContacts] = useState(false);
   const lastProcessedGroupAdminUpdatedRef = useRef("");
 
   const addContactToListEvent = useEvent("add_contact_to_list");
@@ -83,11 +84,13 @@ export default function ConversationTargetsList() {
       );
       setContacts(normalizedList);
       setVisibleCount(INITIAL_BATCH_SIZE);
+      setHasLoadedContacts(true);
       removeEvent("show_list_contact");
       return;
     }
 
     if (showListContactEvent) {
+      setHasLoadedContacts(true);
       removeEvent("show_list_contact");
     }
   }, [showListContactEvent]);
@@ -364,6 +367,20 @@ export default function ConversationTargetsList() {
   };
 
   const visibleContacts = filteredContacts.slice(0, visibleCount);
+
+  if (hasLoadedContacts && contacts.length === 0) {
+    return (
+      <div className="flex flex-col flex-1 min-h-0 w-full min-w-0 items-center justify-center gap-3 px-6 text-center">
+        <MessageOutlined className="text-4xl text-sky-400" aria-hidden="true" />
+        <p className="text-lg font-semibold text-gray-700 m-0">
+          {conversationSidebarText.emptyStateTitle}
+        </p>
+        <p className="text-sm text-gray-500 m-0">
+          {conversationSidebarText.emptyStateSubtitle}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full min-w-0">

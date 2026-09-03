@@ -1,5 +1,5 @@
 import React from "react";
-import { act, render } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { beforeAll, describe, expect, it } from "vitest";
 import { EventProvider, useEventContext } from "../EventContext";
@@ -27,6 +27,14 @@ function Harness() {
   return <ConversationTargetsList />;
 }
 
+function EmptyHarness() {
+  const { addEvent } = useEventContext();
+  React.useEffect(() => {
+    addEvent("show_list_contact", []);
+  }, []);
+  return <ConversationTargetsList />;
+}
+
 describe("ConversationTargetsList accessibility", () => {
   it("has no accessibility violations with no contacts loaded", async () => {
     const { container } = render(
@@ -47,6 +55,20 @@ describe("ConversationTargetsList accessibility", () => {
         </EventProvider>
       ));
     });
+    const results = await axe(container!);
+    expect(results).toHaveNoViolations();
+  });
+
+  it("shows the welcome empty state once the confirmed contact list is empty", async () => {
+    let container: HTMLElement;
+    await act(async () => {
+      ({ container } = render(
+        <EventProvider>
+          <EmptyHarness />
+        </EventProvider>
+      ));
+    });
+    expect(screen.getByText("Bienvenid@ a Pomoroom")).toBeTruthy();
     const results = await axe(container!);
     expect(results).toHaveNoViolations();
   });
