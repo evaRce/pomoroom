@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Modal, Input, List } from "antd";
+import { Button, Modal, List } from "antd";
 import { CopyOutlined, SearchOutlined, CloseOutlined } from "@ant-design/icons";
 import { useEventContext, useEvent } from "../../EventContext";
 import GroupMemberItem from "../../info_panel/GroupMemberItem";
@@ -66,31 +66,33 @@ export default function AddMembersModal({
       onCancel={handleModalClose}
       footer={null}
     >
-      <div className="flex items-center mb-4">
-        <Input
-          className="mr-1"
-          type="text"
-          placeholder={addMembersModalText.searchPlaceholder}
-          aria-label={addMembersModalText.searchPlaceholder}
-          value={searchTerm}
-          onChange={handleSearch}
-        />
-        {searchTerm ? (
-          <Button
-            className="bg-red-300"
-            icon={<CloseOutlined />}
-            onClick={clearSearch}
-            title={addMembersModalText.clearSearch}
-            aria-label={addMembersModalText.clearSearch}
+      <div className="flex items-center w-full mb-4">
+        <div className="flex items-center w-full rounded-full bg-gray-200 shadow-sm transition-shadow duration-200 focus-within:shadow-md">
+          <input
+            className="input bg-transparent border-none h-9 w-full min-w-0 px-4 focus:outline-none shadow-none"
+            type="text"
+            placeholder={addMembersModalText.searchPlaceholder}
+            aria-label={addMembersModalText.searchPlaceholder}
+            value={searchTerm}
+            onChange={handleSearch}
           />
-        ) : (
-          <Button
-            className="bg-sky-400"
-            icon={<SearchOutlined />}
-            title={addMembersModalText.search}
-            aria-label={addMembersModalText.search}
-          />
-        )}
+          {searchTerm ? (
+            <Button
+              className="bg-transparent border-none h-8 w-12 flex items-center justify-center rounded-full mr-1 shrink-0 hover:bg-gray-300 transition-colors duration-200"
+              icon={<CloseOutlined />}
+              onClick={clearSearch}
+              title={addMembersModalText.clearSearch}
+              aria-label={addMembersModalText.clearSearch}
+            />
+          ) : (
+            <Button
+              className="bg-sky-400 hover:bg-sky-500 border-none text-white h-8 w-12 flex items-center justify-center rounded-full mr-1 shrink-0 transition-colors duration-200"
+              icon={<SearchOutlined />}
+              title={addMembersModalText.search}
+              aria-label={addMembersModalText.search}
+            />
+          )}
+        </div>
       </div>
 
       <div
