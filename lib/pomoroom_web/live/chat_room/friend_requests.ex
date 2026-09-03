@@ -17,6 +17,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
 
   def handle_friend_request_accepted(payload, chat_id, socket) do
     PubSub.subscribe(Pomoroom.PubSub, "chat:#{chat_id}")
+    PubSub.subscribe(Pomoroom.PubSub, "chat:#{chat_id}:pomodoro")
     notify_react(socket, payload)
   end
 
@@ -34,6 +35,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
                 Runtime.ensure_chat_server_exists(private_chat.chat_id)
                 ChatServer.join_chat(private_chat.chat_id)
                 PubSub.subscribe(Pomoroom.PubSub, "chat:#{private_chat.chat_id}")
+                PubSub.subscribe(Pomoroom.PubSub, "chat:#{private_chat.chat_id}:pomodoro")
 
                 payload = %{
                   event_name: "update_contact_status_to_accepted",
@@ -221,6 +223,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
                              ) do
                           {:ok, request} ->
                             PubSub.subscribe(Pomoroom.PubSub, "chat:#{private_chat.chat_id}")
+                            PubSub.subscribe(Pomoroom.PubSub, "chat:#{private_chat.chat_id}:pomodoro")
 
                             %{
                               event_name: "add_contact_to_list",

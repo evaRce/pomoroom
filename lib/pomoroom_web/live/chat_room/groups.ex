@@ -42,6 +42,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
       {:ok, group_chat} ->
         Runtime.ensure_chat_server_exists(group_chat.chat_id)
         PubSub.subscribe(Pomoroom.PubSub, "chat:#{group_chat.chat_id}")
+        PubSub.subscribe(Pomoroom.PubSub, "chat:#{group_chat.chat_id}:pomodoro")
         ChatServer.join_chat(group_chat.chat_id)
 
         PubSub.broadcast_from(
@@ -585,6 +586,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Groups do
       Runtime.ensure_chat_server_exists(chat_id)
       ChatServer.join_chat(chat_id)
       PubSub.subscribe(Pomoroom.PubSub, "chat:#{chat_id}")
+      PubSub.subscribe(Pomoroom.PubSub, "chat:#{chat_id}:pomodoro")
       assign(socket, :subscribed_chat_ids, MapSet.put(subscribed_chat_ids, chat_id))
     end
   end
