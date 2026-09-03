@@ -1,5 +1,6 @@
 defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
   import PomoroomWeb.ChatLive.ChatRoom.ReactEvent
+  require Logger
 
   alias Phoenix.PubSub
   alias Pomoroom.ChatPlugins
@@ -153,10 +154,20 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Plugins do
             {:noreply, socket}
 
           {:error, reason} ->
+            Logger.warning(
+              "pomodoro update_config failed: chat_id=#{chat_id} chat_type=#{chat_type} " <>
+                "user=#{user.nickname} config=#{inspect(config)} reason=#{inspect(reason)}"
+            )
+
             push_pomodoro_error(socket, chat_id, chat_type, reason)
         end
 
       {:error, reason} ->
+        Logger.warning(
+          "pomodoro update_config not authorized: chat_id=#{chat_id} chat_type=#{chat_type} " <>
+            "user=#{user.nickname} reason=#{inspect(reason)}"
+        )
+
         push_pomodoro_error(socket, chat_id, chat_type, reason)
     end
   end
