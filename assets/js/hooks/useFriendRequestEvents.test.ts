@@ -134,4 +134,17 @@ describe("useFriendRequestEvents", () => {
 
     expect(setComponent).not.toHaveBeenCalled();
   });
+
+  it.each(["RejectedRequestSend", "RejectedRequestReceived"])(
+    "closes the %s screen too if it was open when the request got cancelled",
+    (screen) => {
+      const { setComponent } = setup(
+        "friend_request_cancelled",
+        { from_user: "eva01", to_user: "bob01" },
+        { userNickname: "bob01", component: screen }
+      );
+
+      expect(setComponent).toHaveBeenCalledWith("");
+    }
+  );
 });

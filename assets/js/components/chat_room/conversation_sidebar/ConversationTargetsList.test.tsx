@@ -37,7 +37,7 @@ function HarnessWithCancelledRequest({ cancelled }: { cancelled: boolean }) {
         request: { from_user: "me", to_user: "Alice", status: "accepted" },
       },
       {
-        contact_data: { nickname: "Bob", chat_id: null, image_profile: "/images/avatars/avatar-2.png" },
+        contact_data: { nickname: "Bob", image_profile: "/images/avatars/avatar-2.png" },
         request: { from_user: "me", to_user: "Bob", status: "pending" },
       },
     ]);
