@@ -56,6 +56,7 @@ export default function ChatHeader({
   const chatPluginUninstalledEvent = useEvent("chat_plugin_uninstalled");
   const chatPluginUninstallFailedEvent = useEvent("chat_plugin_uninstall_failed");
   const groupMemberRemovedEvent = useEvent("group_member_removed");
+  const groupDeletedEvent = useEvent("group_deleted");
   const groupMemberAddedEvent = useEvent("group_member_added");
   const checkAdminEvent = useEvent("check_admin");
   const groupAdminUpdatedEvent = useEvent("group_admin_updated");
@@ -311,6 +312,20 @@ export default function ChatHeader({
       toggleDetailVisibilityAction(addEvent, false, true, groupMemberRemovedEvent.group_name ?? currentGroupName);
     }
   }, [groupMemberRemovedEvent, currentChatId, currentGroupName]);
+
+  useEffect(() => {
+    const isDeletedEventForCurrentChat =
+      groupDeletedEvent &&
+      ((currentChatId && groupDeletedEvent.chat_id && currentChatId === groupDeletedEvent.chat_id) ||
+        (currentGroupName &&
+          groupDeletedEvent.group_name &&
+          currentGroupName === groupDeletedEvent.group_name));
+
+    if (groupDeletedEvent && isDeletedEventForCurrentChat) {
+      setIsGroupMemberRemoved(true);
+      toggleDetailVisibilityAction(addEvent, false, true, groupDeletedEvent.group_name ?? currentGroupName);
+    }
+  }, [groupDeletedEvent, currentChatId, currentGroupName]);
 
   useEffect(() => {
     const isAddedEventForCurrentChat =
@@ -594,7 +609,10 @@ export default function ChatHeader({
           {(!isGroupChat || !isGroupMemberRemoved) && (
             <Button
               type="text"
-              className="!h-9 !w-9 !rounded-lg shrink-0 sm:hidden !bg-green-50 !text-green-700 hover:!bg-green-100 landscape-sm:!h-7 landscape-sm:!w-7"
+              className={`!h-9 !w-9 !rounded-lg shrink-0 sm:hidden landscape-sm:!h-7 landscape-sm:!w-7 ${isThisChatInCall
+                ? "!bg-green-50 !text-green-700 hover:!bg-green-100"
+                : "text-gray-600 hover:!bg-gray-100"
+                }`}
               icon={<MobileCallIcon className={`h-5 w-5 landscape-sm:h-4 landscape-sm:w-4 ${isThisChatConnecting ? "animate-spin" : ""}`} />}
               onClick={handleMobileCallClick}
               disabled={isCallBusyElsewhere || isThisChatConnecting}
@@ -657,7 +675,7 @@ export default function ChatHeader({
           >
             <Button
               type="text"
-              className="!h-9 !w-9 !rounded-lg shrink-0 !bg-green-50 !text-green-700 hover:!bg-green-100 landscape-sm:!h-7 landscape-sm:!w-7"
+              className="!h-9 !w-9 !rounded-lg shrink-0 text-gray-600 hover:!bg-gray-100 landscape-sm:!h-7 landscape-sm:!w-7"
               icon={<MoreVertical className="h-5 w-5 landscape-sm:h-4 landscape-sm:w-4" />}
               title={chatHeaderText.moreOptions}
               aria-label={chatHeaderText.moreOptions}
