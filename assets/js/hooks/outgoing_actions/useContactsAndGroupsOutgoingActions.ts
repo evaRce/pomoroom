@@ -34,6 +34,7 @@ export function useContactsAndGroupsOutgoingActions({
   const addGroup = useEvent("add_group");
   const selectedGroupChat = useEvent("selected_group_chat");
   const groupToDelete = useEvent("delete_group");
+  const groupToDeleteForEveryone = useEvent("delete_group_for_everyone");
   const showMyContactsInGroup = useEvent("get_my_contacts");
   const addContactToGroup = useEvent("add_member");
   const deleteMember = useEvent("delete_member");
@@ -106,6 +107,17 @@ export function useContactsAndGroupsOutgoingActions({
       }
       removeEvent("delete_group");
     }
+    if (groupToDeleteForEveryone) {
+      pushEventToLiveView("action.delete_group_for_everyone", groupToDeleteForEveryone);
+      if (infoChatSelected?.group_name === groupToDeleteForEveryone) {
+        setComponent("");
+        if (isVisibleDetail) {
+          setIsVisibleDetail(false);
+        }
+        setInfoChatSelected({});
+      }
+      removeEvent("delete_group_for_everyone");
+    }
     if (showMyContactsInGroup) {
       pushEventToLiveView("action.get_my_contacts", showMyContactsInGroup);
       removeEvent("get_my_contacts");
@@ -132,12 +144,8 @@ export function useContactsAndGroupsOutgoingActions({
           ? infoChatSelected.group_name === groupDeleted.group_name
           : false;
 
-      if (isCurrentSelectedGroup) {
-        setComponent("");
-        if (isVisibleDetail) {
-          setIsVisibleDetail(false);
-        }
-        setInfoChatSelected({});
+      if (isCurrentSelectedGroup && isVisibleDetail) {
+        setIsVisibleDetail(false);
       }
 
       removeEvent("group_deleted");
@@ -174,6 +182,7 @@ export function useContactsAndGroupsOutgoingActions({
     addGroup,
     selectedGroupChat,
     groupToDelete,
+    groupToDeleteForEveryone,
     showMyContactsInGroup,
     addContactToGroup,
     deleteMember,

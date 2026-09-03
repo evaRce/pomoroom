@@ -112,7 +112,11 @@ export function useGroupMembershipEvents({
         chat_id: eventData?.chat_id || "",
         group_name: eventData?.group_name || "",
       });
-      message.info(t("infoPanelText.groupDeletedMessage", { groupName: eventData?.group_name || "" }));
+      message.info(
+        eventData?.group_name
+          ? t("chatFooterText.groupDeletedWithName", { groupName: eventData.group_name })
+          : t("chatFooterText.groupDeletedGeneric")
+      );
       refreshConversationsAction(addEvent);
     }
   }, [eventName, eventData]);

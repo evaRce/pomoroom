@@ -53,6 +53,8 @@ const en = {
   chatFooterText: {
     removedFromGroupWithName: "You have been removed from the group {{groupName}}",
     removedFromGroupGeneric: "You have been removed from the group",
+    groupDeletedWithName: "The group {{groupName}} has been deleted",
+    groupDeletedGeneric: "The group has been deleted",
     warningIconLabel: "warning",
     inputPlaceholder: "Type a message",
     emojiButton: "Choose emoji",
@@ -147,7 +149,10 @@ const en = {
     confirmRemoveMemberTitle: "Remove member",
     confirmRemoveMemberMessage: 'Are you sure you want to remove "{{nickname}}" from the group?',
     confirmCancelButton: "Cancel",
-    groupDeletedMessage: 'The group "{{groupName}}" was deleted because it has no members left.',
+    deleteGroup: "Delete group",
+    confirmDeleteGroupTitle: "Delete group",
+    confirmDeleteGroupMessage:
+      'You are about to delete the group "{{groupName}}" for all its members. This action is irreversible and neither the group nor its messages can be recovered.',
   },
   kanbanText: {
     taskDeleteTitle: "Delete task",

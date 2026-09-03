@@ -12,6 +12,10 @@ export function deleteGroupAction(addEvent: AddEvent, groupName: string): void {
   addEvent("delete_group", groupName);
 }
 
+export function deleteGroupForEveryoneAction(addEvent: AddEvent, groupName: string): void {
+  addEvent("delete_group_for_everyone", groupName);
+}
+
 export function requestGroupContactsAction(addEvent: AddEvent, groupName: string): void {
   addEvent("get_my_contacts", { group_name: groupName });
 }

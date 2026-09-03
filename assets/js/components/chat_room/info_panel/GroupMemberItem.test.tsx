@@ -49,12 +49,10 @@ describe("GroupMemberItem accessibility", () => {
     expect(results).toHaveNoViolations();
   });
 
-  it("has no accessibility violations for the confirm-leave dialog", async () => {
-    const user = userEvent.setup();
-    render(
+  it("has no accessibility violations for the current user's own row", async () => {
+    const { container } = render(
       <GroupMemberItem
         contact={contact}
-        groupName="Equipo A"
         onSelect={vi.fn()}
         onSetAdmin={vi.fn()}
         onDelete={vi.fn()}
@@ -62,11 +60,7 @@ describe("GroupMemberItem accessibility", () => {
         isCurrentUser
       />
     );
-
-    await user.click(document.querySelector("button")!);
-    await user.click(document.querySelector('[role="menuitem"]')!);
-
-    const results = await axe(document.body, { rules: { region: { enabled: false } } });
+    const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
 });

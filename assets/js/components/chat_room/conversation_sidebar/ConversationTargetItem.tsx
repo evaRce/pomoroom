@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button, Dropdown, type MenuProps } from "antd";
-import { Bell, BellOff, Brain, Coffee, MessageCircle, RotateCcw } from "lucide-react";
+import { Bell, BellOff, Brain, Coffee, MessageCircleMore, RotateCcw } from "lucide-react";
 import { useEventContext } from "../EventContext";
 import { DownOutlined, DeleteOutlined } from "@ant-design/icons";
 import { usePomodoroNotification } from "../pomodoro_timer/pomodoroNotificationStore";
@@ -151,7 +151,8 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
   return (
     <>
     <div
-      className={`relative rounded-lg p-3 sm:p-1.5 lg:p-2 flex items-center gap-3 sm:gap-2 lg:gap-3 hover:border-gray-400 focus-within:ring-2 mb-1 hover:bg-gray-400 ${getBackgroundContact()}`}
+      className={`relative rounded-lg p-3 sm:p-1.5 lg:p-2 flex items-center gap-3 sm:gap-2 lg:gap-3 hover:border-gray-400 focus-within:ring-2 mb-1 hover:bg-gray-400 cursor-pointer ${getBackgroundContact()}`}
+      onClick={handleChat}
     >
       <div className="flex-shrink-0 rounded-full">
         <img
@@ -164,8 +165,7 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
         <div>
           <div className="flex items-center justify-between">
             <div
-              className="flex min-w-0 flex-1 items-center gap-2 cursor-pointer"
-              onClick={handleChat}
+              className="flex min-w-0 flex-1 items-center gap-2"
               role="button"
               tabIndex={0}
               aria-current={isSelected ? "true" : undefined}
@@ -188,7 +188,7 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
                   title={conversationSidebarText.newMessage}
                   aria-label={conversationSidebarText.newMessage}
                 >
-                  <MessageCircle size={14} />
+                  <MessageCircleMore size={14} />
                 </span>
               )}
               {hasPendingNotification && lastPomodoroEventVisual && (

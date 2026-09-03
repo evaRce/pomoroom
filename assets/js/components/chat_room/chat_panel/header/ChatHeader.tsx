@@ -56,6 +56,7 @@ export default function ChatHeader({
   const chatPluginUninstalledEvent = useEvent("chat_plugin_uninstalled");
   const chatPluginUninstallFailedEvent = useEvent("chat_plugin_uninstall_failed");
   const groupMemberRemovedEvent = useEvent("group_member_removed");
+  const groupDeletedEvent = useEvent("group_deleted");
   const groupMemberAddedEvent = useEvent("group_member_added");
   const checkAdminEvent = useEvent("check_admin");
   const groupAdminUpdatedEvent = useEvent("group_admin_updated");
@@ -311,6 +312,20 @@ export default function ChatHeader({
       toggleDetailVisibilityAction(addEvent, false, true, groupMemberRemovedEvent.group_name ?? currentGroupName);
     }
   }, [groupMemberRemovedEvent, currentChatId, currentGroupName]);
+
+  useEffect(() => {
+    const isDeletedEventForCurrentChat =
+      groupDeletedEvent &&
+      ((currentChatId && groupDeletedEvent.chat_id && currentChatId === groupDeletedEvent.chat_id) ||
+        (currentGroupName &&
+          groupDeletedEvent.group_name &&
+          currentGroupName === groupDeletedEvent.group_name));
+
+    if (groupDeletedEvent && isDeletedEventForCurrentChat) {
+      setIsGroupMemberRemoved(true);
+      toggleDetailVisibilityAction(addEvent, false, true, groupDeletedEvent.group_name ?? currentGroupName);
+    }
+  }, [groupDeletedEvent, currentChatId, currentGroupName]);
 
   useEffect(() => {
     const isAddedEventForCurrentChat =
@@ -591,6 +606,21 @@ export default function ChatHeader({
             )}
           </div>
 
+          {(!isGroupChat || !isGroupMemberRemoved) && (
+            <Button
+              type="text"
+              className={`!h-9 !w-9 !rounded-lg shrink-0 sm:hidden landscape-sm:!h-7 landscape-sm:!w-7 ${isThisChatInCall
+                ? "!bg-green-50 !text-green-700 hover:!bg-green-100"
+                : "text-gray-600 hover:!bg-gray-100"
+                }`}
+              icon={<MobileCallIcon className={`h-5 w-5 landscape-sm:h-4 landscape-sm:w-4 ${isThisChatConnecting ? "animate-spin" : ""}`} />}
+              onClick={handleMobileCallClick}
+              disabled={isCallBusyElsewhere || isThisChatConnecting}
+              title={mobileCallLabel}
+              aria-label={mobileCallLabel}
+            />
+          )}
+
           <Dropdown
             trigger={["click"]}
             open={isMobileActionsOpen}
@@ -608,18 +638,6 @@ export default function ChatHeader({
                   >
                     <UserPlus className="h-4 w-4 shrink-0" />
                     {chatHeaderText.addMembers}
-                  </button>
-                )}
-
-                {(!isGroupChat || !isGroupMemberRemoved) && (
-                  <button
-                    type="button"
-                    onClick={handleMobileCallClick}
-                    disabled={isCallBusyElsewhere || isThisChatConnecting}
-                    className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400 disabled:hover:bg-transparent"
-                  >
-                    <MobileCallIcon className={`h-4 w-4 shrink-0 ${isThisChatConnecting ? "animate-spin" : ""}`} />
-                    {mobileCallLabel}
                   </button>
                 )}
 

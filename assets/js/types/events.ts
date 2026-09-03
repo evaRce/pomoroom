@@ -13,6 +13,7 @@ export interface EventBusPayloads {
   add_group: { name: string };
   selected_group_chat: { group_name: string };
   delete_group: string;
+  delete_group_for_everyone: string;
   get_my_contacts: { group_name: string };
   add_member: { group_name: string; new_member: string };
   delete_member: { member_name: string; group_name: string };
@@ -266,6 +267,7 @@ export interface OutgoingActionPayloads {
   "action.add_group": { name: string };
   "action.selected_group_chat": { group_name: string };
   "action.delete_group": string;
+  "action.delete_group_for_everyone": string;
   "action.get_my_contacts": { group_name: string };
   "action.add_member": { group_name: string; new_member: string };
   "action.delete_member": { member_name: string; group_name: string };

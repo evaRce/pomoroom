@@ -5,7 +5,7 @@ import {
   MicOff,
   Video as VideoIcon,
   VideoOff,
-  PhoneOff,
+  Phone,
   X,
   ScreenShare,
   ScreenShareOff,
@@ -473,7 +473,7 @@ export default function CallScreen({
       danger
       shape="circle"
       size="large"
-      icon={<PhoneOff className="h-5 w-5" />}
+      icon={<Phone className="h-5 w-5" />}
       onClick={onEndCall}
       title={callText.screen.endCall}
       aria-label={callText.screen.endCall}

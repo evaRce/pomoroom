@@ -12,6 +12,7 @@ defmodule Pomoroom.GroupChats do
   defdelegate preview_invite(token, user), to: GroupChatService
   defdelegate build_invite_link(chat_id), to: GroupChatService
   defdelegate delete(group_name, user), to: GroupChatService
+  defdelegate delete_for_everyone(group_name, user), to: GroupChatService
   defdelegate delete_member(group_name, user, member), to: GroupChatService
   defdelegate delete_all_group_chats(), to: GroupChatService
   defdelegate get_by(field, value), to: GroupChatService

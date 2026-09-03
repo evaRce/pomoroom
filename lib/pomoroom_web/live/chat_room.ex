@@ -552,6 +552,14 @@ defmodule PomoroomWeb.ChatLive.ChatRoom do
   end
 
   def handle_event(
+        "action.delete_group_for_everyone",
+        group_name,
+        %{assigns: %{user_info: user}} = socket
+      ) do
+    Groups.handle_delete_group_for_everyone(group_name, user, socket)
+  end
+
+  def handle_event(
         "action.get_my_contacts",
         %{"group_name" => group_name},
         %{assigns: %{user_info: user}} = socket

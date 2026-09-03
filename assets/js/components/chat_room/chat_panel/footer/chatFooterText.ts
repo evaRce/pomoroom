@@ -8,6 +8,10 @@ export default function useChatFooterText() {
       groupName
         ? t("chatFooterText.removedFromGroupWithName", { groupName })
         : t("chatFooterText.removedFromGroupGeneric"),
+    groupDeleted: (groupName?: string) =>
+      groupName
+        ? t("chatFooterText.groupDeletedWithName", { groupName })
+        : t("chatFooterText.groupDeletedGeneric"),
     warningIconLabel: t("chatFooterText.warningIconLabel"),
     inputPlaceholder: t("chatFooterText.inputPlaceholder"),
     emojiButton: t("chatFooterText.emojiButton"),
