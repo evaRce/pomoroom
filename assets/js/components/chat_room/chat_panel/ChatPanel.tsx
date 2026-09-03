@@ -318,6 +318,11 @@ export default function ChatPanel({ isVisibleDetail, onBack }: ChatPanelProps) {
     return () => setViewingChatId(null);
   }, [setViewingChatId]);
 
+  const handleBack = () => {
+    setViewingChatId(null);
+    onBack?.();
+  };
+
   const addMessage = (message: ChatMessage) => {
     if (!message || !message.data || message.data.text.trim() === "") {
       return; // No añadir mensajes vacíos
@@ -427,7 +432,7 @@ export default function ChatPanel({ isVisibleDetail, onBack }: ChatPanelProps) {
           isVisibleDetail={isVisibleDetail}
           activePluginId={activePluginId}
           onTogglePluginTab={handleTogglePluginTab}
-          onBack={onBack}
+          onBack={handleBack}
         />
 
         {/* Content area - either plugin or chat messages */}
