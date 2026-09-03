@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Fragment, useRef } from "react";
-import { Button, Input } from "antd";
+import { Button } from "antd";
 import { SearchOutlined, CloseOutlined } from "@ant-design/icons";
 import ConversationTargetItem from "./ConversationTargetItem";
 import { useEventContext, useEvent } from "../EventContext";
@@ -358,31 +358,33 @@ export default function ConversationTargetsList() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full min-w-0">
-      <div className="flex items-center w-full bg-gray-100 shrink-0">
-        <Input
-          className="my-2 ml-2 mr-1 sm:my-1.5 sm:ml-1.5 lg:my-2 lg:ml-2 landscape-sm:my-1 flex-1 min-w-0"
-          type="text"
-          placeholder={conversationSidebarText.searchPlaceholder}
-          aria-label={conversationSidebarText.searchPlaceholder}
-          value={searchTerm}
-          onChange={handleSearch}
-        />
-        {searchTerm ? (
-          <Button
-            className="bg-red-300 mr-2 sm:mr-1.5 lg:mr-2 shrink-0"
-            icon={<CloseOutlined />}
-            onClick={clearSearch}
-            title={conversationSidebarText.clearSearch}
-            aria-label={conversationSidebarText.clearSearch}
+      <div className="flex items-center w-full shrink-0 my-2 px-2 sm:my-1.5 sm:px-1.5 lg:my-2 lg:px-2 landscape-sm:my-1">
+        <div className="flex items-center w-full rounded-full bg-gray-200 shadow-sm transition-shadow duration-200 focus-within:shadow-md">
+          <input
+            className="input bg-transparent border-none h-9 w-full min-w-0 px-4 focus:outline-none shadow-none landscape-sm:h-7 landscape-sm:px-3"
+            type="text"
+            placeholder={conversationSidebarText.searchPlaceholder}
+            aria-label={conversationSidebarText.searchPlaceholder}
+            value={searchTerm}
+            onChange={handleSearch}
           />
-        ) : (
-          <Button
-            className="bg-sky-400 mr-2 sm:mr-1.5 lg:mr-2 shrink-0"
-            icon={<SearchOutlined />}
-            title={conversationSidebarText.search}
-            aria-label={conversationSidebarText.search}
-          />
-        )}
+          {searchTerm ? (
+            <Button
+              className="bg-transparent border-none h-8 w-12 flex items-center justify-center rounded-full mr-1 shrink-0 hover:bg-gray-300 transition-colors duration-200 landscape-sm:!h-6 landscape-sm:!w-10"
+              icon={<CloseOutlined />}
+              onClick={clearSearch}
+              title={conversationSidebarText.clearSearch}
+              aria-label={conversationSidebarText.clearSearch}
+            />
+          ) : (
+            <Button
+              className="bg-sky-400 hover:bg-sky-500 border-none text-white h-8 w-12 flex items-center justify-center rounded-full mr-1 shrink-0 transition-colors duration-200 landscape-sm:!h-6 landscape-sm:!w-10"
+              icon={<SearchOutlined />}
+              title={conversationSidebarText.search}
+              aria-label={conversationSidebarText.search}
+            />
+          )}
+        </div>
       </div>
       <div
         className="flex-1 min-h-0 overflow-auto overscroll-contain w-full p-1"

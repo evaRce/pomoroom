@@ -442,7 +442,7 @@ export default function ChatPanel({ isVisibleDetail, onBack }: ChatPanelProps) {
           <>
             {/* Messages area */}
             <main
-              className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden border-b border-t p-5 landscape-sm:p-2"
+              className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden border-t p-5 bg-grey-100 landscape-sm:p-2"
               style={{ scrollbarWidth: "thin" }}
               ref={messagesEndRef}
               onScroll={handleMessagesScroll}
