@@ -46,11 +46,7 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.Contacts do
 
     all_contact_list = accepted_contact_list ++ open_contact_list
 
-    if all_contact_list != [] do
-      notify_react(socket, "show_list_contact", %{all_contact_list: all_contact_list})
-    else
-      {:noreply, socket}
-    end
+    notify_react(socket, "show_list_contact", %{all_contact_list: all_contact_list})
   end
 
   defp list_open_request_contacts(user, known_nicknames) do

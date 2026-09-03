@@ -59,6 +59,7 @@ function ChatRoomSlice({
     setIsVisibleDetail,
     setComponent,
     infoChatSelected,
+    component,
   });
 
   return (

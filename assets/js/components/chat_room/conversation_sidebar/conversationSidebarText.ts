@@ -23,5 +23,7 @@ export default function useConversationSidebarText() {
     confirmDeleteConversationMessage: (contactName: string) =>
       t("conversationSidebarText.confirmDeleteConversationMessage", { contactName }),
     confirmCancelButton: t("conversationSidebarText.confirmCancelButton"),
+    emptyStateTitle: t("conversationSidebarText.emptyStateTitle"),
+    emptyStateSubtitle: t("conversationSidebarText.emptyStateSubtitle"),
   };
 }

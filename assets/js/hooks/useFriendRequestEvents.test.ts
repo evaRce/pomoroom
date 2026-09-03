@@ -5,7 +5,11 @@ import { useFriendRequestEvents } from "./useFriendRequestEvents";
 function setup(
   eventName: string,
   eventData: Record<string, unknown>,
-  overrides: { userNickname?: string; infoChatSelected?: { contact_name?: string; group_name?: string } } = {}
+  overrides: {
+    userNickname?: string;
+    infoChatSelected?: { contact_name?: string; group_name?: string };
+    component?: string;
+  } = {}
 ) {
   const addEvent = vi.fn();
   const setIsVisibleDetail = vi.fn();
@@ -20,6 +24,7 @@ function setup(
       setIsVisibleDetail,
       setComponent,
       infoChatSelected: overrides.infoChatSelected ?? {},
+      component: overrides.component ?? "",
     })
   );
 
@@ -76,9 +81,9 @@ describe("useFriendRequestEvents", () => {
     expect(setComponent).toHaveBeenCalledWith("RejectedRequestSend");
   });
 
-  it("accepts a friend request, clears the component and deselects the contact", () => {
+  it("accepts a friend request and opens the private chat with the other user", () => {
     const request = { from_user: "bob01", to_user: "eva01", status: "accepted" };
-    const { addEvent, setComponent } = setup("update_contact_status_to_accepted", {
+    const { addEvent } = setup("update_contact_status_to_accepted", {
       request,
       new_status: "accepted",
     });
@@ -86,8 +91,47 @@ describe("useFriendRequestEvents", () => {
     expect(addEvent).toHaveBeenCalledWith("update_contact_status_to_accepted", {
       request,
       new_status: "accepted",
+      chat_id: undefined,
+    });
+    expect(addEvent).toHaveBeenCalledWith("selected_private_chat", { contact_name: "bob01" });
+  });
+
+  it("forwards the chat_id from an accepted request so the new contact's badge can match it", () => {
+    const request = { from_user: "bob01", to_user: "eva01", status: "accepted" };
+    const { addEvent } = setup("update_contact_status_to_accepted", {
+      request,
+      new_status: "accepted",
+      chat_id: "chat-123",
+    });
+
+    expect(addEvent).toHaveBeenCalledWith("update_contact_status_to_accepted", {
+      request,
+      new_status: "accepted",
+      chat_id: "chat-123",
+    });
+  });
+
+  it("forwards a cancelled request and closes the send panel if it was open", () => {
+    const { addEvent, setComponent } = setup(
+      "friend_request_cancelled",
+      { from_user: "eva01", to_user: "bob01" },
+      { userNickname: "eva01", component: "RequestSend" }
+    );
+
+    expect(addEvent).toHaveBeenCalledWith("friend_request_cancelled", {
+      from_user: "eva01",
+      to_user: "bob01",
     });
     expect(setComponent).toHaveBeenCalledWith("");
-    expect(addEvent).toHaveBeenCalledWith("deselect_contact", { from_user: "bob01", to_user: "eva01" });
+  });
+
+  it("does not touch the visible component for a cancelled request on an unrelated screen", () => {
+    const { setComponent } = setup(
+      "friend_request_cancelled",
+      { from_user: "eva01", to_user: "bob01" },
+      { userNickname: "eva01", component: "ChatPanel" }
+    );
+
+    expect(setComponent).not.toHaveBeenCalled();
   });
 });

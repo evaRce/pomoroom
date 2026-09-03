@@ -84,6 +84,7 @@ const es = {
     search: "Buscar",
     shareLink: "O comparte este enlace para invitar a algún colega",
     copyLink: "Copiar enlace",
+    linkCopied: "Enlace copiado",
   },
   pluginMarketPlaceText: {
     title: "Tienda de Plugins",
@@ -112,6 +113,7 @@ const es = {
     reject: "Rechazar",
     requestSendPrefix: "Has enviado una solicitud de amistad a",
     waitingResponse: "Esperando respuesta.",
+    cancel: "Cancelar petición",
   },
   conversationSidebarText: {
     searchPlaceholder: "Buscar a mis colegas",
@@ -131,6 +133,8 @@ const es = {
     confirmDeleteConversationTitle: "Eliminar contacto",
     confirmDeleteConversationMessage: 'Vas a eliminar a "{{contactName}}" de tus contactos. Si ambos lo elimináis, la conversación se borrará por completo. Esta acción es irreversible.',
     confirmCancelButton: "Cancelar",
+    emptyStateTitle: "Bienvenid@ a Pomoroom",
+    emptyStateSubtitle: "Agrega a un nuevo contacto o crea un grupo para empezar a chatear",
   },
   infoPanelText: {
     closeDetails: "Cerrar detalles",

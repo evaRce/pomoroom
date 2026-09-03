@@ -87,6 +87,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   const hasSyncedInitialTimerRef = useRef(false);
   const lastCompletionStampRef = useRef<string>("");
   const lastStateResyncStampRef = useRef<string>("");
+  const isEditingSettingsRef = useRef(false);
   const soundEndWork = useRef(new Audio("/sounds/bell-notification.wav"));
   const soundEndBreak = useRef(
     new Audio("/sounds/happy-bells-notification.wav"),
@@ -130,7 +131,9 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
       const nextTimer = normalizeTimerPayload(eventPayload);
       if (!nextTimer) return;
 
-      setSettings(nextTimer.settings);
+      if (!isEditingSettingsRef.current) {
+        setSettings(nextTimer.settings);
+      }
       setTimerSnapshot(nextTimer);
       setMode(nextTimer.mode);
       setIsRunning(nextTimer.isRunning);
@@ -340,6 +343,8 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
   const handleChange = (field: keyof TimerSettings, value: string) => {
     if (!settings) return;
 
+    isEditingSettingsRef.current = true;
+
     const parsed = value === "" ? 0 : parseInt(value, 10);
 
     if (value !== "" && isNaN(parsed)) return;
@@ -389,7 +394,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
       setCyclesCompleted(timer.cyclesCompleted);
       setHasPendingWorkHalfCycle(timer.hasPendingWorkHalfCycle);
 
-      if (timer.settings) {
+      if (timer.settings && !isEditingSettingsRef.current) {
         setSettings(timer.settings);
       }
 
@@ -511,14 +516,16 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
     }
 
     setTimerId(configLoadedEvent.timer_id || "");
-    const newSettings: TimerSettings = {
-      workDuration: configLoadedEvent.config.work_duration,
-      shortBreakDuration: configLoadedEvent.config.short_break_duration,
-      longBreakDuration: configLoadedEvent.config.long_break_duration,
-      cyclesBeforeLongBreak: configLoadedEvent.config.cycles_before_long_break,
-    };
-    setSettings(newSettings);
-    applyIncomingConfig(configLoadedEvent.config);
+    if (!isEditingSettingsRef.current) {
+      const newSettings: TimerSettings = {
+        workDuration: configLoadedEvent.config.work_duration,
+        shortBreakDuration: configLoadedEvent.config.short_break_duration,
+        longBreakDuration: configLoadedEvent.config.long_break_duration,
+        cyclesBeforeLongBreak: configLoadedEvent.config.cycles_before_long_break,
+      };
+      setSettings(newSettings);
+      applyIncomingConfig(configLoadedEvent.config);
+    }
     applyIncomingTimerState(configLoadedEvent);
     removeEvent("pomodoro_state_loaded");
   }, [
@@ -556,6 +563,7 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
       longBreakDuration: configUpdatedEvent.config.long_break_duration,
       cyclesBeforeLongBreak: configUpdatedEvent.config.cycles_before_long_break,
     };
+    isEditingSettingsRef.current = false;
     setSettings(newSettings);
     applyIncomingConfig(configUpdatedEvent.config);
     applyIncomingTimerState(configUpdatedEvent);
@@ -813,6 +821,11 @@ export function PomodoroTimer({ chatId, chatType }: PomodoroTimerProps) {
             onChange={handleChange}
             onToggleSound={setSoundEnabled}
             onSave={handleSaveSettings}
+            onOpenChange={(open) => {
+              if (!open) {
+                isEditingSettingsRef.current = false;
+              }
+            }}
           />
         </div>
 

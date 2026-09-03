@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { AddEvent, FriendRequestRef } from "../types/events";
+import { selectPrivateChatAction } from "../services/contactService";
 import type { InfoChatSelected } from "./outgoing_actions/useContactsAndGroupsOutgoingActions";
 
 type RejectedRequestPayload = FriendRequestRef & { status: string };
@@ -10,12 +11,16 @@ type UseFriendRequestEventsParams = {
     request?: FriendRequestRef & { status: string };
     rejected_request?: RejectedRequestPayload;
     new_status?: string;
+    chat_id?: string;
+    from_user?: string;
+    to_user?: string;
   };
   addEvent: AddEvent;
   userNickname: string;
   setIsVisibleDetail: (value: boolean) => void;
   setComponent: (value: string) => void;
   infoChatSelected: InfoChatSelected;
+  component: string;
 };
 
 export function useFriendRequestEvents({
@@ -26,6 +31,7 @@ export function useFriendRequestEvents({
   setIsVisibleDetail,
   setComponent,
   infoChatSelected,
+  component,
 }: UseFriendRequestEventsParams) {
   useEffect(() => {
     if (
@@ -87,12 +93,30 @@ export function useFriendRequestEvents({
 
   useEffect(() => {
     if (eventName === "update_contact_status_to_accepted" && eventData.request) {
-      addEvent(eventName, { request: eventData.request, new_status: eventData.new_status || "" });
-      setComponent("");
-      addEvent("deselect_contact", {
-        from_user: eventData.request.from_user,
-        to_user: eventData.request.to_user,
+      addEvent(eventName, {
+        request: eventData.request,
+        new_status: eventData.new_status || "",
+        chat_id: eventData.chat_id,
       });
+      const otherUser =
+        userNickname === eventData.request.to_user
+          ? eventData.request.from_user
+          : eventData.request.to_user;
+      selectPrivateChatAction(addEvent, otherUser);
     }
   }, [eventData.request, eventData.new_status]);
+
+  useEffect(() => {
+    if (
+      eventName === "friend_request_cancelled" &&
+      eventData.from_user &&
+      eventData.to_user &&
+      (userNickname === eventData.from_user || userNickname === eventData.to_user)
+    ) {
+      addEvent(eventName, { from_user: eventData.from_user, to_user: eventData.to_user });
+      if (component === "RequestSend" || component === "RequestReceived") {
+        setComponent("");
+      }
+    }
+  }, [eventData.from_user, eventData.to_user]);
 }

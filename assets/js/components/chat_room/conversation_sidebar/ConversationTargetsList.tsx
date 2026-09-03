@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Fragment, useRef } from "react";
 import { Button } from "antd";
-import { SearchOutlined, CloseOutlined } from "@ant-design/icons";
+import { SearchOutlined, CloseOutlined, MessageOutlined } from "@ant-design/icons";
 import ConversationTargetItem from "./ConversationTargetItem";
 import { useEventContext, useEvent } from "../EventContext";
 import { deleteContactAction } from "../../../services/contactService";
@@ -33,6 +33,7 @@ export default function ConversationTargetsList() {
   const [selectedContact, setSelectedContact] = useState("");
   const [userLogin, setUserLogin] = useState<Partial<ChatUserRef>>({});
   const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH_SIZE);
+  const [hasLoadedContacts, setHasLoadedContacts] = useState(false);
   const lastProcessedGroupAdminUpdatedRef = useRef("");
 
   const addContactToListEvent = useEvent("add_contact_to_list");
@@ -41,6 +42,7 @@ export default function ConversationTargetsList() {
   const showUserInfoEvent = useEvent("show_user_info");
   const updateContactStatusAcceptedEvent = useEvent("update_contact_status_to_accepted");
   const updateContactStatusRejectedEvent = useEvent("update_contact_status_to_rejected");
+  const friendRequestCancelledEvent = useEvent("friend_request_cancelled");
   const deselectContactEvent = useEvent("deselect_contact");
   const closeChatMobileEvent = useEvent("close_chat_mobile");
   const addGroupToListEvent = useEvent("add_group_to_list");
@@ -83,11 +85,13 @@ export default function ConversationTargetsList() {
       );
       setContacts(normalizedList);
       setVisibleCount(INITIAL_BATCH_SIZE);
+      setHasLoadedContacts(true);
       removeEvent("show_list_contact");
       return;
     }
 
     if (showListContactEvent) {
+      setHasLoadedContacts(true);
       removeEvent("show_list_contact");
     }
   }, [showListContactEvent]);
@@ -109,7 +113,8 @@ export default function ConversationTargetsList() {
     if (updateContactStatusAcceptedEvent) {
       updateContactStatus(
         updateContactStatusAcceptedEvent?.request,
-        updateContactStatusAcceptedEvent?.new_status
+        updateContactStatusAcceptedEvent?.new_status,
+        updateContactStatusAcceptedEvent?.chat_id
       );
       removeEvent("update_contact_status_to_accepted");
     }
@@ -124,6 +129,13 @@ export default function ConversationTargetsList() {
       removeEvent("update_contact_status_to_rejected");
     }
   }, [updateContactStatusRejectedEvent]);
+
+  useEffect(() => {
+    if (friendRequestCancelledEvent) {
+      removeCancelledRequestContact(friendRequestCancelledEvent);
+      removeEvent("friend_request_cancelled");
+    }
+  }, [friendRequestCancelledEvent]);
 
   useEffect(() => {
     if (deselectContactEvent) {
@@ -287,7 +299,11 @@ export default function ConversationTargetsList() {
     );
   }, [userLogin?.nickname]);
 
-  const updateContactStatus = (request: { from_user?: string; to_user?: string } | undefined, new_status: string | undefined) => {
+  const updateContactStatus = (
+    request: { from_user?: string; to_user?: string } | undefined,
+    new_status: string | undefined,
+    chatId?: string
+  ) => {
     setContacts((prevContacts) =>
       prevContacts.map((contact) => {
         const isInvolvedReceived =
@@ -301,10 +317,29 @@ export default function ConversationTargetsList() {
           (isInvolvedReceived || isInvolvedSend) &&
           contact?.status_request === "pending"
         ) {
-          return { ...contact, status_request: new_status };
+          return {
+            ...contact,
+            status_request: new_status,
+            chat_id: chatId || contact.chat_id,
+          };
         }
 
         return contact;
+      })
+    );
+  };
+
+  const removeCancelledRequestContact = (request: { from_user?: string; to_user?: string }) => {
+    setContacts((prevContacts) =>
+      prevContacts.filter((contact) => {
+        const isInvolvedReceived =
+          contact?.name === request?.to_user &&
+          userLogin.nickname === request?.from_user;
+        const isInvolvedSend =
+          contact?.name === request?.from_user &&
+          userLogin.nickname === request?.to_user;
+
+        return !((isInvolvedReceived || isInvolvedSend) && contact?.status_request === "pending");
       })
     );
   };
@@ -355,6 +390,20 @@ export default function ConversationTargetsList() {
   };
 
   const visibleContacts = filteredContacts.slice(0, visibleCount);
+
+  if (hasLoadedContacts && contacts.length === 0) {
+    return (
+      <div className="flex flex-col flex-1 min-h-0 w-full min-w-0 items-center justify-center gap-3 px-6 text-center">
+        <MessageOutlined className="text-4xl text-sky-400" aria-hidden="true" />
+        <p className="text-lg font-semibold text-gray-700 m-0">
+          {conversationSidebarText.emptyStateTitle}
+        </p>
+        <p className="text-sm text-gray-500 m-0">
+          {conversationSidebarText.emptyStateSubtitle}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full min-w-0">

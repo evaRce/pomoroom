@@ -135,6 +135,27 @@ defmodule Pomoroom.FriendRequests.FriendRequestService do
     end
   end
 
+  def cancel_friend_request(to_user, from_user, logged_user_nickname) do
+    case get_request_any_direction(to_user, from_user) do
+      {:ok, %{status: "pending"} = request} ->
+        if request.from_user == logged_user_nickname do
+          FriendRequestRepository.delete(request.to_user, request.from_user)
+          {:ok, request}
+        else
+          {:error, %{error: gettext("No autorizado para cancelar esta solicitud de amistad")}}
+        end
+
+      {:ok, _request} ->
+        {:error, %{error: gettext("La solicitud de amistad ya no está pendiente")}}
+
+      {:error, :not_found} ->
+        {:error, %{error: gettext("La solicitud de amistad ya no existe")}}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
   def delete_request(to_user, from_user), do: FriendRequestRepository.delete(to_user, from_user)
 
   def delete_request_between_users(user1, user2),
