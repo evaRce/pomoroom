@@ -7,6 +7,7 @@ import { toggleDetailVisibilityAction } from "../../../services/contactService";
 import {
   setGroupAdminAction,
   deleteMemberAction,
+  deleteGroupForEveryoneAction,
 } from "../../../services/groupService";
 import type { ChatMember, EventBusPayload } from "../../../types/events";
 import useInfoPanelText from "./infoPanelText";
@@ -20,6 +21,7 @@ export default function ChatDetailPanel() {
   const [checkAdmin, setCheckAdmin] = useState(false);
   const [currentUserNickname, setCurrentUserNickname] = useState("");
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
+  const [showDeleteGroupDialog, setShowDeleteGroupDialog] = useState(false);
   const currentChatId = chatData?.chat_id || "";
   const currentGroupName = chatData?.group_name || chatData?.chat_name || "";
 
@@ -105,6 +107,11 @@ export default function ChatDetailPanel() {
     setGroupAdminAction(addEvent, memberName, chatData.chat_name, operation);
   };
 
+  const deleteGroupForEveryone = () => {
+    if (!chatData) return;
+    deleteGroupForEveryoneAction(addEvent, chatData.chat_name);
+  };
+
   const deleteMember = (memberName: string) => {
     if (!chatData) return;
     const index = members.findIndex(
@@ -181,6 +188,15 @@ export default function ChatDetailPanel() {
             {infoPanelText.leaveGroup}
           </button>
         )}
+        {chatData?.is_group && checkAdmin && (
+          <button
+            type="button"
+            onClick={() => setShowDeleteGroupDialog(true)}
+            className="mt-2 w-full py-2 landscape-sm:mt-1 landscape-sm:py-1 rounded-md border border-gray-300 bg-white text-red-600 text-sm font-medium hover:bg-red-50"
+          >
+            {infoPanelText.deleteGroup}
+          </button>
+        )}
       </div>
 
       <ConfirmDialog
@@ -194,6 +210,20 @@ export default function ChatDetailPanel() {
         onConfirm={() => {
           setShowLeaveDialog(false);
           deleteMember(currentUserNickname);
+        }}
+      />
+
+      <ConfirmDialog
+        open={showDeleteGroupDialog}
+        variant="danger"
+        title={infoPanelText.confirmDeleteGroupTitle}
+        content={infoPanelText.confirmDeleteGroupMessage(currentGroupName)}
+        confirmLabel={infoPanelText.deleteGroup}
+        cancelLabel={infoPanelText.confirmCancelButton}
+        onClose={() => setShowDeleteGroupDialog(false)}
+        onConfirm={() => {
+          setShowDeleteGroupDialog(false);
+          deleteGroupForEveryone();
         }}
       />
     </div>

@@ -202,6 +202,27 @@ defmodule Pomoroom.GroupChats.GroupChatService do
     end
   end
 
+  def delete_for_everyone(group_name, user) do
+    case get_by("name", group_name) do
+      {:error, reason} ->
+        {:error, reason}
+
+      {:ok, group_chat} ->
+        if user in group_chat.admin do
+          member_ids = get_member_ids(group_chat.members)
+
+          Chats.delete_chat("group_chats", group_chat.chat_id)
+          Messages.delete_all_belongs_to_chat(group_chat.chat_id)
+
+          {:ok,
+           %{chat_id: group_chat.chat_id, group_name: group_chat.name, member_ids: member_ids}}
+        else
+          {:error,
+           gettext("El usuario %{user} no tiene permiso para eliminar el grupo", user: user)}
+        end
+    end
+  end
+
   def delete_member(group_name, user, member) do
     case get_by("name", group_name) do
       {:error, reason} ->

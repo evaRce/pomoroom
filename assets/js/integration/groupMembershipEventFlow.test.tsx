@@ -75,10 +75,8 @@ describe("group membership event bus flow (server event -> shared bus -> outgoin
       eventData: { chat_id: "chat-1", group_name: "grupo1" },
     });
 
-    expect(message.info).toHaveBeenCalledWith(
-      'El grupo "grupo1" se ha eliminado porque ya no le quedan miembros.'
-    );
-    expect(result.current.infoChatSelected).toEqual({});
+    expect(message.info).toHaveBeenCalledWith("El grupo grupo1 ha sido eliminado");
+    expect(result.current.infoChatSelected).toEqual({ group_name: "grupo1" });
     expect(pushEventToLiveView).toHaveBeenCalledWith("action.get_list_contact", {});
   });
 

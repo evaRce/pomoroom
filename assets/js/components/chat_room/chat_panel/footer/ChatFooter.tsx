@@ -21,8 +21,11 @@ export default function ChatFooter() {
   const [modalVisible, setModalVisible] = useState(false);
   const [isGroupMemberRemoved, setIsGroupMemberRemoved] = useState(false);
   const [groupMemberRemovedMessage, setGroupMemberRemovedMessage] = useState("");
+  const [isGroupDeleted, setIsGroupDeleted] = useState(false);
+  const [groupDeletedMessage, setGroupDeletedMessage] = useState("");
   const lastProcessedGroupMemberRemovedEventSignatureRef = useRef("");
   const lastProcessedGroupMemberAddedEventSignatureRef = useRef("");
+  const lastProcessedGroupDeletedEventSignatureRef = useRef("");
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLElement>(null);
   const [isLandscapeSm, setIsLandscapeSm] = useState(false);
@@ -32,6 +35,7 @@ export default function ChatFooter() {
   const openGroupChatEvent = useEvent("open_group_chat");
   const groupMemberRemovedEvent = useEvent("group_member_removed");
   const groupMemberAddedEvent = useEvent("group_member_added");
+  const groupDeletedEvent = useEvent("group_deleted");
 
   const onEmojiClick = (emojiObject: EmojiClickData, _event: MouseEvent) => {
     setInputStr((prevInput) => prevInput + emojiObject.emoji);
@@ -69,6 +73,8 @@ export default function ChatFooter() {
   useEffect(() => {
     if (openPrivateChatEvent) {
       setChatData(openPrivateChatEvent);
+      setIsGroupDeleted(false);
+      setGroupDeletedMessage("");
       removeEvent("open_private_chat");
     }
   }, [openPrivateChatEvent]);
@@ -82,6 +88,8 @@ export default function ChatFooter() {
           ? buildRemovedMessage(activeChatContextEvent.group_data?.name)
           : ""
       );
+      setIsGroupDeleted(false);
+      setGroupDeletedMessage("");
     }
   }, [activeChatContextEvent]);
 
@@ -92,9 +100,30 @@ export default function ChatFooter() {
       setGroupMemberRemovedMessage(
         openGroupChatEvent.removed_at ? buildRemovedMessage(openGroupChatEvent.group_data?.name) : ""
       );
+      setIsGroupDeleted(false);
+      setGroupDeletedMessage("");
       removeEvent("open_group_chat");
     }
   }, [openGroupChatEvent]);
+
+  useEffect(() => {
+    if (!groupDeletedEvent) return;
+
+    const deletedEventSignature = `${groupDeletedEvent.chat_id || ""}:${groupDeletedEvent.group_name || ""}`;
+
+    if (lastProcessedGroupDeletedEventSignatureRef.current === deletedEventSignature) return;
+
+    const isSameChatById =
+      chatData?.chat_id &&
+      groupDeletedEvent.chat_id &&
+      chatData.chat_id === groupDeletedEvent.chat_id;
+
+    if (isSameChatById) {
+      lastProcessedGroupDeletedEventSignatureRef.current = deletedEventSignature;
+      setIsGroupDeleted(true);
+      setGroupDeletedMessage(chatFooterText.groupDeleted(groupDeletedEvent.group_name));
+    }
+  }, [groupDeletedEvent]);
 
   useEffect(() => {
     if (!groupMemberRemovedEvent) return;
@@ -145,7 +174,7 @@ export default function ChatFooter() {
 
     const currentData = chatData?.chat_id ? chatData : activeChatContextEvent || chatData;
 
-    if (isGroupMemberRemoved && currentData?.group_data) {
+    if ((isGroupMemberRemoved || isGroupDeleted) && currentData?.group_data) {
       return;
     }
 
@@ -162,7 +191,8 @@ export default function ChatFooter() {
     setInputStr("");
   };
 
-  const isRemovedBannerVisible = isGroupMemberRemoved && chatData.group_data;
+  const isRemovedBannerVisible = (isGroupMemberRemoved || isGroupDeleted) && chatData.group_data;
+  const bannerMessage = isGroupDeleted ? groupDeletedMessage : groupMemberRemovedMessage;
 
   return (
     <footer
@@ -180,7 +210,7 @@ export default function ChatFooter() {
             className="shrink-0 text-xl text-amber-600"
           />
           <span className="text-base sm:text-lg font-semibold text-amber-900 text-center">
-            {groupMemberRemovedMessage}
+            {bannerMessage}
           </span>
         </>
       ) : (
