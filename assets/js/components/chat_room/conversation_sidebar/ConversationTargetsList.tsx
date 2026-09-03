@@ -42,6 +42,7 @@ export default function ConversationTargetsList() {
   const updateContactStatusAcceptedEvent = useEvent("update_contact_status_to_accepted");
   const updateContactStatusRejectedEvent = useEvent("update_contact_status_to_rejected");
   const deselectContactEvent = useEvent("deselect_contact");
+  const closeChatMobileEvent = useEvent("close_chat_mobile");
   const addGroupToListEvent = useEvent("add_group_to_list");
   const groupAdminUpdatedEvent = useEvent("group_admin_updated");
   const showListMessagesEvent = useEvent("show_list_messages");
@@ -135,6 +136,13 @@ export default function ConversationTargetsList() {
       removeEvent("deselect_contact");
     }
   }, [deselectContactEvent]);
+
+  useEffect(() => {
+    if (closeChatMobileEvent) {
+      setSelectedContact("");
+      removeEvent("close_chat_mobile");
+    }
+  }, [closeChatMobileEvent]);
 
   useEffect(() => {
     if (addGroupToListEvent) {

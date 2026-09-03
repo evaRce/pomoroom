@@ -28,6 +28,7 @@ export default function MinimizedCallBar() {
 
   const handleBarClick = () => {
     if (isSameChat) {
+      addEvent("open_chat_mobile", Date.now());
       setMinimized(false);
       return;
     }
@@ -38,6 +39,7 @@ export default function MinimizedCallBar() {
       } else {
         selectPrivateChatAction(addEvent, activeCallRoomName);
       }
+      addEvent("open_chat_mobile", Date.now());
       setMinimized(false);
     }
   };
