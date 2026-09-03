@@ -39,7 +39,8 @@ defmodule PomoroomWeb.ChatLive.ChatRoom.FriendRequests do
                   event_name: "update_contact_status_to_accepted",
                   event_data: %{
                     request: request,
-                    new_status: status
+                    new_status: status,
+                    chat_id: private_chat.chat_id
                   }
                 }
 

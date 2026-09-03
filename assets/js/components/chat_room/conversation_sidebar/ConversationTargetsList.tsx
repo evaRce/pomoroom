@@ -109,7 +109,8 @@ export default function ConversationTargetsList() {
     if (updateContactStatusAcceptedEvent) {
       updateContactStatus(
         updateContactStatusAcceptedEvent?.request,
-        updateContactStatusAcceptedEvent?.new_status
+        updateContactStatusAcceptedEvent?.new_status,
+        updateContactStatusAcceptedEvent?.chat_id
       );
       removeEvent("update_contact_status_to_accepted");
     }
@@ -287,7 +288,11 @@ export default function ConversationTargetsList() {
     );
   }, [userLogin?.nickname]);
 
-  const updateContactStatus = (request: { from_user?: string; to_user?: string } | undefined, new_status: string | undefined) => {
+  const updateContactStatus = (
+    request: { from_user?: string; to_user?: string } | undefined,
+    new_status: string | undefined,
+    chatId?: string
+  ) => {
     setContacts((prevContacts) =>
       prevContacts.map((contact) => {
         const isInvolvedReceived =
@@ -301,7 +306,11 @@ export default function ConversationTargetsList() {
           (isInvolvedReceived || isInvolvedSend) &&
           contact?.status_request === "pending"
         ) {
-          return { ...contact, status_request: new_status };
+          return {
+            ...contact,
+            status_request: new_status,
+            chat_id: chatId || contact.chat_id,
+          };
         }
 
         return contact;

@@ -109,7 +109,7 @@ export interface EventBusPayloads {
   open_rejected_request_received: FriendRequestRef;
   delete_rejected_contact: string;
   contact_removed: { contact_name: string; chat_id: string | null };
-  update_contact_status_to_accepted: { request: FriendRequestRef; new_status: string };
+  update_contact_status_to_accepted: { request: FriendRequestRef; new_status: string; chat_id?: string };
   update_contact_status_to_rejected: { request: FriendRequestRef; new_status: string };
   deselect_contact: { from_user: string; to_user: string };
 
