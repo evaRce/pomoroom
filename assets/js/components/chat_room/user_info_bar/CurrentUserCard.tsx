@@ -53,16 +53,6 @@ export default function CurrentUserCard() {
 
 	const items = [
 		{
-			label: userInfoBarText.menu.addContact,
-			key: "add_contact",
-			icon: <UserAddOutlined />,
-		},
-		{
-			label: userInfoBarText.menu.createGroup,
-			key: "create_group",
-			icon: <UsergroupAddOutlined />,
-		},
-		{
 			label: `${t("common.changeLanguage")} (${nextLocale.toUpperCase()})`,
 			key: "change_language",
 			icon: <GlobalOutlined />,
@@ -124,7 +114,27 @@ export default function CurrentUserCard() {
 						<span className="block overflow-ellipsis overflow-hidden whitespace-nowrap truncate min-w-0 flex-1" title={userLogin.nickname}>
 							{userLogin.nickname}
 						</span>
-						<div className="flex gap-3 shrink-0">
+						<div className="flex gap-2 shrink-0">
+							<Button
+								className="bg-white"
+								icon={<UserAddOutlined />}
+								onClick={(e) => {
+									handleButtonClick(e);
+									showAddEntryModal("contact");
+								}}
+								title={userInfoBarText.menu.addContact}
+								aria-label={userInfoBarText.menu.addContact}
+							/>
+							<Button
+								className="bg-white"
+								icon={<UsergroupAddOutlined />}
+								onClick={(e) => {
+									handleButtonClick(e);
+									showAddEntryModal("group");
+								}}
+								title={userInfoBarText.menu.createGroup}
+								aria-label={userInfoBarText.menu.createGroup}
+							/>
 							<Dropdown
 								menu={menuProps}
 								trigger={["click"]}
