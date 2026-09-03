@@ -28,7 +28,9 @@ export default function ChatFooter() {
   const lastProcessedGroupDeletedEventSignatureRef = useRef("");
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isLandscapeSm, setIsLandscapeSm] = useState(false);
+  const MAX_INPUT_LINES = 3;
 
   const openPrivateChatEvent = useEvent("open_private_chat");
   const activeChatContextEvent = useEvent("active_chat_context");
@@ -40,6 +42,18 @@ export default function ChatFooter() {
   const onEmojiClick = (emojiObject: EmojiClickData, _event: MouseEvent) => {
     setInputStr((prevInput) => prevInput + emojiObject.emoji);
   };
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight) || 20;
+    const maxHeight = lineHeight * MAX_INPUT_LINES;
+    const newHeight = Math.min(textarea.scrollHeight, maxHeight);
+    textarea.style.height = `${newHeight}px`;
+    textarea.style.overflowY = textarea.scrollHeight > maxHeight ? "auto" : "hidden";
+  }, [inputStr, isLandscapeSm]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-height: 500px) and (orientation: landscape)");
@@ -169,7 +183,7 @@ export default function ChatFooter() {
     }
   }, [groupMemberAddedEvent]);
 
-  const handleSendMessage = (e: React.FormEvent | React.MouseEvent) => {
+  const handleSendMessage = (e: React.FormEvent | React.MouseEvent | React.KeyboardEvent) => {
     e.preventDefault();
 
     const currentData = chatData?.chat_id ? chatData : activeChatContextEvent || chatData;
@@ -215,16 +229,23 @@ export default function ChatFooter() {
         </>
       ) : (
         <form className="flex w-full gap-3" onSubmit={handleSendMessage}>
-          <div className="flex items-center w-full justify-center rounded-full bg-gray-200 shadow-sm transition-shadow duration-200 focus-within:shadow-md">
-            <input
-              className="input bg-transparent border-none h-9 w-full min-w-0 px-4 focus:outline-none shadow-none landscape-sm:h-7 landscape-sm:px-3"
-              type="text"
+          <div className="flex items-end w-full justify-center rounded-full bg-gray-200 shadow-sm transition-shadow duration-200 focus-within:shadow-md py-1">
+            <textarea
+              ref={textareaRef}
+              className="input bg-transparent border-none resize-none w-full min-w-0 px-4 py-1.5 leading-5 focus:outline-none shadow-none landscape-sm:leading-4 landscape-sm:px-3"
+              rows={1}
               value={inputStr}
               onChange={(e) => {
                 if (e.target.value.length <= 5000) {
                   setInputStr(e.target.value);
                 } else {
                   setModalVisible(true);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage(e);
                 }
               }}
               placeholder={chatFooterText.inputPlaceholder}
