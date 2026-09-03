@@ -68,7 +68,7 @@ export default function ChatPanel({ isVisibleDetail, onBack }: ChatPanelProps) {
   const pomodoroToastTimerRef = useRef<number | null>(null);
   const soundEndWork = useRef(new Audio("/sounds/bell-notification.wav"));
   const soundEndBreak = useRef(new Audio("/sounds/happy-bells-notification.wav"));
-  const soundNewMessage = useRef(new Audio("/sounds/bell-notification.wav"));
+  const soundNewMessage = useRef(new Audio("/sounds/message-notification.wav"));
 
   const getPomodoroSignature = useCallback((eventName: string, payload: PomodoroServerPayload | undefined) => {
     const state = payload?.state || {};

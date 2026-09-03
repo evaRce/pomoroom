@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button, Dropdown, type MenuProps } from "antd";
-import { Bell, BellOff, Brain, Coffee, MessageCircle, RotateCcw } from "lucide-react";
+import { Bell, BellOff, Brain, Coffee, MessageCircleMore, RotateCcw } from "lucide-react";
 import { useEventContext } from "../EventContext";
 import { DownOutlined, DeleteOutlined } from "@ant-design/icons";
 import { usePomodoroNotification } from "../pomodoro_timer/pomodoroNotificationStore";
@@ -188,7 +188,7 @@ export default function ConversationTargetItem({ contact, isSelected, onSelect, 
                   title={conversationSidebarText.newMessage}
                   aria-label={conversationSidebarText.newMessage}
                 >
-                  <MessageCircle size={14} />
+                  <MessageCircleMore size={14} />
                 </span>
               )}
               {hasPendingNotification && lastPomodoroEventVisual && (
