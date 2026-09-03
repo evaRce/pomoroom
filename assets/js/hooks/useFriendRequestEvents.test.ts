@@ -86,7 +86,23 @@ describe("useFriendRequestEvents", () => {
     expect(addEvent).toHaveBeenCalledWith("update_contact_status_to_accepted", {
       request,
       new_status: "accepted",
+      chat_id: undefined,
     });
     expect(addEvent).toHaveBeenCalledWith("selected_private_chat", { contact_name: "bob01" });
+  });
+
+  it("forwards the chat_id from an accepted request so the new contact's badge can match it", () => {
+    const request = { from_user: "bob01", to_user: "eva01", status: "accepted" };
+    const { addEvent } = setup("update_contact_status_to_accepted", {
+      request,
+      new_status: "accepted",
+      chat_id: "chat-123",
+    });
+
+    expect(addEvent).toHaveBeenCalledWith("update_contact_status_to_accepted", {
+      request,
+      new_status: "accepted",
+      chat_id: "chat-123",
+    });
   });
 });

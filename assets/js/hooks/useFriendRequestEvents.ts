@@ -11,6 +11,7 @@ type UseFriendRequestEventsParams = {
     request?: FriendRequestRef & { status: string };
     rejected_request?: RejectedRequestPayload;
     new_status?: string;
+    chat_id?: string;
   };
   addEvent: AddEvent;
   userNickname: string;
@@ -88,7 +89,11 @@ export function useFriendRequestEvents({
 
   useEffect(() => {
     if (eventName === "update_contact_status_to_accepted" && eventData.request) {
-      addEvent(eventName, { request: eventData.request, new_status: eventData.new_status || "" });
+      addEvent(eventName, {
+        request: eventData.request,
+        new_status: eventData.new_status || "",
+        chat_id: eventData.chat_id,
+      });
       const otherUser =
         userNickname === eventData.request.to_user
           ? eventData.request.from_user
