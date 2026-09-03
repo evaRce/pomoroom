@@ -11,7 +11,6 @@ import { ConfirmDialog } from "../../../../components-shadcn/ui/confirm-dialog";
 
 interface GroupMemberItemProps {
   contact: ChatMember;
-  groupName?: string;
   onSelect: () => void;
   onSetAdmin: ((memberName: string, operation: string) => void) | null;
   onDelete: ((memberName: string) => void) | null;
@@ -22,7 +21,6 @@ interface GroupMemberItemProps {
 
 export default function GroupMemberItem({
   contact,
-  groupName = "",
   onSelect,
   onSetAdmin,
   onDelete,
@@ -32,7 +30,6 @@ export default function GroupMemberItem({
 }: GroupMemberItemProps) {
   const infoPanelText = useInfoPanelText();
   const [dropdownVisible, setDropdownVisible] = useState(false);
-  const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showRemoveMemberDialog, setShowRemoveMemberDialog] = useState(false);
 
   const handleMenuClick = (key: string) => {
@@ -41,35 +38,23 @@ export default function GroupMemberItem({
     } else if (key === "deleteAdmin") {
       onSetAdmin?.(contact.nickname, "delete");
     } else if (key === "deleteMember") {
-      if (isCurrentUser) {
-        setShowLeaveDialog(true);
-      } else {
-        setShowRemoveMemberDialog(true);
-      }
+      setShowRemoveMemberDialog(true);
     }
     setDropdownVisible(false);
   };
 
-  const items = isCurrentUser
-    ? [
-        {
-          label: infoPanelText.leaveGroup,
-          key: "deleteMember",
-          icon: <DeleteOutlined />,
-        },
-      ]
-    : [
-        {
-          label: contact.is_admin ? infoPanelText.removeAsAdmin : infoPanelText.setAsAdmin,
-          key: contact.is_admin ? "deleteAdmin" : "addAdmin",
-          icon: <ThunderboltOutlined />,
-        },
-        {
-          label: infoPanelText.removeMember,
-          key: "deleteMember",
-          icon: <DeleteOutlined />,
-        },
-      ];
+  const items = [
+    {
+      label: contact.is_admin ? infoPanelText.removeAsAdmin : infoPanelText.setAsAdmin,
+      key: contact.is_admin ? "deleteAdmin" : "addAdmin",
+      icon: <ThunderboltOutlined />,
+    },
+    {
+      label: infoPanelText.removeMember,
+      key: "deleteMember",
+      icon: <DeleteOutlined />,
+    },
+  ];
 
   const menuProps: MenuProps = {
     items,
@@ -95,7 +80,7 @@ export default function GroupMemberItem({
             {infoPanelText.adminBadge}
           </span>
         )}
-        {imAdmin && (
+        {imAdmin && !isCurrentUser && (
           <Dropdown
             menu={menuProps}
             trigger={["click"]}
@@ -117,20 +102,6 @@ export default function GroupMemberItem({
         )}
       </div>
     </div>
-
-    <ConfirmDialog
-      open={showLeaveDialog}
-      variant="danger"
-      title={infoPanelText.confirmLeaveGroupTitle}
-      content={infoPanelText.confirmLeaveGroupMessage(groupName)}
-      confirmLabel={infoPanelText.leaveGroup}
-      cancelLabel={infoPanelText.confirmCancelButton}
-      onClose={() => setShowLeaveDialog(false)}
-      onConfirm={() => {
-        setShowLeaveDialog(false);
-        onDelete?.(contact.nickname);
-      }}
-    />
 
     <ConfirmDialog
       open={showRemoveMemberDialog}

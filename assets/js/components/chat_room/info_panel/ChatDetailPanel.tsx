@@ -10,6 +10,7 @@ import {
 } from "../../../services/groupService";
 import type { ChatMember, EventBusPayload } from "../../../types/events";
 import useInfoPanelText from "./infoPanelText";
+import { ConfirmDialog } from "../../../../components-shadcn/ui/confirm-dialog";
 
 export default function ChatDetailPanel() {
   const infoPanelText = useInfoPanelText();
@@ -18,6 +19,7 @@ export default function ChatDetailPanel() {
   const [members, setMembers] = useState<ChatMember[]>([]);
   const [checkAdmin, setCheckAdmin] = useState(false);
   const [currentUserNickname, setCurrentUserNickname] = useState("");
+  const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const currentChatId = chatData?.chat_id || "";
   const currentGroupName = chatData?.group_name || chatData?.chat_name || "";
 
@@ -159,7 +161,6 @@ export default function ChatDetailPanel() {
                 <li key={index} className="list-none" style={{ position: "relative" }}>
                   <GroupMemberItem
                     contact={item}
-                    groupName={currentGroupName}
                     onSelect={() => console.log("Miembro ", item.nickname)}
                     onSetAdmin={setAdmin}
                     onDelete={deleteMember}
@@ -171,7 +172,30 @@ export default function ChatDetailPanel() {
             />
           </div>
         )}
+        {chatData?.is_group && (
+          <button
+            type="button"
+            onClick={() => setShowLeaveDialog(true)}
+            className="mt-2 w-full py-2 landscape-sm:mt-1 landscape-sm:py-1 rounded-md border border-gray-300 bg-white text-red-600 text-sm font-medium hover:bg-red-50"
+          >
+            {infoPanelText.leaveGroup}
+          </button>
+        )}
       </div>
+
+      <ConfirmDialog
+        open={showLeaveDialog}
+        variant="danger"
+        title={infoPanelText.confirmLeaveGroupTitle}
+        content={infoPanelText.confirmLeaveGroupMessage(currentGroupName)}
+        confirmLabel={infoPanelText.leaveGroup}
+        cancelLabel={infoPanelText.confirmCancelButton}
+        onClose={() => setShowLeaveDialog(false)}
+        onConfirm={() => {
+          setShowLeaveDialog(false);
+          deleteMember(currentUserNickname);
+        }}
+      />
     </div>
   );
 }
