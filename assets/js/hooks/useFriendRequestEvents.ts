@@ -114,12 +114,7 @@ export function useFriendRequestEvents({
       (userNickname === eventData.from_user || userNickname === eventData.to_user)
     ) {
       addEvent(eventName, { from_user: eventData.from_user, to_user: eventData.to_user });
-      if (
-        component === "RequestSend" ||
-        component === "RequestReceived" ||
-        component === "RejectedRequestSend" ||
-        component === "RejectedRequestReceived"
-      ) {
+      if (component === "RequestSend" || component === "RequestReceived") {
         setComponent("");
       }
     }
