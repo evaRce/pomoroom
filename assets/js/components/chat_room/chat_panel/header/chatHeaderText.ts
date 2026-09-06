@@ -21,5 +21,6 @@ export default function useChatHeaderText() {
     plugins: t("chatHeaderText.plugins"),
     groupDetails: t("chatHeaderText.groupDetails"),
     moreOptions: t("chatHeaderText.moreOptions"),
+    loadingChat: t("chatHeaderText.loadingChat"),
   };
 }

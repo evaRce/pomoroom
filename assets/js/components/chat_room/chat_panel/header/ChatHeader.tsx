@@ -61,7 +61,10 @@ export default function ChatHeader({
   const checkAdminEvent = useEvent("check_admin");
   const groupAdminUpdatedEvent = useEvent("group_admin_updated");
   const membersSnapshotEvent = useEvent("members_snapshot");
+  const selectedPrivateChatEvent = useEvent("selected_private_chat");
+  const selectedGroupChatEvent = useEvent("selected_group_chat");
   const [chatData, setChatData] = useState<ChatSessionData | null>(null);
+  const [isChatLoading, setIsChatLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [checkAdmin, setCheckAdmin] = useState<{ is_admin: boolean }>({ is_admin: false });
   const [chatName, setChatName] = useState("");
@@ -192,8 +195,16 @@ export default function ChatHeader({
   ) as TimerState | undefined;
 
   useEffect(() => {
+    if (selectedPrivateChatEvent || selectedGroupChatEvent) {
+      setChatData(null);
+      setIsChatLoading(true);
+    }
+  }, [selectedPrivateChatEvent, selectedGroupChatEvent]);
+
+  useEffect(() => {
     if (openPrivateChatEvent) {
       setChatData(openPrivateChatEvent);
+      setIsChatLoading(false);
       setInstalledPlugins(normalizeInstalledPlugins(getPluginsFromChat(openPrivateChatEvent)));
       removeEvent("active_chat_context");
       addEvent("active_chat_context", openPrivateChatEvent);
@@ -204,6 +215,7 @@ export default function ChatHeader({
   useEffect(() => {
     if (openGroupChatEvent) {
       setChatData(openGroupChatEvent);
+      setIsChatLoading(false);
       setIsGroupMemberRemoved(Boolean(openGroupChatEvent.removed_at));
       setInstalledPlugins(normalizeInstalledPlugins(getPluginsFromChat(openGroupChatEvent)));
       removeEvent("active_chat_context");
@@ -484,6 +496,13 @@ export default function ChatHeader({
 
   return (
     <header className="shrink-0 border-b border-gray-200 bg-white shadow-sm">
+      {!chatData && isChatLoading && (
+        <div className="flex items-center gap-3 px-2 py-2 sm:px-4 sm:py-3">
+          <Avatar size={40} className="shrink-0 animate-pulse bg-gray-100" />
+          <span className="text-sm font-medium text-gray-400">{chatHeaderText.loadingChat}</span>
+        </div>
+      )}
+
       {chatData && (
         <div className="flex items-center justify-between gap-2 px-2 py-2 sm:px-4 sm:py-3 landscape-sm:gap-1 landscape-sm:px-2 landscape-sm:py-1">
           <div className="flex min-w-0 flex-1 flex-col gap-2 landscape-sm:gap-0.5">

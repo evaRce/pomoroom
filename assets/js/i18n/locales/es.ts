@@ -76,6 +76,7 @@ const es = {
     plugins: "Tienda de plugins",
     groupDetails: "Detalles del grupo",
     moreOptions: "Más opciones",
+    loadingChat: "Cargando conversación…",
   },
   addMembersModalText: {
     titleWithGroup: "Añade a tus colegas a {{groupName}}",
