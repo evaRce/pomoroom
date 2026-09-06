@@ -1,8 +1,12 @@
 defmodule Pomoroom.LiveKit.RoomCache do
   @moduledoc """
   Tracks which LiveKit rooms we've already confirmed exist (with the
-  participant cap applied), so `Pomoroom.LiveKit.ensure_room/1` only has to
-  hit the Room Service API once per room instead of on every join.
+  participant cap applied), along with when that was last confirmed.
+
+  LiveKit deletes empty rooms and can silently recreate them uncapped, so
+  `Pomoroom.LiveKit.ensure_room/1` only trusts a cache hit while it's fresh
+  (see `fresh?/2`) and re-confirms against LiveKit once it goes stale,
+  instead of hitting the Room Service API on every single join.
   """
 
   use GenServer
@@ -18,9 +22,17 @@ defmodule Pomoroom.LiveKit.RoomCache do
     :ets.member(@table, chat_id)
   end
 
+  @spec fresh?(String.t(), non_neg_integer()) :: boolean()
+  def fresh?(chat_id, max_age_ms) do
+    case :ets.lookup(@table, chat_id) do
+      [{^chat_id, confirmed_at}] -> System.monotonic_time(:millisecond) - confirmed_at < max_age_ms
+      [] -> false
+    end
+  end
+
   @spec mark_ensured(String.t()) :: :ok
   def mark_ensured(chat_id) do
-    :ets.insert(@table, {chat_id})
+    :ets.insert(@table, {chat_id, System.monotonic_time(:millisecond)})
     :ok
   end
 
