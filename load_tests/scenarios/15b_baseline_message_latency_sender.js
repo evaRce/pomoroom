@@ -1,3 +1,5 @@
+// Envía mensajes a eva123 espaciados en el tiempo, sin
+// carga, para tener una referencia de latencia normal.
 import { browser } from 'k6/x/browser';
 import { check, sleep } from 'k6';
 import { BASE_URL } from '../lib/config.js';

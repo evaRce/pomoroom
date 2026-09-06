@@ -1,10 +1,13 @@
+// Mide, con 1 usuario, cuánto tarda en abrir un chat privado.
 import { browser } from 'k6/x/browser';
 import { check, sleep } from 'k6';
+import { Trend } from 'k6/metrics';
 import { BASE_URL } from '../lib/config.js';
 
 const EMAIL = 'eva@gmail.com';
 const PASSWORD = 'eva12345';
 const CONTACT_NAME = 'buddy123';
+const roomJoinDuration = new Trend('room_join_duration_ms', true);
 
 export const options = {
   scenarios: {
@@ -67,6 +70,7 @@ export default async function () {
       joinedElapsed += 50;
     }
     const roomJoinDurationMs = Date.now() - start;
+    roomJoinDuration.add(roomJoinDurationMs);
 
     check(ready, { 'UI de chat lista (nombre de contacto visible)': (v) => v });
     console.log(`room_join_duration_ms=${roomJoinDurationMs}`);

@@ -1,3 +1,5 @@
+// Se queda escuchando mensajes de buddy123 y mide cuánto
+// tardan en llegar, sin ninguna otra carga (línea base).
 import { browser } from 'k6/x/browser';
 import { Trend } from 'k6/metrics';
 import { BASE_URL } from '../lib/config.js';

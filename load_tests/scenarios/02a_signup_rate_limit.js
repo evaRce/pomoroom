@@ -1,3 +1,4 @@
+// Prueba que el límite de intentos de registro (3) funciona.
 import { browser } from 'k6/x/browser';
 import { check } from 'k6';
 import { BASE_URL } from '../lib/config.js';

@@ -1,3 +1,5 @@
+// Mide añadir una tarea Kanban cuando todos lo hacen a la
+// vez en el mismo tablero de grupo.
 import { browser } from 'k6/x/browser';
 import { check } from 'k6';
 import { Trend } from 'k6/metrics';

@@ -517,7 +517,11 @@ export default function CallScreen({
   }
 
   return (
-    <div ref={containerRef} className="flex h-full min-h-0 flex-col bg-gray-50">
+    <div
+      ref={containerRef}
+      className="flex h-full min-h-0 flex-col bg-gray-50"
+      data-call-connected={connectedAt ? "true" : "false"}
+    >
       <div className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-white px-5 py-3">
         <div className="flex flex-col">
           <span className="text-sm font-semibold text-gray-800">{callText.screen.roomTitle(roomName)}</span>

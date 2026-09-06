@@ -1,3 +1,5 @@
+// Prueba que el límite de mensajes seguidos (10) funciona,
+// enviando muchos mensajes rápido con un solo usuario.
 import { browser } from 'k6/x/browser';
 import { check } from 'k6';
 import { BASE_URL } from '../lib/config.js';

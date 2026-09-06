@@ -1,3 +1,4 @@
+// Mide cuánto tardan varios usuarios en registrarse a la vez.
 import { browser } from 'k6/x/browser';
 import { check } from 'k6';
 import { Trend } from 'k6/metrics';

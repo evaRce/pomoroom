@@ -1,3 +1,4 @@
+// Mide cuánto tardan varios usuarios a la vez en abrir un chat.
 import { browser } from 'k6/x/browser';
 import { check } from 'k6';
 import { Trend } from 'k6/metrics';
@@ -32,26 +33,32 @@ export default async function () {
     const page = await context.newPage();
 
     const start = Date.now();
-    await page.goto(`${BASE_URL}/chat`, { waitUntil: 'networkidle' });
+    await page.goto(`${BASE_URL}/chat`, { waitUntil: 'load' });
 
-    const clicked = await page.evaluate(
-      (contactName) => {
-        const nav = document.querySelector('[aria-label="Conversaciones"]');
-        if (!nav) return false;
-        const item = Array.from(nav.querySelectorAll('[role="button"]')).find(
-          (el) => el.textContent && el.textContent.includes(contactName)
-        );
-        if (!item) return false;
-        item.click();
-        return true;
-      },
-      CONTACT_NAME
-    );
+    const contactDeadline = Date.now() + 10000;
+    let clicked = false;
+    while (Date.now() < contactDeadline) {
+      clicked = await page.evaluate(
+        (contactName) => {
+          const nav = document.querySelector('[aria-label="Conversaciones"]');
+          if (!nav) return false;
+          const item = Array.from(nav.querySelectorAll('[role="button"]')).find(
+            (el) => el.textContent && el.textContent.includes(contactName)
+          );
+          if (!item) return false;
+          item.click();
+          return true;
+        },
+        CONTACT_NAME
+      );
+      if (clicked) break;
+      await page.waitForTimeout(50);
+    }
     check(clicked, { [`${session.nickname}: conversación con ${CONTACT_NAME} visible`]: (v) => v });
 
-    let elapsed = 0;
+    const readyDeadline = Date.now() + 5000;
     let ready = false;
-    while (elapsed < 5000) {
+    while (Date.now() < readyDeadline) {
       ready = await page.evaluate(
         (contactName) => {
           const header = document.querySelector('header');
@@ -61,7 +68,6 @@ export default async function () {
       );
       if (ready) break;
       await page.waitForTimeout(50);
-      elapsed += 50;
     }
     roomJoinDuration.add(Date.now() - start);
 
