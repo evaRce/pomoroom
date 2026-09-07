@@ -21,6 +21,9 @@ defmodule Pomoroom.IntegrationCase do
     Pomoroom.PrivateChats.delete_all_private_chats()
     Pomoroom.GroupChats.delete_all_group_chats()
     Pomoroom.Users.delete_all_users()
+    Pomoroom.ChatPlugins.Kanban.KanbanRepository.delete_all_boards()
+    Pomoroom.ChatPlugins.Kanban.KanbanRepository.delete_all_tasks()
+    Pomoroom.ChatPlugins.PomodoroTimer.PomodoroTimerRepository.delete_all()
     :ok
   end
 end
