@@ -1,3 +1,5 @@
+// Hace capturas periódicas del panel de Phoenix para ver
+// el estado del servidor mientras corren otras pruebas.
 import { browser } from 'k6/x/browser';
 import { BASE_URL } from '../lib/config.js';
 

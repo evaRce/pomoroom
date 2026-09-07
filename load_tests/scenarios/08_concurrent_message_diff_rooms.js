@@ -1,3 +1,5 @@
+// Mide enviar mensajes cuando cada usuario escribe en su
+// propio chat privado, todos a la vez.
 import { browser } from 'k6/x/browser';
 import { check } from 'k6';
 import { Trend } from 'k6/metrics';
@@ -56,16 +58,14 @@ export default async function () {
     const start = Date.now();
     await input.press('Enter');
 
-    let elapsed = 0;
     let sent = false;
-    while (elapsed < 10000) {
+    while (Date.now() - start < 10000) {
       sent = await page.evaluate(
         (text) => Array.from(document.querySelectorAll('.chat-bubble')).some((el) => el.textContent.includes(text)),
         messageText
       );
       if (sent) break;
       await page.waitForTimeout(50);
-      elapsed += 50;
     }
     messageSendDuration.add(Date.now() - start);
 

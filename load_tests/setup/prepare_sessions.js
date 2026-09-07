@@ -46,10 +46,13 @@ export default async function () {
       const page = await context.newPage();
       const loggedIn = await login(page, buddy.email, buddy.password);
       if (!loggedIn) {
-        throw new Error(`no se pudo autenticar a ${buddy.nickname}`);
+        console.log(`FALLO_LOGIN:${buddy.nickname}`);
+        continue;
       }
       const cookies = await context.cookies();
       sessions.push({ nickname: buddy.nickname, cookies });
+    } catch (err) {
+      console.log(`FALLO_LOGIN:${buddy.nickname}:${err}`);
     } finally {
       await context.close();
     }

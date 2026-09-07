@@ -1,3 +1,5 @@
+// Envía un mensaje de una persona a otra concreta, para ver
+// si un fallo en una sala afecta solo a esa sala o a todas.
 import { browser } from 'k6/x/browser';
 import { check } from 'k6';
 import { BASE_URL } from '../lib/config.js';

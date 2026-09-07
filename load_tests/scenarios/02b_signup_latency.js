@@ -1,3 +1,4 @@
+// Mide cuánto tarda un registro normal en redirigir al chat.
 import { browser } from 'k6/x/browser';
 import { check } from 'k6';
 import { BASE_URL } from '../lib/config.js';

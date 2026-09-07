@@ -1,3 +1,4 @@
+// Mide cuánto tarda un login normal en redirigir al chat.
 import { browser } from 'k6/x/browser';
 import { check, sleep } from 'k6';
 import { BASE_URL } from '../lib/config.js';

@@ -1,3 +1,5 @@
+// Mide iniciar el Pomodoro cuando todos lo hacen a la vez
+// en la misma sala de grupo.
 import { browser } from 'k6/x/browser';
 import { check } from 'k6';
 import { Trend } from 'k6/metrics';

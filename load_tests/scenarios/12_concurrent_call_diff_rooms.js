@@ -1,3 +1,5 @@
+// Mide cuánto tardan en conectarse varias videollamadas
+// privadas distintas, todas a la vez.
 import { browser } from 'k6/x/browser';
 import { check } from 'k6';
 import { Trend } from 'k6/metrics';
@@ -8,7 +10,6 @@ const sessions = allSessions.slice(0, Number(__ENV.VUS || allSessions.length));
 
 const CONTACT_NAME = 'eva123';
 const JOIN_CALL_LABEL = 'Entrar a la sala';
-const END_CALL_LABEL = 'Finalizar llamada';
 
 const callJoinDuration = new Trend('call_join_duration_ms', true);
 
@@ -28,13 +29,12 @@ export const options = {
 };
 
 async function retryClick(page, evalFn, arg, timeoutMs) {
-  let elapsed = 0;
+  const deadline = Date.now() + timeoutMs;
   let clicked = false;
-  while (elapsed < timeoutMs && !clicked) {
+  while (Date.now() < deadline && !clicked) {
     clicked = await page.evaluate(evalFn, arg);
     if (!clicked) {
       await page.waitForTimeout(100);
-      elapsed += 100;
     }
   }
   return clicked;
@@ -42,7 +42,7 @@ async function retryClick(page, evalFn, arg, timeoutMs) {
 
 export default async function () {
   const session = sessions[(__VU - 1) % sessions.length];
-  const context = await browser.newContext();
+  const context = await browser.newContext({ ignoreHTTPSErrors: true });
   try {
     await context.addCookies(session.cookies);
     const page = await context.newPage();
@@ -80,16 +80,14 @@ export default async function () {
     );
     check(clickedJoin, { [`${session.nickname}: botón entrar a la sala visible`]: (v) => v });
 
-    let elapsed = 0;
+    const inCallDeadline = Date.now() + 15000;
     let inCall = false;
-    while (elapsed < 15000) {
+    while (Date.now() < inCallDeadline) {
       inCall = await page.evaluate(
-        (label) => !!document.querySelector(`[aria-label="${label}"]`),
-        END_CALL_LABEL
+        () => document.querySelector('[data-call-connected]')?.getAttribute('data-call-connected') === 'true'
       );
       if (inCall) break;
       await page.waitForTimeout(100);
-      elapsed += 100;
     }
     callJoinDuration.add(Date.now() - start);
 

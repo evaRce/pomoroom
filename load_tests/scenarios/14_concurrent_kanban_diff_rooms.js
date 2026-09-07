@@ -1,3 +1,5 @@
+// Mide añadir una tarea Kanban en tableros privados
+// distintos, todos los usuarios a la vez.
 import { browser } from 'k6/x/browser';
 import { check } from 'k6';
 import { Trend } from 'k6/metrics';
