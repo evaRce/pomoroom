@@ -60,7 +60,7 @@ defmodule Pomoroom.Messages.MessageService do
   end
 
   defp set_timestamps(changeset) do
-    now = NaiveDateTime.utc_now()
+    now = DateTime.utc_now()
     change(changeset, %{inserted_at: now, updated_at: now})
   end
 end
